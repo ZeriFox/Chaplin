@@ -28,8 +28,8 @@ export function RoomsPreview() {
       nearbyTitle: "Nelle vicinanze",
       mapBtn: "Vedi su Google Maps",
       airports: [
-        { name: "Aeroporto di Roma Fiumicino (FCO)", distance: "118000 mt" },
-        { name: "Aeroporto di Roma Ciampino (CIA)", distance: "118000 mt" },
+        { name: "Aeroporto di Roma Fiumicino (FCO)", distance: "118 km" },
+        { name: "Aeroporto di Roma Ciampino (CIA)", distance: "118 km" },
       ],
       stations: [
         { name: "Stazione Viterbo Porta Romana", distance: "1500 mt" },
@@ -54,8 +54,8 @@ export function RoomsPreview() {
       nearbyTitle: "Nearby",
       mapBtn: "View on Google Maps",
       airports: [
-        { name: "Rome Fiumicino Airport (FCO)", distance: "118000 mt" },
-        { name: "Rome Ciampino Airport (CIA)", distance: "118000 mt" },
+        { name: "Rome Fiumicino Airport (FCO)", distance: "118 km" },
+        { name: "Rome Ciampino Airport (CIA)", distance: "118 km" },
       ],
       stations: [
         { name: "Viterbo Porta Romana Station", distance: "1500 mt" },
@@ -80,8 +80,8 @@ export function RoomsPreview() {
       nearbyTitle: "A proximite",
       mapBtn: "Voir sur Google Maps",
       airports: [
-        { name: "Aeroport de Rome Fiumicino (FCO)", distance: "118000 mt" },
-        { name: "Aeroport de Rome Ciampino (CIA)", distance: "118000 mt" },
+        { name: "Aeroport de Rome Fiumicino (FCO)", distance: "118 km" },
+        { name: "Aeroport de Rome Ciampino (CIA)", distance: "118 km" },
       ],
       stations: [
         { name: "Gare Viterbo Porta Romana", distance: "1500 mt" },
@@ -106,8 +106,8 @@ export function RoomsPreview() {
       nearbyTitle: "Cerca",
       mapBtn: "Ver en Google Maps",
       airports: [
-        { name: "Aeropuerto de Roma Fiumicino (FCO)", distance: "118000 mt" },
-        { name: "Aeropuerto de Roma Ciampino (CIA)", distance: "118000 mt" },
+        { name: "Aeropuerto de Roma Fiumicino (FCO)", distance: "118 km" },
+        { name: "Aeropuerto de Roma Ciampino (CIA)", distance: "118 km" },
       ],
       stations: [
         { name: "Estacion Viterbo Porta Romana", distance: "1500 mt" },
@@ -132,8 +132,8 @@ export function RoomsPreview() {
       nearbyTitle: "In der Nahe",
       mapBtn: "Auf Google Maps ansehen",
       airports: [
-        { name: "Flughafen Rom Fiumicino (FCO)", distance: "118000 mt" },
-        { name: "Flughafen Rom Ciampino (CIA)", distance: "118000 mt" },
+        { name: "Flughafen Rom Fiumicino (FCO)", distance: "118 km" },
+        { name: "Flughafen Rom Ciampino (CIA)", distance: "118 km" },
       ],
       stations: [
         { name: "Bahnhof Viterbo Porta Romana", distance: "1500 mt" },
