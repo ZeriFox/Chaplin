@@ -216,7 +216,7 @@ export default function CamerePage() {
                 {[
                   { icon: MapPin, label: "Centro Viterbo" },
                   { icon: Wifi, label: "WiFi gratuito" },
-                  { icon: Waves, label: "Piscina & Benessere" },
+                  { icon: Waves, label: "Minipiscina" },
                   { icon: Sparkles, label: "Relax premium" },
                 ].map((f, i) => (
                   <div key={i} className="flex flex-col items-center gap-2">
