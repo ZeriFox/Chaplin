@@ -3,7 +3,7 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, Eye, Lock, Users, Mail, Phone } from "lucide-react"
+import { Shield, Eye, Lock, Users, Phone } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { useLanguage } from "@/components/language-provider"
 
@@ -12,8 +12,7 @@ export default function PrivacyPage() {
   const { t } = useLanguage()
 
 const PRIVACY_CONTACT = {
-  email: process.env.NEXT_PUBLIC_PRIVACY_EMAIL || "privacy@all22suite.com",
-  phone: process.env.NEXT_PUBLIC_PRIVACY_PHONE || "+39 328 328 7303",
+  phone: "+39 351 719 6320",
 }
 
   return (
@@ -56,17 +55,13 @@ const PRIVACY_CONTACT = {
 <Card className="card-invisible bg-gradient-to-br from-primary/5 to-accent/5">
   <CardHeader>
     <CardTitle className="flex items-center gap-2 text-primary">
-      <Mail className="w-5 h-5" />
+      <Phone className="w-5 h-5" />
       {t("contactUs")}
     </CardTitle>
   </CardHeader>
   <CardContent>
     <p className="mb-4">{t("privacyContactDesc")}</p>
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <Mail className="w-4 h-4 text-primary" />
-        <span>{PRIVACY_CONTACT.email}</span>
-      </div>
       <div className="flex items-center gap-2">
         <Phone className="w-4 h-4 text-primary" />
         <span>{PRIVACY_CONTACT.phone}</span>
