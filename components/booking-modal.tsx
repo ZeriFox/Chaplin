@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,11 @@ interface BookingModalProps {
     touristTax: number
     serviceFee: number
     total: number
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    notes: string
   }
 }
 
@@ -35,8 +40,29 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [notes, setNotes] = useState("")
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "nexi">("stripe")
   const [isProcessing, setIsProcessing] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+    setFirstName(bookingData.firstName)
+    setLastName(bookingData.lastName)
+    setEmail(bookingData.email)
+    setPhone(bookingData.phone)
+    setNotes(bookingData.notes)
+    if (bookingData.firstName && bookingData.lastName && bookingData.email) {
+      setStep(2)
+    }
+  }, [
+    isOpen,
+    bookingData.firstName,
+    bookingData.lastName,
+    bookingData.email,
+    bookingData.phone,
+    bookingData.notes,
+  ])
 
   const handleNext = () => {
     if (step === 1) {
@@ -70,8 +96,8 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
         firstName,
         lastName,
         email,
-        phone: "",
-        notes: "",
+        phone,
+        notes,
         roomId: bookingData.roomId,
         roomName:
           bookingData.roomId === "1" ? "Camera Familiare con Balcone" : "Camera Matrimoniale con Vasca Idromassaggio",
