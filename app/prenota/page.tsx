@@ -374,7 +374,7 @@ export default function PrenotaPage() {
                   </div>
 
                   <div className="rounded-md border border-[#c9a84c]/40 bg-[#c9a84c]/10 px-4 py-3">
-                    <p className="font-semibold">Suite Con SPA (MAX 2 PERSONE)</p>
+                    <p className="font-semibold">Suite con SPA (MAX 2 PERSONE)</p>
                     <input type="hidden" name="guests" value="2" />
                   </div>
 
