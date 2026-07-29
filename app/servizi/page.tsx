@@ -3,13 +3,11 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ServicesGrid } from "@/components/services-grid"
-import { ServiceCategories } from "@/components/service-categories"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { useLanguage } from "@/components/language-provider"
 
 export default function ServiziPage() {
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation()
-  const { ref: categoriesRef, isVisible: categoriesVisible } = useScrollAnimation()
   const { t } = useLanguage()
 
   return (
@@ -46,14 +44,6 @@ export default function ServiziPage() {
           </div>
         </div>
       </section>
-
-      {/* Service Categories with animations */}
-      <div
-        ref={categoriesRef}
-        className={`transition-all duration-1000 ${categoriesVisible ? "animate-slide-in-up" : "opacity-0 translate-y-10"}`}
-      >
-        <ServiceCategories />
-      </div>
 
       {/* Services Grid */}
       <ServicesGrid />
