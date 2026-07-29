@@ -138,7 +138,7 @@ export default function ContactsPage() {
                 <Clock className="h-5 w-5 text-[#c9a84c] mt-1 flex-shrink-0" />
                 <div className="flex-1">
                   <h3 className="font-cinzel font-semibold text-[#c9a84c] dark:text-[#d4af37] mb-2 text-base">
-                    Orari
+                    Servizio Informazioni
                   </h3>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between gap-2">
