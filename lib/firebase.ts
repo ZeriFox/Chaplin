@@ -36,15 +36,28 @@ import { setPersistence, browserLocalPersistence } from "firebase/auth"
 
 // ---------- INIT ----------
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
+export const isFirebaseConfigured = Object.values(firebaseConfig).every(Boolean)
+
+const fallbackFirebaseConfig = {
+  apiKey: "firebase-not-configured",
+  authDomain: "firebase-not-configured.invalid",
+  projectId: "firebase-not-configured",
+  storageBucket: "firebase-not-configured.invalid",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:0000000000000000000000",
+}
+
+const app = getApps().length
+  ? getApp()
+  : initializeApp(isFirebaseConfigured ? firebaseConfig : fallbackFirebaseConfig)
 
 export const auth = getAuth(app)
 export const db = getFirestore(app)
@@ -58,15 +71,17 @@ const googleProvider = new GoogleAuthProvider()
 // Suggerisce la scelta dell'account ad ogni login (utile se l’utente è già loggato con altro account)
 googleProvider.setCustomParameters({ prompt: "select_account" })
 
-if (process.env.NEXT_PUBLIC_USE_FUNCTIONS_EMULATOR === "true") {
+if (IS_BROWSER && isFirebaseConfigured && process.env.NEXT_PUBLIC_USE_FUNCTIONS_EMULATOR === "true") {
   connectFunctionsEmulator(functions, "127.0.0.1", 5001)
 }
 // Garantisce che il redirect mantenga la sessione tra le navigazioni
-;(async () => {
-  try {
-    await setPersistence(auth, browserLocalPersistence)
-  } catch {}
-})()
+if (IS_BROWSER && isFirebaseConfigured) {
+  ;(async () => {
+    try {
+      await setPersistence(auth, browserLocalPersistence)
+    } catch {}
+  })()
+}
 
 // ---------- USER DOC ----------
 export type UserDoc = {
