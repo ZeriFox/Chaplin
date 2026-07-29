@@ -232,7 +232,7 @@ export function ServicesGrid() {
           ))}
         </div>
 
-        {filteredServices.length === 0 && (
+        {services.length === 0 && (
           <div className="text-center py-16">
             <p className="text-muted-foreground text-xl">Nessun servizio trovato per la categoria selezionata.</p>
           </div>
