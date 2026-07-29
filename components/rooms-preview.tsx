@@ -43,7 +43,7 @@ export function RoomsPreview() {
         { name: "Piazza del Plebiscito", distance: "600 mt" },
         { name: "Quartiere Medievale San Pellegrino", distance: "900 mt" },
         { name: "Palazzo dei Papi", distance: "800 mt" },
-        { name: "Civita di Bagnoregio", distance: "30000 mt" },
+        { name: "Civita di Bagnoregio", distance: "30 km" },
       ],
     },
     en: {
@@ -69,7 +69,7 @@ export function RoomsPreview() {
         { name: "Piazza del Plebiscito", distance: "600 mt" },
         { name: "Medieval San Pellegrino Quarter", distance: "900 mt" },
         { name: "Papal Palace", distance: "800 mt" },
-        { name: "Civita di Bagnoregio", distance: "30000 mt" },
+        { name: "Civita di Bagnoregio", distance: "30 km" },
       ],
     },
     fr: {
@@ -95,7 +95,7 @@ export function RoomsPreview() {
         { name: "Piazza del Plebiscito", distance: "600 mt" },
         { name: "Quartier medieval San Pellegrino", distance: "900 mt" },
         { name: "Palais des Papes", distance: "800 mt" },
-        { name: "Civita di Bagnoregio", distance: "30000 mt" },
+        { name: "Civita di Bagnoregio", distance: "30 km" },
       ],
     },
     es: {
@@ -121,7 +121,7 @@ export function RoomsPreview() {
         { name: "Piazza del Plebiscito", distance: "600 mt" },
         { name: "Barrio medieval San Pellegrino", distance: "900 mt" },
         { name: "Palacio de los Papas", distance: "800 mt" },
-        { name: "Civita di Bagnoregio", distance: "30000 mt" },
+        { name: "Civita di Bagnoregio", distance: "30 km" },
       ],
     },
     de: {
@@ -147,7 +147,7 @@ export function RoomsPreview() {
         { name: "Piazza del Plebiscito", distance: "600 mt" },
         { name: "Mittelalterliches Viertel San Pellegrino", distance: "900 mt" },
         { name: "Papstpalast", distance: "800 mt" },
-        { name: "Civita di Bagnoregio", distance: "30000 mt" },
+        { name: "Civita di Bagnoregio", distance: "30 km" },
       ],
     },
   }
