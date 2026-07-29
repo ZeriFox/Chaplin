@@ -33,7 +33,7 @@ export function RoomsPreview() {
       ],
       stations: [
         { name: "Stazione Viterbo Porta Romana", distance: "1.5 km" },
-        { name: "Stazione Viterbo Porta Fiorentina", distance: "2 km" },
+        { name: "Stazione Viterbo Porta Fiorentina", distance: "700 mt" },
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "1.2 km" },
@@ -59,7 +59,7 @@ export function RoomsPreview() {
       ],
       stations: [
         { name: "Viterbo Porta Romana Station", distance: "1.5 km" },
-        { name: "Viterbo Porta Fiorentina Station", distance: "2 km" },
+        { name: "Viterbo Porta Fiorentina Station", distance: "700 mt" },
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "1.2 km" },
@@ -85,7 +85,7 @@ export function RoomsPreview() {
       ],
       stations: [
         { name: "Gare Viterbo Porta Romana", distance: "1.5 km" },
-        { name: "Gare Viterbo Porta Fiorentina", distance: "2 km" },
+        { name: "Gare Viterbo Porta Fiorentina", distance: "700 mt" },
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "1.2 km" },
@@ -111,7 +111,7 @@ export function RoomsPreview() {
       ],
       stations: [
         { name: "Estacion Viterbo Porta Romana", distance: "1.5 km" },
-        { name: "Estacion Viterbo Porta Fiorentina", distance: "2 km" },
+        { name: "Estacion Viterbo Porta Fiorentina", distance: "700 mt" },
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "1.2 km" },
@@ -137,7 +137,7 @@ export function RoomsPreview() {
       ],
       stations: [
         { name: "Bahnhof Viterbo Porta Romana", distance: "1.5 km" },
-        { name: "Bahnhof Viterbo Porta Fiorentina", distance: "2 km" },
+        { name: "Bahnhof Viterbo Porta Fiorentina", distance: "700 mt" },
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "1.2 km" },
