@@ -4,11 +4,12 @@ import { useMemo, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Users, AlertCircle } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import { useRoomPrices } from "@/hooks/use-room-prices"
 import { checkRoomAvailability } from "@/lib/booking-utils"
@@ -16,6 +17,7 @@ import { BookingModal } from "@/components/booking-modal"
 import type { DateRange } from "@/components/date-range-picker"
 import { useDynamicPrice } from "@/hooks/use-dynamic-price"
 import { BookingCalendarPicker } from "@/components/booking-calendar-picker"
+import { toast } from "sonner"
 
 interface BookingWidgetProps {
   roomId: string
@@ -26,9 +28,14 @@ export function BookingWidget({ roomId }: BookingWidgetProps) {
   const { prices } = useRoomPrices()
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
-  const [guests, setGuests] = useState(2)
+  const guests = 2
   const [selectedRoomType, setSelectedRoomType] = useState(roomId)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [specialRequests, setSpecialRequests] = useState("")
 
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false)
   const [availabilityStatus, setAvailabilityStatus] = useState<{ available: boolean; message: string } | null>(null)
@@ -91,6 +98,14 @@ export function BookingWidget({ roomId }: BookingWidgetProps) {
   }, [checkIn, checkOut, selectedRoomType, t])
 
   const handleBooking = () => {
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+      toast.error("Compila Nome, Cognome ed Email")
+      return
+    }
+    if (!email.includes("@")) {
+      toast.error("Email non valida")
+      return
+    }
     setIsModalOpen(true)
   }
 
@@ -135,26 +150,64 @@ export function BookingWidget({ roomId }: BookingWidgetProps) {
               />
             </div>
 
-            <div>
-              <Label htmlFor="widget-guests">{t("guests")}</Label>
-              <div className="relative">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="widget-firstName">{t("bookingFormFirstName") || "Nome"}</Label>
                 <Input
-                  id="widget-guests"
-                  type="number"
-                  min="1"
-                  max="2"
-                  value={guests}
-                  onChange={(e) => setGuests(Math.min(2, Math.max(1, Number.parseInt(e.target.value || "1"))))}
-                  className="pl-10"
+                  id="widget-firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
                 />
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              </div>
+              <div>
+                <Label htmlFor="widget-lastName">{t("bookingFormLastName") || "Cognome"}</Label>
+                <Input
+                  id="widget-lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                />
               </div>
             </div>
 
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="widget-email">{t("bookingFormEmail") || "Email"}</Label>
+                <Input
+                  id="widget-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="widget-phone">{t("bookingFormPhone") || "Telefono"}</Label>
+                <Input
+                  id="widget-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="rounded-md border border-[#c9a84c]/40 bg-[#c9a84c]/10 px-4 py-3">
+              <p className="font-semibold">Suite con SPA (MAX 2 PERSONE)</p>
+            </div>
+
             <div>
-              <Label htmlFor="widget-nights">{t("nights")}</Label>
-              <Input id="widget-nights" value={nights || ""} readOnly placeholder="—" />
-              <p className="mt-1 text-xs text-muted-foreground">{t("nightsCalculated")}</p>
+              <Label htmlFor="widget-specialRequests">
+                {t("bookingFormSpecialRequests") || "Richieste Speciali"}
+              </Label>
+              <Textarea
+                id="widget-specialRequests"
+                value={specialRequests}
+                onChange={(e) => setSpecialRequests(e.target.value)}
+                placeholder={t("bookingFormSpecialRequestsPlaceholder") || "Eventuali richieste particolari..."}
+                rows={3}
+              />
             </div>
 
             {isCheckingAvailability && (
@@ -225,6 +278,11 @@ export function BookingWidget({ roomId }: BookingWidgetProps) {
           touristTax,
           serviceFee: 0,
           total,
+          firstName,
+          lastName,
+          email,
+          phone,
+          notes: specialRequests,
         }}
       />
     </>
