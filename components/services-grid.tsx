@@ -48,7 +48,6 @@ export function ServicesGrid() {
 
   const services: Service[] = useMemo(
     () => [
-      // BENESSERE (plausibile: spa privata, piscina/jacuzzi)
       {
         id: 1,
         category: "Benessere",
@@ -65,66 +64,6 @@ export function ServicesGrid() {
         popular: true,
       },
       {
-        id: 2,
-        category: "Benessere",
-        name: "Jacuzzi & Relax (Uso esclusivo)",
-        description:
-          "Vasca idromassaggio in esclusiva con atmosfera soft e luci rilassanti. Ideale per coppie.",
-        image: "/chaplin/services/0013.JPG",
-        duration: "45 min",
-        price: 35,
-        capacity: 2,
-        rating: 4.8,
-        reviews: 41,
-        available: true,
-        popular: true,
-      },
-      {
-        id: 3,
-        category: "Benessere",
-        name: "Pacchetto Coppia: SPA + Jacuzzi",
-        description:
-          "Esperienza completa: accesso area benessere + sessione jacuzzi in esclusiva. Massimo relax, zero pensieri.",
-        image: "/chaplin/services/couple-package.jpg",
-        duration: "90 min",
-        price: 65,
-        capacity: 2,
-        rating: 5.0,
-        reviews: 33,
-        available: true,
-        popular: true,
-      },
-
-      // ESPERIENZE (plausibili: setup romantico, aperitivo)
-      {
-        id: 4,
-        category: "Esperienze",
-        name: "Aperitivo in Casa (Vino + Tagliere)",
-        description:
-          "Aperitivo pronto all’arrivo: vino (o analcolico) e tagliere con prodotti locali selezionati. Perfetto per una serata tranquilla.",
-        image: "/chaplin/services/wine-board.jpg",
-        duration: "—",
-        price: 28,
-        capacity: 2,
-        rating: 4.8,
-        reviews: 24,
-        available: true,
-      },
-      {
-        id: 5,
-        category: "Esperienze",
-        name: "Colazione (in casa / self-service)",
-        description:
-          "Selezione colazione con prodotti confezionati e bevande disponibili in casa (compatibile con check-in serale).",
-        image: "/chaplin/services/breakfast.jpg",
-        duration: "—",
-        price: 12,
-        capacity: 2,
-        rating: 4.7,
-        reviews: 29,
-        available: true,
-      },
-      {
         id: 6,
         category: "Esperienze",
         name: "Allestimento Romantico (Coppia)",
@@ -139,41 +78,11 @@ export function ServicesGrid() {
         available: true,
         popular: true,
       },
-
-      // COMFORT (plausibile: late checkout, pulizia extra)
-      {
-        id: 7,
-        category: "Comfort",
-        name: "Late Check-out (soggetto a disponibilità)",
-        description:
-          "Resta più a lungo e goditi la casa senza fretta. Orario esteso concordato in base alle prenotazioni del giorno.",
-        image: "/chaplin/services/late-checkout.jpg",
-        duration: "+2 ore",
-        price: 20,
-        capacity: 2,
-        rating: 4.6,
-        reviews: 22,
-        available: true,
-      },
-      {
-        id: 8,
-        category: "Comfort",
-        name: "Pulizia Extra (su richiesta)",
-        description:
-          "Pulizia aggiuntiva durante il soggiorno con cambio biancheria (se disponibile). Consigliata per soggiorni più lunghi.",
-        image: "/chaplin/services/cleaning.jpg",
-        duration: "—",
-        price: 18,
-        capacity: 2,
-        rating: 4.7,
-        reviews: 17,
-        available: true,
-      },
     ],
     [],
   )
 
-  const categories = ["Tutti", "Benessere", "Esperienze", "Comfort", "Extra"]
+  const categories = ["Tutti", "Benessere", "Esperienze"]
 
   const filteredServices =
     selectedCategory === "Tutti" ? services : services.filter((s) => s.category === selectedCategory)
