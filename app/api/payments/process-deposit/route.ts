@@ -2,12 +2,19 @@ import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { calculatePaymentSchedule } from "@/lib/payment-logic"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-12-18.acacia",
-})
-
 export async function POST(request: NextRequest) {
   try {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+
+    if (!stripeSecretKey || !siteUrl) {
+      return NextResponse.json({ error: "Payments are not configured yet" }, { status: 503 })
+    }
+
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: "2024-12-18.acacia",
+    })
+
     const { bookingId, totalAmount, checkInDate, customerEmail, customerName } = await request.json()
 
     const schedule = calculatePaymentSchedule(totalAmount, new Date(checkInDate))
@@ -37,8 +44,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "payment",
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout?cancelled=true`,
+      success_url: `${siteUrl}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/checkout?cancelled=true`,
       metadata: {
         bookingId,
         paymentType: "deposit",
