@@ -37,7 +37,7 @@ export function RoomsPreview() {
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "350 mt" },
-        { name: "Piazza Verdi", distance: "0.8 km" },
+        { name: "Piazza Verdi", distance: "0.4 km" },
         { name: "Santuario di Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
         { name: "Piazza del Plebiscito", distance: "0.9 km" },
@@ -63,7 +63,7 @@ export function RoomsPreview() {
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "350 mt" },
-        { name: "Piazza Verdi", distance: "0.8 km" },
+        { name: "Piazza Verdi", distance: "0.4 km" },
         { name: "Sanctuary of Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
         { name: "Piazza del Plebiscito", distance: "0.9 km" },
@@ -89,7 +89,7 @@ export function RoomsPreview() {
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "350 mt" },
-        { name: "Piazza Verdi", distance: "0.8 km" },
+        { name: "Piazza Verdi", distance: "0.4 km" },
         { name: "Sanctuaire de Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
         { name: "Piazza del Plebiscito", distance: "0.9 km" },
@@ -115,7 +115,7 @@ export function RoomsPreview() {
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "350 mt" },
-        { name: "Piazza Verdi", distance: "0.8 km" },
+        { name: "Piazza Verdi", distance: "0.4 km" },
         { name: "Santuario de Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
         { name: "Piazza del Plebiscito", distance: "0.9 km" },
@@ -141,7 +141,7 @@ export function RoomsPreview() {
       ],
       nearby: [
         { name: "Rocca Albornoz", distance: "350 mt" },
-        { name: "Piazza Verdi", distance: "0.8 km" },
+        { name: "Piazza Verdi", distance: "0.4 km" },
         { name: "Heiligtum der Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
         { name: "Piazza del Plebiscito", distance: "0.9 km" },
