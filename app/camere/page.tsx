@@ -158,7 +158,6 @@ export default function CamerePage() {
     { icon: Droplets, label: "Vasca idromassaggio (Jacuzzi)" },
     { icon: ShieldCheck, label: "Sicurezza: estintori • rilevatore monossido" },
     { icon: Languages, label: "Lingue: Italiano • Inglese" },
-    { icon: CalendarClock, label: "Arrivo 15:00–23:00 • Partenza 07:00–11:00" },
   ]
 
   // ✅ Verde WhatsApp
