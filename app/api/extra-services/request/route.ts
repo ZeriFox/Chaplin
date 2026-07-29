@@ -3,10 +3,17 @@ import { Resend } from "resend"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: NextRequest) {
   try {
+    const resendApiKey = process.env.RESEND_API_KEY
+    const firebaseConfigured =
+      process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY
+
+    if (!resendApiKey || !firebaseConfigured) {
+      return NextResponse.json({ error: "Extra services are not configured yet" }, { status: 503 })
+    }
+
+    const resend = new Resend(resendApiKey)
     const body = await request.json()
     const { bookingId, roomId, checkIn, checkOut, guests, userEmail, userName, services, notes } = body
 

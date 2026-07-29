@@ -2,10 +2,15 @@ import { type NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { getBookingById } from "@/lib/firebase"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: NextRequest) {
   try {
+    const resendApiKey = process.env.RESEND_API_KEY
+
+    if (!resendApiKey) {
+      return NextResponse.json({ error: "Email notifications are not configured yet" }, { status: 503 })
+    }
+
+    const resend = new Resend(resendApiKey)
     const body = await request.json()
     const { bookingId, services, notes } = body
 

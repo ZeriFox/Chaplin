@@ -3,12 +3,19 @@ import Stripe from "stripe"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-12-18.acacia",
-})
-
 export async function POST(request: NextRequest) {
   try {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+
+    if (!stripeSecretKey || !siteUrl) {
+      return NextResponse.json({ error: "Payments are not configured yet" }, { status: 503 })
+    }
+
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: "2024-12-18.acacia",
+    })
+
     const { bookingId, amount, description } = await request.json()
 
     if (!bookingId || !amount) {
@@ -46,8 +53,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "payment",
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/user/booking/${bookingId}?payment=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/user/booking/${bookingId}?payment=cancelled`,
+      success_url: `${siteUrl}/user/booking/${bookingId}?payment=success`,
+      cancel_url: `${siteUrl}/user/booking/${bookingId}?payment=cancelled`,
       metadata: {
         bookingId,
         paymentType: "penalty",
