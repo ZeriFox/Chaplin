@@ -181,21 +181,10 @@ export function ServicesGrid() {
                 <p className="text-muted-foreground text-sm mb-4 line-clamp-3 leading-relaxed">{service.description}</p>
 
                 {/* Details */}
-                {service.id === 1 ? (
+                {service.id === 1 && (
                   <div className="flex items-center gap-2 bg-[#c9a84c]/10 rounded-lg px-3 py-2 border border-[#c9a84c]/20 mb-5 text-sm">
                     <Clock className="w-4 h-4 text-[#c9a84c]" />
                     <span className="font-medium">{service.duration}</span>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3 mb-5 text-sm">
-                    <div className="flex items-center gap-2 bg-[#c9a84c]/10 rounded-lg px-3 py-2 border border-[#c9a84c]/20">
-                      <Clock className="w-4 h-4 text-[#c9a84c]" />
-                      <span className="font-medium">{service.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-[#c9a84c]/10 rounded-lg px-3 py-2 border border-[#c9a84c]/20">
-                      <Users className="w-4 h-4 text-[#c9a84c]" />
-                      <span className="font-medium">Max {service.capacity}</span>
-                    </div>
                   </div>
                 )}
 
