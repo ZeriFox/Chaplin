@@ -36,7 +36,7 @@ export function RoomsPreview() {
         { name: "Stazione Viterbo Porta Fiorentina", distance: "700 mt" },
       ],
       nearby: [
-        { name: "Rocca Albornoz", distance: "1.2 km" },
+        { name: "Rocca Albornoz", distance: "350 mt" },
         { name: "Piazza Verdi", distance: "0.8 km" },
         { name: "Santuario di Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
@@ -62,7 +62,7 @@ export function RoomsPreview() {
         { name: "Viterbo Porta Fiorentina Station", distance: "700 mt" },
       ],
       nearby: [
-        { name: "Rocca Albornoz", distance: "1.2 km" },
+        { name: "Rocca Albornoz", distance: "350 mt" },
         { name: "Piazza Verdi", distance: "0.8 km" },
         { name: "Sanctuary of Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
@@ -88,7 +88,7 @@ export function RoomsPreview() {
         { name: "Gare Viterbo Porta Fiorentina", distance: "700 mt" },
       ],
       nearby: [
-        { name: "Rocca Albornoz", distance: "1.2 km" },
+        { name: "Rocca Albornoz", distance: "350 mt" },
         { name: "Piazza Verdi", distance: "0.8 km" },
         { name: "Sanctuaire de Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
@@ -114,7 +114,7 @@ export function RoomsPreview() {
         { name: "Estacion Viterbo Porta Fiorentina", distance: "700 mt" },
       ],
       nearby: [
-        { name: "Rocca Albornoz", distance: "1.2 km" },
+        { name: "Rocca Albornoz", distance: "350 mt" },
         { name: "Piazza Verdi", distance: "0.8 km" },
         { name: "Santuario de Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
@@ -140,7 +140,7 @@ export function RoomsPreview() {
         { name: "Bahnhof Viterbo Porta Fiorentina", distance: "700 mt" },
       ],
       nearby: [
-        { name: "Rocca Albornoz", distance: "1.2 km" },
+        { name: "Rocca Albornoz", distance: "350 mt" },
         { name: "Piazza Verdi", distance: "0.8 km" },
         { name: "Heiligtum der Santa Rosa", distance: "0.5 km" },
         { name: "Corso Italia", distance: "0.7 km" },
