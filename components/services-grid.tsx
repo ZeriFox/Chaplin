@@ -52,10 +52,10 @@ export function ServicesGrid() {
       {
         id: 1,
         category: "Benessere",
-        name: "Accesso SPA Privata (Piscina + Area Relax)",
+        name: "Accesso SPA Privata",
         description:
-          "Sessione privata nell’area benessere: piscina coperta riscaldata e zona relax. Perfetta per staccare e ricaricare energie.",
-        image: "/chaplin/services/0004.JPG",
+          "Minipiscina riscaldata ad uso esclusivo per la coppia con atmosfera soft e luci rilassanti. Cromoterapia, idromassaggio professionale",
+        image: "/chaplin/services/0013.JPG",
         duration: "60 min",
         price: 40,
         capacity: 2,
