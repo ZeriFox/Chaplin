@@ -42,7 +42,6 @@ function openWhatsApp(service: Service) {
 }
 
 export function ServicesGrid() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("Tutti")
   const [favorites, setFavorites] = useState<Set<number>>(new Set())
   const { ref, visibleItems } = useStaggeredAnimation(150)
 
@@ -82,11 +81,6 @@ export function ServicesGrid() {
     [],
   )
 
-  const categories = ["Tutti", "Benessere", "Esperienze"]
-
-  const filteredServices =
-    selectedCategory === "Tutti" ? services : services.filter((s) => s.category === selectedCategory)
-
   const toggleFavorite = (serviceId: number) => {
     setFavorites((prev) => {
       const next = new Set(prev)
@@ -98,28 +92,9 @@ export function ServicesGrid() {
   return (
     <section className="py-16 bg-gradient-to-b from-background to-secondary/30">
       <div className="container mx-auto px-4">
-        {/* Category Filter (verde WhatsApp) */}
-        <div className="flex flex-wrap gap-3 mb-12 justify-center">
-          {categories.map((category, index) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category)}
-              className={`rounded-full px-7 py-3 text-base font-medium transition-all duration-300 hover:scale-105 ${
-                selectedCategory === category
-                  ? "bg-[#1a1a1a] hover:bg-[#333] text-[#f5f5f0] shadow-lg"
-                  : "border-[#c9a84c]/40 hover:bg-[#c9a84c]/10"
-              }`}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
-
         {/* Services Grid */}
         <div ref={ref} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredServices.map((service, index) => (
+          {services.map((service, index) => (
             <div
               key={service.id}
               data-index={index}
