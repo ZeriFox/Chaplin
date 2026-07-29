@@ -56,7 +56,7 @@ export function ServicesGrid() {
         description:
           "Minipiscina riscaldata ad uso esclusivo per la coppia con atmosfera soft e luci rilassanti. Cromoterapia, idromassaggio professionale",
         image: "/chaplin/services/0013.JPG",
-        duration: "60 min",
+        duration: "Dalle 15:00 alle 3:00",
         price: 40,
         capacity: 2,
         rating: 4.9,
@@ -250,9 +250,11 @@ export function ServicesGrid() {
                 </div>
 
                 {/* Price */}
-                <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm text-white px-3 py-2 rounded-full text-lg font-bold border border-white/20">
-                  €{service.price}
-                </div>
+                {service.id !== 1 && (
+                  <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm text-white px-3 py-2 rounded-full text-lg font-bold border border-white/20">
+                    €{service.price}
+                  </div>
+                )}
 
                 {/* Action buttons overlay */}
                 <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
@@ -295,16 +297,23 @@ export function ServicesGrid() {
                 <p className="text-muted-foreground text-sm mb-4 line-clamp-3 leading-relaxed">{service.description}</p>
 
                 {/* Details */}
-                <div className="grid grid-cols-2 gap-3 mb-5 text-sm">
-                  <div className="flex items-center gap-2 bg-[#c9a84c]/10 rounded-lg px-3 py-2 border border-[#c9a84c]/20">
+                {service.id === 1 ? (
+                  <div className="flex items-center gap-2 bg-[#c9a84c]/10 rounded-lg px-3 py-2 border border-[#c9a84c]/20 mb-5 text-sm">
                     <Clock className="w-4 h-4 text-[#c9a84c]" />
                     <span className="font-medium">{service.duration}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-[#c9a84c]/10 rounded-lg px-3 py-2 border border-[#c9a84c]/20">
-                    <Users className="w-4 h-4 text-[#c9a84c]" />
-                    <span className="font-medium">Max {service.capacity}</span>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 mb-5 text-sm">
+                    <div className="flex items-center gap-2 bg-[#c9a84c]/10 rounded-lg px-3 py-2 border border-[#c9a84c]/20">
+                      <Clock className="w-4 h-4 text-[#c9a84c]" />
+                      <span className="font-medium">{service.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-[#c9a84c]/10 rounded-lg px-3 py-2 border border-[#c9a84c]/20">
+                      <Users className="w-4 h-4 text-[#c9a84c]" />
+                      <span className="font-medium">Max {service.capacity}</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Reviews */}
                 <div className="text-xs text-muted-foreground mb-4">
