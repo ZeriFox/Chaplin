@@ -373,22 +373,9 @@ export default function PrenotaPage() {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="guests">Adulti</Label>
-                      <select
-                        id="guests"
-                        name="guests"
-                        value={formData.guests}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                        required
-                      >
-                        <option value="1">1 Adulto</option>
-                        <option value="2">2 Adulti</option>
-                      </select>
-                      <p className="text-xs text-muted-foreground mt-1">Max 2 adulti.</p>
-                    </div>
+                  <div className="rounded-md border border-[#c9a84c]/40 bg-[#c9a84c]/10 px-4 py-3">
+                    <p className="font-semibold">Suite Con SPA (MAX 2 PERSONE)</p>
+                    <input type="hidden" name="guests" value="2" />
                   </div>
 
                   {/* Appartamento unico - selezione camera nascosta */}
