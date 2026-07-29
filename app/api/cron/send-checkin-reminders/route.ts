@@ -2,16 +2,24 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function GET(request: NextRequest) {
   try {
+    const cronSecret = process.env.CRON_SECRET
+    const resendApiKey = process.env.RESEND_API_KEY
+    const firebaseConfigured =
+      process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY
+
+    if (!cronSecret || !resendApiKey || !firebaseConfigured) {
+      return NextResponse.json({ error: "Check-in reminders are not configured yet" }, { status: 503 })
+    }
+
     // Verify cron secret
     const authHeader = request.headers.get("authorization")
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const resend = new Resend(resendApiKey)
     const db = getAdminDb()
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
