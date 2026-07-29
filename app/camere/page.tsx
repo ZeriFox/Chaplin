@@ -142,7 +142,7 @@ export default function CamerePage() {
   const amenities = [
     { icon: DoorClosed, label: "Intero alloggio (appartamento privato in edificio)" },
     { icon: UtensilsCrossed, label: "Cucina completa" },
-    { icon: Waves, label: "Piscina coperta (Gratis) • riscaldata • solo adulti • tutto l’anno" },
+    { icon: Waves, label: "Minipiscina coperta (Gratis) • riscaldata • solo adulti • tutto l’anno" },
     { icon: Sparkles, label: "Spa e centro benessere • sala relax" },
     { icon: Wifi, label: "WiFi gratuito" },
     { icon: Wind, label: "Aria condizionata" },
