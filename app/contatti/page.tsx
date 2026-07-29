@@ -149,10 +149,6 @@ export default function ContactsPage() {
                       <span className="font-medium">Sab-Dom</span>
                       <span className="text-muted-foreground">09:00 - 21:00</span>
                     </div>
-                    <div className="flex justify-between gap-2">
-                      <span className="font-medium">Check-in/out</span>
-                      <span className="text-muted-foreground">24/7</span>
-                    </div>
                   </div>
                 </div>
               </div>
