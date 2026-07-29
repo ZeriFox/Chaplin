@@ -94,8 +94,8 @@ export function CookieConsent() {
                 <div className="flex items-center gap-3 flex-1">
                   <Cookie className="w-8 h-8 text-primary animate-bounce" />
                   <div>
-                    <h3 className="font-cinzel text-lg font-semibold text-primary mb-2">{t("cookieTitle")}</h3>
-                    <p className="text-sm text-muted-foreground">{t("cookieDescription")}</p>
+                    <h3 className="font-cinzel text-lg font-semibold text-primary mb-2">{t("manageCookiePreferences")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("cookiePolicySubtitle")}</p>
                   </div>
                 </div>
 
@@ -106,17 +106,17 @@ export function CookieConsent() {
                     className="bg-transparent hover:bg-primary/10 border-primary/30"
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    {t("customize")}
+                    {t("manageCookiePreferences")}
                   </Button>
                   <Button variant="outline" onClick={acceptNecessaryOnly} className="bg-transparent hover:bg-muted/50">
-                    {t("onlyNecessary")}
+                    {t("onlyNecessaryButton")}
                   </Button>
                   <Button
                     onClick={acceptAll}
                     className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg"
                   >
                     <Check className="w-4 h-4 mr-2" />
-                    {t("acceptAll")}
+                    {t("acceptAllButton")}
                   </Button>
                 </div>
               </div>
@@ -143,14 +143,14 @@ export function CookieConsent() {
                 <div className="border border-border/50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{t("necessaryCookies")}</h3>
+                      <h3 className="font-semibold">{t("necessaryCookiesTitle")}</h3>
                       <Badge className="bg-[#c9a84c]/15 text-[#1a1a1a] text-xs">{t("alwaysActive")}</Badge>
                     </div>
                     <div className="w-12 h-6 bg-[#c9a84c] rounded-full flex items-center justify-end px-1">
                       <div className="w-4 h-4 bg-white rounded-full"></div>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">{t("necessaryCookiesDesc")}</p>
+                  <p className="text-sm text-muted-foreground">{t("necessaryCookiesAlwaysActive")}</p>
                 </div>
 
                 <div className="border border-border/50 rounded-lg p-4">
@@ -158,7 +158,7 @@ export function CookieConsent() {
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold">{t("analyticsCookies")}</h3>
                       <Badge variant="outline" className="text-xs">
-                        {t("optional")}
+                        {t("requireConsent")}
                       </Badge>
                     </div>
                     <button
@@ -170,7 +170,7 @@ export function CookieConsent() {
                       <div className="w-4 h-4 bg-white rounded-full mx-1"></div>
                     </button>
                   </div>
-                  <p className="text-sm text-muted-foreground">{t("analyticsCookiesDesc")}</p>
+                  <p className="text-sm text-muted-foreground">{t("analyticsCookiesHelp")}</p>
                 </div>
 
                 <div className="border border-border/50 rounded-lg p-4">
@@ -178,7 +178,7 @@ export function CookieConsent() {
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold">{t("marketingCookies")}</h3>
                       <Badge variant="outline" className="text-xs">
-                        {t("optional")}
+                        {t("requireConsent")}
                       </Badge>
                     </div>
                     <button
@@ -190,7 +190,7 @@ export function CookieConsent() {
                       <div className="w-4 h-4 bg-white rounded-full mx-1"></div>
                     </button>
                   </div>
-                  <p className="text-sm text-muted-foreground">{t("marketingCookiesDesc")}</p>
+                  <p className="text-sm text-muted-foreground">{t("marketingCookiesAds")}</p>
                 </div>
               </div>
 
@@ -200,13 +200,13 @@ export function CookieConsent() {
                   onClick={acceptNecessaryOnly}
                   className="flex-1 bg-transparent hover:bg-muted/50"
                 >
-                  {t("onlyNecessary")}
+                  {t("onlyNecessaryButton")}
                 </Button>
                 <Button
                   onClick={saveCustomPreferences}
                   className="flex-1 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
                 >
-                  {t("savePreferences")}
+                  {t("savePreferencesButton")}
                 </Button>
               </div>
             </CardContent>
