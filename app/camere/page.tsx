@@ -77,8 +77,8 @@ export default function CamerePage() {
         "Riscaldamento",
       ],
       rules: {
-        checkIn: "Dalle 15:00 alle 23:00 (comunicare l’orario di arrivo in anticipo)",
-        checkOut: "Dalle 07:00 alle 11:00",
+        checkIn: "dalle ore 15:00 in poi",
+        checkOut: "entro le 11:00",
         notes:
           "Le condizioni di cancellazione/pagamento anticipato possono variare: verificare prima della prenotazione.",
       },
@@ -361,14 +361,14 @@ export default function CamerePage() {
             <div className={`mt-6 p-4 rounded-2xl border ${greenBorder} bg-[#c9a84c]/5`}>
               <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                 <CalendarClock className={`w-5 h-5 ${greenText}`} />
-                Regole della struttura
+                Orari della Struttura
               </h3>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>
-                  <span className="font-medium text-foreground">Arrivo:</span> {HOME.rules.checkIn}
+                  <span className="font-medium text-foreground">Check-in:</span> {HOME.rules.checkIn}
                 </li>
                 <li>
-                  <span className="font-medium text-foreground">Partenza:</span> {HOME.rules.checkOut}
+                  <span className="font-medium text-foreground">Check-Out:</span> {HOME.rules.checkOut}
                 </li>
               </ul>
             </div>
