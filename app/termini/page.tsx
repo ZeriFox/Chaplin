@@ -9,7 +9,6 @@ import { useLanguage } from "@/components/language-provider"
 
 // Config contatti (no hardcode in UI)
 const TERMS_CONTACT = {
-  email: process.env.NEXT_PUBLIC_TERMS_EMAIL || "Chaplinviterbo@gmail.com",
   phone: process.env.NEXT_PUBLIC_TERMS_PHONE || "+39 351 719 6320",
 }
 
@@ -166,12 +165,6 @@ export default function TerminiPage() {
               <CardContent>
                 <p className="mb-4">{t("questionsAboutTerms")}</p>
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-primary" />
-                    <a href={`mailto:${TERMS_CONTACT.email}`} className="hover:text-primary transition-colors">
-                      {TERMS_CONTACT.email}
-                    </a>
-                  </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-primary" />
                     <a
