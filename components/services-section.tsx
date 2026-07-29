@@ -4,7 +4,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
-import { Check } from "lucide-react"
 
 export function ServicesSection() {
   const { language } = useLanguage()
@@ -13,7 +12,6 @@ export function ServicesSection() {
     title: string
     subtitle: string
     description: string
-    features: string[]
     noDeposit: string
     freeCancellation: string
     infoBtn: string
@@ -25,14 +23,6 @@ export function ServicesSection() {
       title: "La Suite Esclusiva",
       subtitle: "CHAPLIN Luxury Holiday House",
       description: "",
-      features: [
-        "Piscina privata ad uso esclusivo",
-        "Spa con vasca idromassaggio 32 getti",
-        "Sauna a infrarossi con cromoterapia",
-        "Smart TV 55'' con Netflix e Disney+",
-        "Cucina completamente attrezzata",
-        "Aria condizionata e riscaldamento",
-      ],
       noDeposit: "Nessun anticipo richiesto",
       freeCancellation: "Cancellazione gratuita",
       infoBtn: "Scopri di piu",
@@ -44,14 +34,6 @@ export function ServicesSection() {
       title: "The Apartment",
       subtitle: "CHAPLIN Luxury Holiday House",
       description: "",
-      features: [
-        "Private pool for exclusive use",
-        "Spa with 32-jet hydromassage tub",
-        "Infrared sauna with chromotherapy",
-        "55'' Smart TV with Netflix and Disney+",
-        "Fully equipped kitchen",
-        "Air conditioning and heating",
-      ],
       noDeposit: "No deposit required",
       freeCancellation: "Free cancellation",
       infoBtn: "Learn more",
@@ -63,14 +45,6 @@ export function ServicesSection() {
       title: "L'Appartement",
       subtitle: "CHAPLIN Luxury Holiday House",
       description: "",
-      features: [
-        "Piscine privee a usage exclusif",
-        "Spa avec baignoire hydromassage 32 jets",
-        "Sauna infrarouge avec chromotherapie",
-        "Smart TV 55'' avec Netflix et Disney+",
-        "Cuisine entierement equipee",
-        "Climatisation et chauffage",
-      ],
       noDeposit: "Aucun acompte requis",
       freeCancellation: "Annulation gratuite",
       infoBtn: "En savoir plus",
@@ -82,14 +56,6 @@ export function ServicesSection() {
       title: "El Apartamento",
       subtitle: "CHAPLIN Luxury Holiday House",
       description: "",
-      features: [
-        "Piscina privada de uso exclusivo",
-        "Spa con banera de hidromasaje de 32 chorros",
-        "Sauna de infrarrojos con cromoterapia",
-        "Smart TV 55'' con Netflix y Disney+",
-        "Cocina totalmente equipada",
-        "Aire acondicionado y calefaccion",
-      ],
       noDeposit: "Sin deposito requerido",
       freeCancellation: "Cancelacion gratuita",
       infoBtn: "Saber mas",
@@ -101,14 +67,6 @@ export function ServicesSection() {
       title: "Die Wohnung",
       subtitle: "CHAPLIN Luxury Holiday House",
       description: "",
-      features: [
-        "Privater Pool zur exklusiven Nutzung",
-        "Spa mit 32-Dusen-Whirlpool",
-        "Infrarotsauna mit Chromotherapie",
-        "55'' Smart TV mit Netflix und Disney+",
-        "Voll ausgestattete Kuche",
-        "Klimaanlage und Heizung",
-      ],
       noDeposit: "Keine Anzahlung erforderlich",
       freeCancellation: "Kostenlose Stornierung",
       infoBtn: "Mehr erfahren",
@@ -185,16 +143,6 @@ export function ServicesSection() {
                 {content.description}
               </p>
             ) : null}
-
-            {/* Features */}
-            <ul className="space-y-2 mb-8">
-              {content.features.map((feature, index) => (
-                <li key={index} className="flex items-center gap-3 text-sm text-[#4a4a4a]">
-                  <Check className="w-4 h-4 text-[#c9a84c] flex-shrink-0" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
