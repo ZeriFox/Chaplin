@@ -15,7 +15,7 @@ const content: Record<Lang, RoomContent> = {
   it: {
     description:
       "Una magnifica struttura pensata per rilassarsi. Possiede un'elegante camera matrimoniale e offre un'esperienza di soggiorno indimenticabile con il suo design raffinato e i comfort moderni.",
-    badges: { adults: "Max 2 adulti", beds: "2 letti", bath: "1 bagno", size: "57 m²" },
+    badges: { adults: "Max 2 adulti", beds: "1 letto", bath: "1 bagno", size: "57 m²" },
     zones: [
       {
         title: "Zona notte",
@@ -89,7 +89,7 @@ const content: Record<Lang, RoomContent> = {
   en: {
     description:
       "A magnificent property designed for relaxation. It features an elegant double room and offers an unforgettable stay experience with its refined design and modern comforts.",
-    badges: { adults: "Max 2 adults", beds: "2 beds", bath: "1 bathroom", size: "57 m²" },
+    badges: { adults: "Max 2 adults", beds: "1 bed", bath: "1 bathroom", size: "57 m²" },
     zones: [
       {
         title: "Sleeping area",
@@ -163,7 +163,7 @@ const content: Record<Lang, RoomContent> = {
   fr: {
     description:
       "Une magnifique structure pensée pour la détente. Elle dispose d'une élégante chambre double et offre une expérience de séjour inoubliable grâce à son design raffiné et son confort moderne.",
-    badges: { adults: "Max 2 adultes", beds: "2 lits", bath: "1 salle de bain", size: "57 m²" },
+    badges: { adults: "Max 2 adultes", beds: "1 lit", bath: "1 salle de bain", size: "57 m²" },
     zones: [
       {
         title: "Coin nuit",
@@ -237,7 +237,7 @@ const content: Record<Lang, RoomContent> = {
   es: {
     description:
       "Una magnífica estructura pensada para relajarse. Dispone de una elegante habitación doble y ofrece una experiencia de estancia inolvidable con su diseño refinado y comodidades modernas.",
-    badges: { adults: "Máx 2 adultos", beds: "2 camas", bath: "1 baño", size: "57 m²" },
+    badges: { adults: "Máx 2 adultos", beds: "1 cama", bath: "1 baño", size: "57 m²" },
     zones: [
       {
         title: "Zona de descanso",
@@ -311,7 +311,7 @@ const content: Record<Lang, RoomContent> = {
   de: {
     description:
       "Eine wunderschöne Unterkunft zum Entspannen. Sie verfügt über ein elegantes Doppelzimmer und bietet mit ihrem raffinierten Design und modernem Komfort ein unvergessliches Aufenthaltserlebnis.",
-    badges: { adults: "Max 2 Erwachsene", beds: "2 Betten", bath: "1 Bad", size: "57 m²" },
+    badges: { adults: "Max 2 Erwachsene", beds: "1 Bett", bath: "1 Bad", size: "57 m²" },
     zones: [
       {
         title: "Schlafbereich",
