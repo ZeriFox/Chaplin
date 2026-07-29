@@ -14,7 +14,7 @@ export function StorySection() {
       paragraph1:
         "Una elegante suite indipendente situata nel centro storico di Viterbo, ideale per una fuga di coppia in cerca di relax.",
       paragraph2:
-        "L'ambiente e raffinato e curato nei minimi dettagli, offre il massimo comfort: zona notte, zona giorno, cucina attrezzata, bagno privato e area spa interna ad uso esclusivo. 57 mq di puro benessere per un soggiorno indimenticabile.",
+        "L'ambiente è raffinato e curato nei minimi dettagli, offre il massimo comfort: zona notte, zona giorno, cucina attrezzata, bagno privato e area spa interna ad uso esclusivo. 57 mq di puro benessere per un soggiorno indimenticabile.",
       galleryTitle: "Citta di Viterbo",
     },
     en: {
