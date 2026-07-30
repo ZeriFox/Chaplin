@@ -15,7 +15,7 @@ type Service = {
   image: string
   mosaicImages?: string[]
   duration: string
-  price: number
+  price: number | null
   capacity: number
   rating: number
   reviews: number
@@ -34,7 +34,7 @@ function openWhatsApp(service: Service) {
     `✅ Servizio: *${service.name}*`,
     `🕒 Durata: ${service.duration}`,
     `👥 Persone: max ${service.capacity}`,
-    `💶 Prezzo: €${service.price}`,
+    ...(service.price === null ? [] : [`💶 Prezzo: €${service.price}`]),
     ``,
     `Mi dite disponibilità e come procedere?`,
   ].join("\n")
@@ -72,7 +72,7 @@ export function ServicesGrid() {
           "Decorazioni romantiche in casa (petali, luci soft, dettagli a tema). Ideale per anniversari o sorprese.",
         image: "/chaplin/services/romantic-setup.jpg",
         duration: "—",
-        price: 25,
+        price: null,
         capacity: 2,
         rating: 4.9,
         reviews: 18,
@@ -174,7 +174,7 @@ export function ServicesGrid() {
                 </div>
 
                 {/* Price */}
-                {service.id !== 1 && !service.draft && (
+                {service.id !== 1 && service.price !== null && !service.draft && (
                   <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm text-white px-3 py-2 rounded-full text-lg font-bold border border-white/20">
                     €{service.price}
                   </div>
@@ -197,7 +197,8 @@ export function ServicesGrid() {
                       variant="ghost"
                       className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border border-white/20"
                       onClick={() => {
-                        const shareText = `${service.name} — €${service.price} (${service.duration})`
+                        const priceText = service.price === null ? "" : ` — €${service.price}`
+                        const shareText = `${service.name}${priceText} (${service.duration})`
                         navigator.clipboard?.writeText?.(shareText)
                       }}
                       title="Copia info servizio"
