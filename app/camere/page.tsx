@@ -249,15 +249,6 @@ export default function CamerePage() {
       <section className="py-10 bg-gradient-to-b from-background to-[#c9a84c]/5 overflow-hidden">
         <div className="container mx-auto px-4">
           <Card className={`p-6 shadow-xl border-2 ${greenBorder} bg-white/60 dark:bg-black/20 max-w-6xl mx-auto`}>
-            <div className="text-center mb-6">
-              <h2 className={`font-cinzel text-2xl sm:text-3xl font-bold ${greenText}`}>
-                Casa vacanze — Intero alloggio
-              </h2>
-              <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-3xl mx-auto">
-                {HOME.description}
-              </p>
-            </div>
-
             {/* disponibilità */}
             <div className={`mb-6 p-4 rounded-2xl border ${greenBorder} bg-[#c9a84c]/5 flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
               <div>
