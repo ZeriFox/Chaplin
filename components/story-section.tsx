@@ -68,10 +68,10 @@ export function StorySection() {
   ]
 
   const galleryImages = [
-    { src: "/images/1.jpg", alt: "Interno suite" },
-    { src: "/images/2.jpg", alt: "Suite" },
-    { src: "/images/pool.jpg", alt: "Piscina privata" },
-    { src: "/images/spa1.jpg", alt: "Spa e wellness" },
+    { src: "/images/viterbo-palazzo-papi.jpeg", alt: "Palazzo dei Papi di Viterbo" },
+    { src: "/images/viterbo-macchina-santa-rosa.jpeg", alt: "Macchina di Santa Rosa a Viterbo" },
+    { src: "/images/viterbo-quartiere-medievale.jpeg", alt: "Quartiere medievale di Viterbo" },
+    { src: "/images/viterbo-piazza-plebiscito.jpeg", alt: "Piazza del Plebiscito a Viterbo" },
   ]
 
   return (
