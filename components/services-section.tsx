@@ -79,7 +79,7 @@ export function ServicesSection() {
   const content = sectionContent[language] || sectionContent.it
 
   const images = [
-    { src: "/chaplin/0053.JPG", alt: "Interno suite" },
+    { src: "/images/chaplin-camera-matrimoniale.jpeg", alt: "Camera matrimoniale della suite" },
     { src: "/images/spa1.jpg", alt: "Vasca idromassaggio" },
     { src: "/images/room-1.jpg", alt: "Zona notte suite" },
   ]
