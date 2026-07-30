@@ -38,10 +38,6 @@ export const metadata: Metadata = {
   description:
     "Experience authentic Italian hospitality at CHAPLIN Luxury Holiday House bed & breakfast in the Viterbo, Italia",
   generator: "next.js",
-  icons: {
-    icon: "/images/chaplin-logo.png",
-    apple: "/images/chaplin-logo.png",
-  },
   metadataBase: new URL("https://chaplinhome.vercel.app/"),
   openGraph: {
     title: "CHAPLIN Luxury Holiday House",
