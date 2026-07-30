@@ -98,6 +98,7 @@ export function ServicesGrid() {
         rating: 0,
         reviews: 0,
         available: true,
+        popular: true,
       },
     ],
     [],
@@ -159,7 +160,13 @@ export function ServicesGrid() {
                   </Badge>
 
                   {service.popular && (
-                    <Badge className="bg-gradient-to-r from-[#c9a84c] to-[#d4af37] text-white text-sm font-medium">
+                    <Badge
+                      className={
+                        service.id === 7
+                          ? "border border-white/20 bg-[#1a1a1a]/90 text-white text-sm font-medium backdrop-blur-sm"
+                          : "bg-gradient-to-r from-[#c9a84c] to-[#d4af37] text-white text-sm font-medium"
+                      }
+                    >
                       <Sparkles className="w-3.5 h-3.5 mr-1" /> {service.id === 1 ? "Incluso" : "Consigliato"}
                     </Badge>
                   )}
