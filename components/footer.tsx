@@ -5,17 +5,6 @@ import Image from "next/image"
 import { MapPin, Phone, Mail, Facebook, Instagram, Clock, MessageCircle } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 
-const NexiIcon = (props: any) => (
-  <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <rect width="48" height="32" rx="4" fill="white" />
-    <rect x="7" y="8" width="8" height="8" rx="2" fill="#4753C7" />
-    <rect x="11" y="12" width="8" height="8" rx="2" fill="#00A9E0" fillOpacity=".9" />
-    <text x="33" y="20" fill="#232F6B" fontSize="12" fontWeight="700" fontFamily="Arial, sans-serif" textAnchor="middle">
-      nexi
-    </text>
-  </svg>
-)
-
 const BankTransferIcon = (props: any) => (
   <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" {...props}>
     <rect width="48" height="32" rx="4" fill="white" />
@@ -196,7 +185,13 @@ export function Footer() {
                 aria-label="Nexi"
                 title="Nexi"
               >
-                <NexiIcon className="h-full w-full" />
+                <Image
+                  src="/images/nexi-pay-logo.png"
+                  alt="Nexi Pay"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded object-contain"
+                />
               </div>
               <div className="h-10 w-16 flex items-center justify-center hover:scale-105 transition-transform">
                 <VisaIcon className="h-full w-full" />
