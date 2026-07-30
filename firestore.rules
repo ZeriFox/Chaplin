@@ -7,7 +7,14 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read: if isUser(uid) || isAdmin();
-      allow write: if isUser(uid) || isAdmin(); // client validates immutable email
+      allow create: if isUser(uid)
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.role == 'user';
+      allow update: if isAdmin()
+                    || (isUser(uid)
+                        && request.resource.data.uid == resource.data.uid
+                        && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
     }
 
     match /bookings/{id} {
