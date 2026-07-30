@@ -124,6 +124,8 @@ export default function CamerePage() {
 
   { src: "/chaplin/0081.JPG", alt: "Interni luxury" },
   { src: "/chaplin/0083.JPG", alt: "Finale gallery" },
+  { src: "/images/chaplin-kit-cortesia.jpeg", alt: "Kit di cortesia" },
+  { src: "/images/chaplin-lavabo.jpeg", alt: "Lavabo e prodotti di cortesia" },
   ]
 
   const [galleryOpen, setGalleryOpen] = useState(false)
