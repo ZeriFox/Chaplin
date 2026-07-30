@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
-import { FieldValue } from "firebase-admin/firestore"
 import { Resend } from "resend"
-import { getAdminDb } from "@/lib/firebase-admin"
 
 export const dynamic = "force-dynamic"
 
@@ -9,6 +7,7 @@ const STRUCTURE_EMAIL = "chaplinviterbo@gmail.com"
 const MAX_TEXT_LENGTH = 2_000
 
 type BookingRequestBody = {
+  bookingId?: string
   email?: string
   firstName?: string
   lastName?: string
@@ -76,6 +75,7 @@ export async function POST(request: Request) {
     }
 
     const body = (await request.json()) as BookingRequestBody
+    const bookingId = cleanText(body.bookingId, 100)
     const firstName = cleanText(body.firstName)
     const lastName = cleanText(body.lastName)
     const email = cleanText(body.email).toLowerCase()
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     const serviceFee = Math.max(0, Math.round(Number(body.serviceFee) || 0))
     const totalAmount = Math.max(0, Math.round(Number(body.totalAmount) || 0))
 
-    if (!firstName || !lastName || !email || !checkIn || !checkOut || !roomId || !roomType) {
+    if (!bookingId || !firstName || !lastName || !email || !checkIn || !checkOut || !roomId || !roomType) {
       return NextResponse.json({ error: "Compila tutti i campi obbligatori" }, { status: 400 })
     }
 
@@ -115,48 +115,6 @@ export async function POST(request: Request) {
     }
 
     const nights = calculatedNights
-    const db = getAdminDb()
-    const bookingRef = db.collection("bookings").doc()
-    const bookingId = bookingRef.id
-
-    const bookingData = {
-      bookingId,
-      email,
-      firstName,
-      lastName,
-      phone,
-      checkIn,
-      checkOut,
-      guests,
-      children,
-      roomType,
-      roomName,
-      roomId,
-      nights,
-      pricePerNight,
-      subtotal,
-      taxes,
-      serviceFee,
-      totalAmount,
-      specialRequests,
-      notes: specialRequests,
-      currency: "EUR",
-      status: "pending",
-      origin: "site",
-      paymentProvider: null,
-      paymentId: null,
-      paymentRequired: false,
-      paidAt: null,
-      emailDelivery: {
-        customer: "pending",
-        structure: "pending",
-      },
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    }
-
-    await bookingRef.set(bookingData)
-
     const safeBookingId = escapeHtml(bookingId)
     const safeName = `${escapeHtml(firstName)} ${escapeHtml(lastName)}`
     const safeEmail = escapeHtml(email)
@@ -239,15 +197,6 @@ export async function POST(request: Request) {
       customerResult.status === "fulfilled" && !customerResult.value.error
     const structureDelivered =
       structureResult.status === "fulfilled" && !structureResult.value.error
-
-    await bookingRef.update({
-      emailDelivery: {
-        customer: customerDelivered ? "sent" : "failed",
-        structure: structureDelivered ? "sent" : "failed",
-      },
-      emailSentAt: customerDelivered && structureDelivered ? FieldValue.serverTimestamp() : null,
-      updatedAt: FieldValue.serverTimestamp(),
-    })
 
     if (!customerDelivered || !structureDelivered) {
       console.error("[Booking Request] Email delivery failed", {
