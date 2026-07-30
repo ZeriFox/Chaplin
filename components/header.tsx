@@ -36,7 +36,7 @@ export function Header() {
       <Link href="/" className="flex items-center gap-2 group shrink-0">
   <div className="relative h-10 w-28 sm:h-12 sm:w-36 md:h-14 md:w-44">
     <Image
-      src="/images/chaplin-logo.png"
+      src="/images/chaplin-logo-readable.png"
       alt="Chaplin Luxury Holiday House"
       fill
       className="object-contain"

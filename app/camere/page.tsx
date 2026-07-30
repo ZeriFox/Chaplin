@@ -63,7 +63,7 @@ export default function CamerePage() {
       size: 57,
       priceLabel: "Prezzo variabile (verifica disponibilità)",
       description:
-        "Splendida casa vacanze nel centro di Viterbo, a pochi passi dal cuore storico. Alloggio con area benessere e piscina, WiFi gratuito e cucina completa. Ideale per coppie che cercano relax, privacy e una posizione comoda per visitare Viterbo e i dintorni.",
+        "Suite con area SPA interna esclusiva, WiFi gratuito e cucina completa. Ideale per coppie che cercano relax, privacy e una posizione comoda per visitare Viterbo e i dintorni.",
       chips: [
         "Intero alloggio tutto per te",
         "57 m²",
