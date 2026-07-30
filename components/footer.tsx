@@ -228,7 +228,7 @@ export function Footer() {
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-background/80">
               <div className="flex flex-col items-center md:items-start text-center md:text-left">
                 <p className="flex items-center gap-2">
-                  <span>© COPYRIGHT 2025</span>
+                  <span>© COPYRIGHT 2026</span>
                   <Link
                     href="/admin"
                     className="inline-flex items-center opacity-30 hover:opacity-100 transition-opacity"
