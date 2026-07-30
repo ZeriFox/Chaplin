@@ -24,7 +24,7 @@ type Service = {
   draft?: boolean
 }
 
-const WHATSAPP_PHONE = "+393517196320" // <-- METTI QUI IL NUMERO DELLA STRUTTURA (formato internazionale, senza +)
+const WHATSAPP_PHONE = "393517196320"
 
 function openWhatsApp(service: Service) {
   const text = [

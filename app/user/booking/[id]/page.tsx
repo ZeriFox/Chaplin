@@ -161,7 +161,7 @@ export default function BookingDetailPage() {
     return "/images/room-1.jpg"
   }
 
-  const CONTACT_PHONE = "+39 375 701 7689"
+  const CONTACT_PHONE = "+39 351 719 6320"
   const CONTACT_EMAIL = "info@AL22Suite&SPALUXURYEXPERIENCE.it"
 
   if (loading) {
@@ -519,7 +519,7 @@ export default function BookingDetailPage() {
                   <Button
                     variant="outline"
                     className="w-full bg-transparent"
-                    onClick={() => window.open(`https://wa.me/${CONTACT_PHONE.replace(/\s/g, "")}`, "_blank")}
+                    onClick={() => window.open(`https://wa.me/${CONTACT_PHONE.replace(/\D/g, "")}`, "_blank")}
                   >
                     {t("sendMessage")}
                   </Button>
