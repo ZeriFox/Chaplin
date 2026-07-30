@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { CalendarIcon, Users, MapPin, Clock, AlertCircle } from "lucide-react"
+import { CalendarIcon, Users, MapPin, Clock, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
-import { createBooking, type BookingPayload, getAllRooms } from "@/lib/firebase"
+import { getAllRooms } from "@/lib/firebase"
 import { checkRoomAvailability } from "@/lib/booking-utils"
 import {
   AlertDialog,
@@ -47,7 +47,6 @@ const AVAILABLE_SERVICES = [
 
 export default function PrenotaPage() {
   const router = useRouter()
-  const search = useSearchParams()
   const { language, t } = useLanguage()
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation()
 
@@ -69,13 +68,14 @@ export default function PrenotaPage() {
   // ---- Date range (unico comando) ----
   const [range, setRange] = useState<DateRange | undefined>(undefined)
 
-  // ---- Pagamenti / UI ----
+  // ---- Invio richiesta / UI ----
   const [showErrorModal, setShowErrorModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [submittedBookingId, setSubmittedBookingId] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false)
   const [availabilityStatus, setAvailabilityStatus] = useState<{ available: boolean; message: string } | null>(null)
-
-  const hasError = search.get("error") === "payment_failed"
 
   // Utils
   const toInputDate = (d: Date) => {
@@ -106,16 +106,6 @@ export default function PrenotaPage() {
     }
     fetchPrices()
   }, [])
-
-  // ---- Payment error da QS ----
-  useEffect(() => {
-    if (hasError) {
-      setErrorMessage(
-        t("bookingErrorDescription") || "Si è verificato un problema con la transazione. Riprova tra 5 minuti.",
-      )
-      setShowErrorModal(true)
-    }
-  }, [hasError, t])
 
   // ---- Sync calendar -> form ----
   useEffect(() => {
@@ -212,45 +202,55 @@ export default function PrenotaPage() {
       return
     }
 
-    handleProceedToCheckout()
+    await submitBookingRequest()
   }
 
-  const handleProceedToCheckout = async () => {
-    proceedToPayment()
-  }
-
-  const proceedToPayment = async () => {
-    const payload: BookingPayload = {
-      checkIn: formData.checkIn,
-      checkOut: formData.checkOut,
-      guests: Number(formData.guests || "1"),
-      children: Number(formData.children || "0"),
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      notes: formData.specialRequests,
-      pricePerNight: basePrice,
-      totalAmount: Math.round(total * 100),
-      currency: "EUR",
-      status: "pending",
-      origin: "site",
-      roomId: ROOM_IDS[formData.roomType],
-      roomName: ROOM_NAMES[formData.roomType],
-    }
-
+  const submitBookingRequest = async () => {
+    setIsSubmitting(true)
     try {
-      const bookingId = await createBooking(payload)
-      const qs = new URLSearchParams({ bookingId, method: "stripe" }).toString()
-      router.push(`/checkout?${qs}`)
-    } catch (err) {
-      console.error("[booking] Create booking error:", err)
-      setErrorMessage(t("bookingErrorDescription") || "Si è verificato un problema con la prenotazione.")
+      const response = await fetch("/api/bookings/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          checkIn: formData.checkIn,
+          checkOut: formData.checkOut,
+          guests: adults,
+          children,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          specialRequests: formData.specialRequests,
+          nights,
+          pricePerNight: basePrice,
+          subtotal: Math.round(total * 100),
+          taxes: 0,
+          serviceFee: 0,
+          totalAmount: Math.round(total * 100),
+          roomType: formData.roomType,
+          roomId: ROOM_IDS[formData.roomType],
+          roomName: ROOM_NAMES[formData.roomType],
+        }),
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        const requestCode = result.bookingId ? ` Codice richiesta: ${result.bookingId}.` : ""
+        throw new Error(`${result.error || "Impossibile inviare la richiesta."}${requestCode}`)
+      }
+
+      setSubmittedBookingId(result.bookingId)
+      setShowSuccessModal(true)
+    } catch (error) {
+      console.error("[booking] Request error:", error)
+      setErrorMessage(error instanceof Error ? error.message : "Si è verificato un problema con la prenotazione.")
       setShowErrorModal(true)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
@@ -410,10 +410,17 @@ export default function PrenotaPage() {
                   <Button
                     type="submit"
                     className="w-full text-lg py-6"
-                    disabled={!availabilityStatus?.available || isCheckingAvailability}
+                    disabled={!availabilityStatus?.available || isCheckingAvailability || isSubmitting}
                     onClick={handleSubmit}
                   >
-                    {t("bookingConfirmButton") || "Conferma Prenotazione"}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Invio in corso...
+                      </>
+                    ) : (
+                      "Invia richiesta di prenotazione"
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -478,13 +485,37 @@ export default function PrenotaPage() {
         <AlertDialog open={showErrorModal} onOpenChange={setShowErrorModal}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>{t("bookingErrorTitle") || "Errore nel pagamento"}</AlertDialogTitle>
+              <AlertDialogTitle>Errore nella prenotazione</AlertDialogTitle>
               <AlertDialogDescription>{errorMessage}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogAction onClick={() => setShowErrorModal(false)}>
                 {t("bookingErrorOkButton") || "Ok"}
               </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <div className="mb-2 flex justify-center">
+                <CheckCircle2 className="h-12 w-12 text-primary" />
+              </div>
+              <AlertDialogTitle className="text-center">Richiesta inviata</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3 text-center">
+                <span className="block">
+                  Abbiamo inviato il riepilogo a <strong>{formData.email}</strong>. La struttura ti contatterà per
+                  confermare disponibilità e dettagli.
+                </span>
+                <span className="block font-medium text-foreground">Nessun pagamento è stato effettuato.</span>
+                {submittedBookingId && (
+                  <span className="block text-xs">Codice richiesta: {submittedBookingId}</span>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => router.push("/")}>Torna alla home</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
