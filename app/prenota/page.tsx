@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { CalendarIcon, Users, MapPin, Clock, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
-import { getAllRooms } from "@/lib/firebase"
+import { createBooking, type BookingPayload, getAllRooms } from "@/lib/firebase"
 import { checkRoomAvailability } from "@/lib/booking-utils"
 import {
   AlertDialog,
@@ -208,10 +208,31 @@ export default function PrenotaPage() {
   const submitBookingRequest = async () => {
     setIsSubmitting(true)
     try {
+      const bookingPayload: BookingPayload = {
+        checkIn: formData.checkIn,
+        checkOut: formData.checkOut,
+        guests: adults,
+        numberOfChildren: children,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        notes: formData.specialRequests,
+        pricePerNight: basePrice,
+        totalAmount: Math.round(total * 100),
+        currency: "EUR",
+        status: "pending",
+        origin: "site",
+        roomId: ROOM_IDS[formData.roomType],
+        roomName: ROOM_NAMES[formData.roomType],
+      }
+      const bookingId = await createBooking(bookingPayload)
+
       const response = await fetch("/api/bookings/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          bookingId,
           checkIn: formData.checkIn,
           checkOut: formData.checkOut,
           guests: adults,
@@ -235,11 +256,11 @@ export default function PrenotaPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        const requestCode = result.bookingId ? ` Codice richiesta: ${result.bookingId}.` : ""
+        const requestCode = result.bookingId ? ` Codice richiesta: ${result.bookingId}.` : ` Codice richiesta: ${bookingId}.`
         throw new Error(`${result.error || "Impossibile inviare la richiesta."}${requestCode}`)
       }
 
-      setSubmittedBookingId(result.bookingId)
+      setSubmittedBookingId(bookingId)
       setShowSuccessModal(true)
     } catch (error) {
       console.error("[booking] Request error:", error)
