@@ -1,70 +1,179 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 
-// Lazy Resend init - wrapped in closure to avoid build-time evaluation
+export const runtime = "nodejs"
+
+const RECIPIENT_EMAIL = "chaplinviterbo@gmail.com"
+
 const getResend = (() => {
   let instance: Resend | null = null
-  return (): Resend | null => {
+
+  return () => {
     if (!instance && process.env.RESEND_API_KEY) {
       instance = new Resend(process.env.RESEND_API_KEY)
     }
+
     return instance
   }
 })()
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;")
+}
+
+function asText(value: unknown, maxLength: number) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : ""
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { bookingId, message, userEmail, userName } = body
+    const name = asText(body.name, 120)
+    const email = asText(body.email, 254).toLowerCase()
+    const subject = asText(body.subject, 160).replace(/[\r\n]+/g, " ")
+    const message = asText(body.message, 5000)
+    const website = asText(body.website, 200)
 
-    if (!bookingId || !message || !userEmail) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    // Campo invisibile anti-spam: per i bot la richiesta risulta completata senza inviare email.
+    if (website) {
+      return NextResponse.json({ success: true })
+    }
+
+    if (!name || !email || !subject || !message) {
+      return NextResponse.json({ error: "Compila tutti i campi richiesti." }, { status: 400 })
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Inserisci un indirizzo email valido." }, { status: 400 })
     }
 
     const resend = getResend()
+
     if (!resend) {
-      return NextResponse.json({ error: "Email service not configured" }, { status: 500 })
+      return NextResponse.json(
+        { error: "Il servizio email non è ancora configurato. Riprova più tardi." },
+        { status: 503 },
+      )
     }
 
-    const structureEmail = "progettocale@gmail.com"
+    const safeName = escapeHtml(name)
+    const safeEmail = escapeHtml(email)
+    const safeSubject = escapeHtml(subject)
+    const safeMessage = escapeHtml(message).replace(/\n/g, "<br />")
+    const receivedAt = new Intl.DateTimeFormat("it-IT", {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: "Europe/Rome",
+    }).format(new Date())
 
-    // Send email to structure
-    await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "noreply@al22suite.com",
-      to: structureEmail,
-      replyTo: userEmail,
-      subject: `Messaggio da ${userName} - Prenotazione ${bookingId.slice(0, 12).toUpperCase()}`,
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "Chaplin Luxury Holiday House <onboarding@resend.dev>",
+      to: [RECIPIENT_EMAIL],
+      replyTo: email,
+      subject: `[Sito Chaplin] ${subject}`,
+      text: [
+        "Nuovo messaggio dal sito CHAPLIN Luxury Holiday House",
+        "",
+        `Nome: ${name}`,
+        `Email: ${email}`,
+        `Oggetto: ${subject}`,
+        `Ricevuto: ${receivedAt}`,
+        "",
+        "Messaggio:",
+        message,
+      ].join("\n"),
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #8B4513;">Nuovo messaggio da un ospite</h2>
-          
-          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Da:</strong> ${userName}</p>
-            <p><strong>Email:</strong> ${userEmail}</p>
-            <p><strong>ID Prenotazione:</strong> ${bookingId.slice(0, 12).toUpperCase()}</p>
-          </div>
-
-          <div style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-            <p><strong>Messaggio:</strong></p>
-            <p style="white-space: pre-wrap;">${message}</p>
-          </div>
-
-          <p style="color: #666; font-size: 12px; margin-top: 20px;">
-            Puoi rispondere direttamente a questa email per contattare l'ospite.
-          </p>
-        </div>
+        <!doctype html>
+        <html lang="it">
+          <body style="margin:0;padding:0;background:#f3f1eb;font-family:Arial,Helvetica,sans-serif;color:#24231f;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f1eb;padding:32px 12px;">
+              <tr>
+                <td align="center">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e4dcc5;box-shadow:0 10px 30px rgba(35,31,22,.08);">
+                    <tr>
+                      <td style="padding:32px;background:#1b1a17;text-align:center;">
+                        <div style="font-family:Georgia,'Times New Roman',serif;font-size:32px;font-style:italic;color:#ffffff;letter-spacing:.5px;">
+                          Chaplin
+                        </div>
+                        <div style="margin-top:7px;font-size:11px;color:#d5b65a;letter-spacing:2.4px;text-transform:uppercase;">
+                          Luxury Holiday House
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:34px 34px 18px;">
+                        <div style="font-size:12px;font-weight:700;color:#b18c32;letter-spacing:1.6px;text-transform:uppercase;">
+                          Nuovo messaggio dal sito
+                        </div>
+                        <h1 style="margin:10px 0 8px;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.25;color:#24231f;">
+                          ${safeSubject}
+                        </h1>
+                        <p style="margin:0;color:#777168;font-size:13px;">Ricevuto il ${receivedAt}</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:10px 34px 0;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8f6f0;border:1px solid #ebe3cf;border-radius:12px;">
+                          <tr>
+                            <td style="padding:18px 20px;border-bottom:1px solid #ebe3cf;">
+                              <div style="font-size:11px;color:#9a803e;text-transform:uppercase;letter-spacing:1px;">Nome</div>
+                              <div style="margin-top:5px;font-size:16px;font-weight:700;color:#24231f;">${safeName}</div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding:18px 20px;">
+                              <div style="font-size:11px;color:#9a803e;text-transform:uppercase;letter-spacing:1px;">Email</div>
+                              <div style="margin-top:5px;font-size:16px;">
+                                <a href="mailto:${safeEmail}" style="color:#24231f;text-decoration:none;">${safeEmail}</a>
+                              </div>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:24px 34px 8px;">
+                        <div style="font-size:11px;color:#9a803e;text-transform:uppercase;letter-spacing:1px;">Messaggio</div>
+                        <div style="margin-top:10px;padding:20px;background:#ffffff;border-left:3px solid #c9a84c;font-size:16px;line-height:1.7;color:#3d3932;">
+                          ${safeMessage}
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:24px 34px 36px;text-align:center;">
+                        <a href="mailto:${safeEmail}?subject=${encodeURIComponent(`Re: ${subject}`)}"
+                           style="display:inline-block;padding:13px 24px;background:#c9a84c;color:#1b1a17;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">
+                          Rispondi a ${safeName}
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:18px 28px;background:#f8f6f0;text-align:center;color:#8a8479;font-size:11px;line-height:1.5;">
+                        Messaggio inviato dal modulo contatti di CHAPLIN Luxury Holiday House.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
       `,
     })
 
-    console.log("[API] Contact message sent successfully")
+    if (result.error) {
+      console.error("[Contact form] Resend error:", result.error)
+      return NextResponse.json({ error: "Non è stato possibile inviare il messaggio. Riprova." }, { status: 502 })
+    }
 
-    return NextResponse.json({
-      success: true,
-      message: "Message sent successfully",
-    })
-  } catch (error: any) {
-    console.error("[API] Error sending contact message:", error)
-    return NextResponse.json({ error: error.message || "Failed to send message" }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[Contact form] Unexpected error:", error)
+    return NextResponse.json({ error: "Si è verificato un errore durante l’invio." }, { status: 500 })
   }
 }
-

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Mail, Phone, MapPin, Clock, Heart, Users, Award, Send } from "lucide-react"
+import { AlertCircle, Award, CheckCircle2, Clock, Heart, Loader2, Mail, MapPin, Phone, Send, Users } from "lucide-react"
 
 const CONTACT_INFO = {
   name: "CHAPLIN Luxury Holiday House",
@@ -30,14 +30,48 @@ export default function ContactsPage() {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [notRobot, setNotRobot] = useState(false)
   const [emailButtonClicked, setEmailButtonClicked] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+  const [submitMessage, setSubmitMessage] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const submittedForm = new FormData(e.currentTarget)
+
     if (!notRobot) {
       alert("Per favore conferma di non essere un robot")
       return
     }
-    console.log("Contact form submitted:", formData)
+
+    setIsSubmitting(true)
+    setSubmitStatus("idle")
+    setSubmitMessage("")
+
+    try {
+      const response = await fetch("/api/contact-structure", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          website: submittedForm.get("website"),
+        }),
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Non è stato possibile inviare il messaggio.")
+      }
+
+      setFormData({ name: "", email: "", subject: "", message: "" })
+      setNotRobot(false)
+      setSubmitStatus("success")
+      setSubmitMessage("Messaggio inviato correttamente. Ti risponderemo entro 24 ore.")
+    } catch (error) {
+      setSubmitStatus("error")
+      setSubmitMessage(error instanceof Error ? error.message : "Non è stato possibile inviare il messaggio.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleEmailClick = useCallback(() => {
@@ -194,6 +228,7 @@ export default function ContactsPage() {
                           name="name"
                           value={formData.name}
                           onChange={handleInputChange}
+                          maxLength={120}
                           required
                           className="mt-1 focus-visible:ring-[#c9a84c]"
                         />
@@ -209,6 +244,7 @@ export default function ContactsPage() {
                           type="email"
                           value={formData.email}
                           onChange={handleInputChange}
+                          maxLength={254}
                           required
                           className="mt-1 focus-visible:ring-[#c9a84c]"
                         />
@@ -223,6 +259,7 @@ export default function ContactsPage() {
                           name="subject"
                           value={formData.subject}
                           onChange={handleInputChange}
+                          maxLength={160}
                           required
                           className="mt-1 focus-visible:ring-[#c9a84c]"
                         />
@@ -240,9 +277,19 @@ export default function ContactsPage() {
                           placeholder="Scrivi il tuo messaggio..."
                           className="mt-1 focus-visible:ring-[#c9a84c]"
                           rows={4}
+                          maxLength={5000}
                           required
                         />
                       </div>
+
+                      <input
+                        type="text"
+                        name="website"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        className="sr-only"
+                        aria-hidden="true"
+                      />
 
                       <div className="md:col-span-2 flex items-center gap-2">
                         <Checkbox 
@@ -259,12 +306,38 @@ export default function ContactsPage() {
                       <div className="md:col-span-2">
                         <Button 
                           type="submit" 
-                          disabled={!notRobot}
+                          disabled={!notRobot || isSubmitting}
                           className="w-full py-5 bg-[#1a1a1a] hover:bg-[#333] text-[#f5f5f0] disabled:opacity-50"
                         >
-                          Invia
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Invio in corso...
+                            </>
+                          ) : (
+                            "Invia"
+                          )}
                         </Button>
                       </div>
+
+                      {submitStatus !== "idle" && (
+                        <div
+                          className={`md:col-span-2 flex items-start gap-2 rounded-lg border p-3 text-sm ${
+                            submitStatus === "success"
+                              ? "border-green-200 bg-green-50 text-green-800"
+                              : "border-red-200 bg-red-50 text-red-800"
+                          }`}
+                          role="status"
+                          aria-live="polite"
+                        >
+                          {submitStatus === "success" ? (
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                          ) : (
+                            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                          )}
+                          <span>{submitMessage}</span>
+                        </div>
+                      )}
                     </form>
                   </CardContent>
                 </Card>
