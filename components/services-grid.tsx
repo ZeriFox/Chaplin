@@ -82,8 +82,9 @@ export function ServicesGrid() {
       {
         id: 7,
         category: "Esperienze",
-        name: "Nuovo servizio",
-        description: "Titolo e descrizione in aggiornamento.",
+        name: "Pacchetto silver SPA",
+        description:
+          "Frutta fresca coreografica con bottiglia a scelta serviti a bordo vasca. Consigliato per anniversari o compleanni.",
         image: "/images/service-mosaic-vino-giallo.jpeg",
         mosaicImages: [
           "/images/service-mosaic-vino-giallo.jpeg",
@@ -92,12 +93,11 @@ export function ServicesGrid() {
           "/images/service-mosaic-vino-rosa.jpeg",
         ],
         duration: "",
-        price: 0,
+        price: 59,
         capacity: 2,
         rating: 0,
         reviews: 0,
-        available: false,
-        draft: true,
+        available: true,
       },
     ],
     [],
@@ -214,7 +214,7 @@ export function ServicesGrid() {
                     {service.name}
                   </h3>
 
-                  {!service.draft && (
+                  {!service.draft && service.rating > 0 && (
                     <div className="flex items-center gap-1 ml-3 bg-[#c9a84c]/10 px-2 py-1 rounded-full border border-[#c9a84c]/20">
                       <Star className="w-4 h-4 fill-[#c9a84c] text-[#c9a84c]" />
                       <span className="text-sm font-bold">{service.rating}</span>
@@ -233,7 +233,7 @@ export function ServicesGrid() {
                 )}
 
                 {/* Reviews */}
-                {!service.draft && (
+                {!service.draft && service.reviews > 0 && (
                   <div className="text-xs text-muted-foreground mb-4">
                     {service.reviews} recensioni • Valutazione media {service.rating}/5
                   </div>
@@ -282,3 +282,4 @@ export function ServicesGrid() {
     </section>
   )
 }
+
