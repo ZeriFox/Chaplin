@@ -16,16 +16,6 @@ const NexiIcon = (props: any) => (
   </svg>
 )
 
-const PostepayIcon = (props: any) => (
-  <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <rect width="48" height="32" rx="4" fill="#173F8A" />
-    <rect y="5" width="48" height="4" fill="#F6C900" />
-    <text x="24" y="21" fill="white" fontSize="9" fontWeight="700" fontFamily="Arial, sans-serif" textAnchor="middle">
-      POSTEPAY
-    </text>
-  </svg>
-)
-
 const BankTransferIcon = (props: any) => (
   <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" {...props}>
     <rect width="48" height="32" rx="4" fill="white" />
@@ -70,44 +60,6 @@ const PayPalIcon = (props: any) => (
         fill="#00A4E0"
       />
     </g>
-  </svg>
-)
-
-const GooglePayIcon = (props: any) => (
-  <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <rect width="48" height="32" rx="4" fill="white" />
-    {/* Google G logo */}
-    <path
-      d="M16 11v2.4h3.97c-.16 1.03-1.2 3.02-3.97 3.02-2.39 0-4.34-1.98-4.34-4.42s1.95-4.42 4.34-4.42c1.36 0 2.27.58 2.79 1.08l1.9-1.83C19.47 5.69 17.89 5 16 5c-3.87 0-7 3.13-7 7s3.13 7 7 7c4.04 0 6.72-2.84 6.72-6.84 0-.46-.05-.81-.11-1.16H16z"
-      fill="#4285F4"
-    />
-    <path
-      d="M16 19c1.89 0 3.47-.69 4.69-1.87l-1.9-1.83c-.52.5-1.43 1.08-2.79 1.08-2.77 0-3.81-1.99-3.97-3.02H8.66c.63 2.37 2.59 4.64 7.34 4.64z"
-      fill="#34A853"
-    />
-    <path
-      d="M12.03 13.38c-.08-.24-.13-.5-.13-.76s.05-.52.13-.76V8.64H8.66c-.42.83-.66 1.77-.66 2.76s.24 1.93.66 2.76l3.37-2.78z"
-      fill="#FBBC04"
-    />
-    <path
-      d="M16 7.58c1.36 0 2.27.58 2.79 1.08l1.9-1.83C19.47 5.69 17.89 5 16 5c-4.75 0-6.71 2.27-7.34 4.64l3.37 2.78c.16-1.03 1.2-3.02 3.97-3.02z"
-      fill="#EA4335"
-    />
-    {/* Pay text */}
-    <text x="28" y="18" fill="#5F6368" fontSize="9" fontWeight="500" fontFamily="Arial, sans-serif">
-      Pay
-    </text>
-  </svg>
-)
-
-const ApplePayIcon = (props: any) => (
-  <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <rect width="48" height="32" rx="4" fill="white" />
-    {/* Apple logo */}
-    <path
-      d="M15.5 10.5c-.3.4-.8.7-1.3.6-.1-.5.1-1 .4-1.3.3-.4.8-.7 1.2-.7.1.5 0 1-.3 1.4zm.3.5c-.7 0-1.2.4-1.5.4s-.8-.4-1.4-.4c-.7 0-1.4.4-1.7 1-.8 1.3-.2 3.3.5 4.4.4.5.8 1.1 1.4 1.1s.8-.4 1.3-.4.8.4 1.4.4 1-.5 1.3-1.1c.4-.6.6-1.1.6-1.2 0 0-1.2-.5-1.2-1.8s1-1.6 1-1.7c-.5-.8-1.3-.8-1.6-.8zm4.7-.3v7.8h1.2v-2.7h1.7c1.5 0 2.6-1 2.6-2.5s-1-2.6-2.5-2.6h-2.9zm1.2 1h1.5c1 0 1.6.5 1.6 1.5s-.6 1.6-1.6 1.6h-1.5v-3.1zm5.8 6.8c.8 0 1.5-.4 1.8-1h0v.9h1.1v-4.2c0-1.2-1-2-2.5-2-1.4 0-2.4.8-2.5 1.9h1.1c.1-.5.6-.9 1.3-.9.9 0 1.4.4 1.4 1.1v.5l-1.8.1c-1.7.1-2.6.8-2.6 1.9 0 1.2.9 1.9 2.2 1.9zm.3-.9c-.8 0-1.3-.4-1.3-1s.5-1 1.4-1l1.7-.1v.5c0 .9-.7 1.5-1.8 1.5zm4.5 3.4c1.2 0 1.8-.5 2.3-1.9l2.2-6.2h-1.2l-1.5 5h0l-1.5-5h-1.3l2.1 5.9-.1.3c-.2.6-.5.8-1 .8-.1 0-.3 0-.4 0v1c.1 0 .3 0 .4 0z"
-      fill="#000"
-    />
   </svg>
 )
 
@@ -255,18 +207,16 @@ export function Footer() {
               <div className="h-10 w-16 flex items-center justify-center hover:scale-105 transition-transform">
                 <PayPalIcon className="h-full w-full" />
               </div>
-              <div className="h-10 w-16 flex items-center justify-center bg-white rounded-md p-1.5 hover:scale-105 transition-transform">
-                <GooglePayIcon className="h-full w-full" />
-              </div>
-              <div className="h-10 w-16 flex items-center justify-center hover:scale-105 transition-transform">
-                <ApplePayIcon className="h-full w-full" />
-              </div>
               <div
-                className="h-10 w-16 flex items-center justify-center hover:scale-105 transition-transform"
+                className="h-10 w-24 flex items-center justify-center rounded-md bg-white px-2 hover:scale-105 transition-transform"
                 aria-label="Postepay"
                 title="Postepay"
               >
-                <PostepayIcon className="h-full w-full" />
+                <img
+                  src="https://www.media.poste.it/115928d8-bbe0-41ff-963a-1de8efe7a784/lg/webp/logo-pp%402x"
+                  alt="Postepay"
+                  className="h-auto w-full"
+                />
               </div>
               <div
                 className="h-10 w-16 flex items-center justify-center hover:scale-105 transition-transform"
@@ -312,5 +262,6 @@ export function Footer() {
     </footer>
   )
 }
+
 
 
