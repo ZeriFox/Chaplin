@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useLanguage } from "@/components/language-provider"
+import { createBooking, type BookingPayload } from "@/lib/firebase"
 
 interface BookingModalProps {
   isOpen: boolean
@@ -87,10 +88,31 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
       const roomType = bookingData.roomId === "1" ? "deluxe" : "suite"
       const roomName =
         bookingData.roomId === "1" ? "Camera Familiare con Balcone" : "Camera Matrimoniale con Vasca Idromassaggio"
+      const bookingPayload: BookingPayload = {
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
+        guests: bookingData.guests,
+        numberOfChildren: 0,
+        firstName,
+        lastName,
+        email,
+        phone,
+        notes,
+        roomId: bookingData.roomId,
+        roomName,
+        pricePerNight: Math.round(bookingData.subtotal / bookingData.nights),
+        totalAmount: Math.round(bookingData.total * 100),
+        currency: "EUR",
+        status: "pending",
+        origin: "site",
+      }
+      const bookingId = await createBooking(bookingPayload)
+
       const response = await fetch("/api/bookings/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          bookingId,
           checkIn: bookingData.checkIn,
           checkOut: bookingData.checkOut,
           guests: bookingData.guests,
@@ -114,7 +136,7 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
       const result = await response.json()
 
       if (!response.ok) {
-        const requestCode = result.bookingId ? ` Codice richiesta: ${result.bookingId}.` : ""
+        const requestCode = result.bookingId ? ` Codice richiesta: ${result.bookingId}.` : ` Codice richiesta: ${bookingId}.`
         throw new Error(`${result.error || "Impossibile inviare la richiesta."}${requestCode}`)
       }
 
