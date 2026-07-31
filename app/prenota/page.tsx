@@ -196,7 +196,10 @@ export default function PrenotaPage() {
       setShowErrorModal(true)
       return
     }
-    if (!availabilityStatus?.available) {
+    // Only block when availability is explicitly known to be unavailable.
+    // A null status means the check hasn't run or failed (e.g. Firestore unreachable / rules),
+    // and must NOT prevent sending a booking request that staff will confirm manually.
+    if (availabilityStatus && availabilityStatus.available === false) {
       setErrorMessage(t("roomNotAvailableError") || "La camera selezionata non è disponibile in queste date.")
       setShowErrorModal(true)
       return
@@ -446,7 +449,16 @@ export default function PrenotaPage() {
                   <Button
                     type="submit"
                     className="w-full text-lg py-6"
-                    disabled={!availabilityStatus?.available || isCheckingAvailability || isSubmitting}
+                    disabled={
+                      isSubmitting ||
+                      isCheckingAvailability ||
+                      !formData.checkIn ||
+                      !formData.checkOut ||
+                      !formData.firstName.trim() ||
+                      !formData.lastName.trim() ||
+                      !formData.email.trim() ||
+                      availabilityStatus?.available === false
+                    }
                     onClick={handleSubmit}
                   >
                     {isSubmitting ? (
