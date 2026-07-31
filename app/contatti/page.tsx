@@ -1,6 +1,7 @@
 "use client"
 import type React from "react"
 import { useState, useCallback } from "react"
+import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -27,7 +28,11 @@ const getEmail = () => {
 export default function ContactsPage() {
   const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" })
   const [newsletterEmail, setNewsletterEmail] = useState("")
+  const [newsletterPhone, setNewsletterPhone] = useState("")
+  const [newsletterConsent, setNewsletterConsent] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const [newsletterSubmitting, setNewsletterSubmitting] = useState(false)
+  const [newsletterError, setNewsletterError] = useState("")
   const [notRobot, setNotRobot] = useState(false)
   const [emailButtonClicked, setEmailButtonClicked] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -87,11 +92,42 @@ export default function ContactsPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log("Newsletter subscription:", newsletterEmail)
-    setIsSubscribed(true)
-    setNewsletterEmail("")
+    const submittedForm = new FormData(e.currentTarget)
+
+    if (!newsletterConsent) {
+      setNewsletterError("Devi accettare l’informativa per iscriverti alla newsletter.")
+      return
+    }
+
+    setNewsletterSubmitting(true)
+    setNewsletterError("")
+
+    try {
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newsletterEmail,
+          phone: newsletterPhone,
+          marketingConsent: newsletterConsent,
+          website: submittedForm.get("newsletter-website"),
+        }),
+      })
+      const result = await response.json()
+
+      if (!response.ok) throw new Error(result.error || "Non è stato possibile completare l’iscrizione.")
+
+      setIsSubscribed(true)
+      setNewsletterEmail("")
+      setNewsletterPhone("")
+      setNewsletterConsent(false)
+    } catch (error) {
+      setNewsletterError(error instanceof Error ? error.message : "Non è stato possibile completare l’iscrizione.")
+    } finally {
+      setNewsletterSubmitting(false)
+    }
   }
 
   return (
@@ -361,21 +397,63 @@ export default function ContactsPage() {
                   </p>
 
                   {!isSubscribed ? (
-                    <form
-                      onSubmit={handleNewsletterSubmit}
-                      className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto"
-                    >
-                      <Input
-                        type="email"
-                        placeholder="La tua email"
-                        value={newsletterEmail}
-                        onChange={(e) => setNewsletterEmail(e.target.value)}
-                        required
-                        className="flex-1 h-10 focus-visible:ring-[#c9a84c]"
+                    <form onSubmit={handleNewsletterSubmit} className="max-w-2xl mx-auto space-y-3">
+                      <input
+                        type="text"
+                        name="newsletter-website"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        aria-hidden="true"
+                        className="hidden"
                       />
-                      <Button type="submit" size="sm" className="h-10 bg-[#1a1a1a] hover:bg-[#333] text-[#f5f5f0]">
-                        Iscriviti
-                      </Button>
+                      <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                        <Input
+                          type="email"
+                          placeholder="La tua email"
+                          value={newsletterEmail}
+                          onChange={(e) => setNewsletterEmail(e.target.value)}
+                          autoComplete="email"
+                          required
+                          className="h-10 focus-visible:ring-[#c9a84c]"
+                        />
+                        <Input
+                          type="tel"
+                          placeholder="Numero di telefono"
+                          value={newsletterPhone}
+                          onChange={(e) => setNewsletterPhone(e.target.value)}
+                          autoComplete="tel"
+                          required
+                          className="h-10 focus-visible:ring-[#c9a84c]"
+                        />
+                        <Button
+                          type="submit"
+                          size="sm"
+                          disabled={newsletterSubmitting || !newsletterConsent}
+                          className="h-10 bg-[#1a1a1a] hover:bg-[#333] text-[#f5f5f0]"
+                        >
+                          {newsletterSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Iscriviti"}
+                        </Button>
+                      </div>
+                      <div className="flex items-start justify-center gap-2 text-left text-xs text-muted-foreground">
+                        <Checkbox
+                          id="newsletter-consent"
+                          checked={newsletterConsent}
+                          onCheckedChange={(checked) => setNewsletterConsent(checked === true)}
+                          className="mt-0.5"
+                        />
+                        <Label htmlFor="newsletter-consent" className="cursor-pointer text-xs font-normal leading-relaxed">
+                          Acconsento a ricevere comunicazioni e offerte da Chaplin. Ho letto l’
+                          <Link href="/privacy" className="underline hover:text-foreground">
+                            informativa privacy
+                          </Link>
+                          .
+                        </Label>
+                      </div>
+                      {newsletterError && (
+                        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+                          {newsletterError}
+                        </p>
+                      )}
                     </form>
                   ) : (
                     <div className="bg-[#c9a84c]/10 border border-[#c9a84c]/30 rounded-lg p-3 max-w-md mx-auto">
