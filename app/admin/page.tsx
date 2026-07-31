@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, BarChart3, Home, Settings, Users, Clock, Euro, Sparkles, TestTube, ContactRound } from "lucide-react"
+import { Calendar, BarChart3, Home, Settings, Users, Clock, Euro, Sparkles, TestTube } from "lucide-react"
 import { RequireAdmin } from "@/components/route-guards"
 import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
@@ -23,7 +23,6 @@ import { BookingCalendarFiltered } from "@/components/booking-calendar-filtered"
 import { AdminSecuritySettings } from "@/components/admin-security-settings"
 import { DynamicPricingManagement } from "@/components/dynamic-pricing-management"
 import { ExtraServicesRequestsAdmin } from "@/components/extra-services-requests-admin"
-import { NewsletterContactsAdmin } from "@/components/newsletter-contacts-admin"
 import type { Booking, Room } from "@/lib/booking-utils"
 
 interface BnBSettings {
@@ -173,7 +172,7 @@ function AdminInner() {
             </Button>
           </div>
           <Tabs defaultValue="dashboard" className="space-y-4 sm:space-y-6">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 h-auto gap-1 p-1">
+            <TabsList className="grid w-full grid-cols-8 h-auto gap-1 p-1">
               <TabsTrigger value="dashboard" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -189,10 +188,6 @@ function AdminInner() {
               <TabsTrigger value="guests" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Ospiti</span>
-              </TabsTrigger>
-              <TabsTrigger value="contacts" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
-                <ContactRound className="h-4 w-4" />
-                <span className="hidden sm:inline">Contatti</span>
               </TabsTrigger>
               <TabsTrigger value="pricing" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <Euro className="h-4 w-4" />
@@ -327,9 +322,498 @@ function AdminInner() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {rooms.ãM½¶‰žËkºwµç@€€€€€€€€€€€€€€€€€€€€€€€€€€ñ	…‘”±…ÍÍ9…µ”ô‰Ñ•áÐµáÌˆûŠ
-±íˆ¹Ñ½Ñ…°ñð€¡ˆ…Ì…¹ä¤¹Ñ½Ñ…±µ½Õ¹Ðñð€ˆÀ‰ôð½	…‘”ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à™±•àµ½°Í´é™±•àµÉ½ÜÍ´é¥Ñ•µÌµ•¹Ñ•È…À´ÄÍ´é…À´ÐÑ•áÐµÍ´Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰ÑÉÕ¹…Ñ”ˆùíˆ¹É½½µ9…µ•ôð½ÍÁ…¸ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰Ñ•áÐµáÌÍ´éÑ•áÐµÍ´ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€í™½Éµ…Ñ…Ñ”¡ˆ¹¡•­%¸¥ôƒŠHí™½Éµ…Ñ…Ñ”¡ˆ¹¡•­=ÕÐ¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€¤¤4(€€€€€€€€€€€€€€€€€€€€€€¥ô4(€€€€€€€€€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø4(4(€€€€€€€€€€€€€€€€€€€€ñQ…‰Í½¹Ñ•¹ÐÙ…±Õ”ô‰Í¥Ñ”ˆ±…ÍÍ9…µ”ô‰ÍÁ…”µä´Ìˆø4(€€€€€€€€€€€€€€€€€€€€€íÍ¥Ñ•¹‘¥É•Ñ	½½­¥¹Ì¹±•¹Ñ €ôôô€À€ü€ 4(€€€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰Ñ•áÐµÍ´Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆù9•ÍÍÕ¹„ÁÉ•¹½Ñ…é¥½¹”‘…°Í¥Ñ¼Ý•ˆ¼‘¥É•ÑÑ„ð½Àø4(€€€€€€€€€€€€€€€€€€€€€€¤€è€ 4(€€€€€€€€€€€€€€€€€€€€€€€Í¥Ñ•¹‘¥É•Ñ	½½­¥¹Ì¹µ…À ¡ˆ¤€ôø€ 4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€­•äõíˆ¹¥‘ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰™±•à™±•àµ½°…À´ÈÀ´ÌÍ´éÀ´Ð‰½É‘•ÈÉ½Õ¹‘•µ±œ¡½Ù•Èé‰œµµÕÑ•¼ÌÀÑÉ…¹Í¥Ñ¥½¸µ½±½ÉÌˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à¥Ñ•µÌµÍÑ…ÉÐ©ÕÍÑ¥™äµ‰•ÑÝ••¸…À´Èˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à´Äµ¥¸µÜ´Àˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰™½¹Ðµµ•‘¥Õ´ÑÉÕ¹…Ñ”ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹Õ•ÍÑ¥ÉÍÐñð€¡ˆ…Ì…¹ä¤¹™¥ÉÍÑ9…µ”ñð€‰9½µ”¹½¸‘¥ÍÁ½¹¥‰¥±”‰õìˆ€‰ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹Õ•ÍÑ1…ÍÐñð€¡ˆ…Ì…¹ä¤¹±…ÍÑ9…µ”ñð€ˆ‰ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½Àø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰Ñ•áÐµÍ´Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ÑÉÕ¹…Ñ”ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹•µ…¥±ôƒŠˆíˆ¹Á¡½¹•ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½Àø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à…À´È™±•àµÍ¡É¥¹¬´Àˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ	…‘”±…ÍÍ9…µ”ô‰‰œµlŒå„àÑtÑ•áÐµÝ¡¥Ñ”Ñ•áÐµáÌˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹½É¥¥¸€ôôô€‰‘¥É•Ðˆ€ü€‰¥É•ÑÑ„ˆ€è€‰M¥Ñ¼]•ˆ‰ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½	…‘”ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ	…‘”±…ÍÍ9…µ”ô‰Ñ•áÐµáÌˆûŠ
-±íˆ¹Ñ½Ñ…°ñð€¡ˆ…Ì…¹ä¤¹Ñ½Ñ…±µ½Õ¹Ðñð€ˆÀ‰ôð½	…‘”ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à™±•àµ½°Í´é™±•àµÉ½ÜÍ´é¥Ñ•µÌµ•¹Ñ•È…À´ÄÍ´é…À´ÐÑ•áÐµÍ´Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰ÑÉÕ¹…Ñ”ˆùíˆ¹É½½µ9…µ•ôð½ÍÁ…¸ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰Ñ•áÐµáÌÍ´éÑ•áÐµÍ´ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€í™½Éµ…Ñ…Ñ”¡ˆ¹¡•­%¸¥ôƒŠHí™½Éµ…Ñ…Ñ”¡ˆ¹¡•­=ÕÐ¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹Í•ÉÙ¥•Ì€˜˜ˆ¹Í•ÉÙ¥•Ì¹±•¹Ñ €ø€À€˜˜€ 4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰Ñ•áÐµáÌÑ•áÐµÁÉ¥µ…Éäˆø¬íˆ¹Í•ÉÙ¥•Ì¹©½¥¸ ˆ°€ˆ¥ôð½ÍÁ…¸ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€¤¤4(€€€€€€€€€€€€€€€€€€€€€€¥ô4(€€€€€€€€€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø4(4(€€€€€€€€€€€€€€€€€€€€ñQ…‰Í½¹Ñ•¹ÐÙ…±Õ”ô‰…¹•±±•ˆ±…ÍÍ9…µ”ô‰ÍÁ…”µä´Ìˆø4(€€€€€€€€€€€€€€€€€€€€€í…¹•±±•‘	½½­¥¹Ì¹±•¹Ñ €ôôô€À€ü€ 4(€€€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰Ñ•áÐµÍ´Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆù9•ÍÍÕ¹„ÁÉ•¹½Ñ…é¥½¹”…¹•±±…Ñ„ð½Àø4(€€€€€€€€€€€€€€€€€€€€€€¤€è€ 4(€€€€€€€€€€€€€€€€€€€€€€€…¹•±±•‘	½½­¥¹Ì¹µ…À ¡ˆ¤€ôø€ 4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€­•äõíˆ¹¥‘ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰™±•à™±•àµ½°…À´ÈÀ´ÌÍ´éÀ´Ð‰½É‘•È‰½É‘•Èµ‘•ÍÑÉÕÑ¥Ù”¼ÌÀÉ½Õ¹‘•µ±œ‰œµ‘•ÍÑÉÕÑ¥Ù”¼Ô¡½Ù•Èé‰œµ‘•ÍÑÉÕÑ¥Ù”¼ÄÀÑÉ…¹Í¥Ñ¥½¸µ½±½ÉÌˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à¥Ñ•µÌµÍÑ…ÉÐ©ÕÍÑ¥™äµ‰•ÑÝ••¸…À´Èˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à´Äµ¥¸µÜ´Àˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰™½¹Ðµµ•‘¥Õ´ÑÉÕ¹…Ñ”ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹™¥ÉÍÑ9…µ”ñðˆ¹Õ•ÍÑ¥ÉÍÐñð€‰9½µ”¹½¸‘¥ÍÁ½¹¥‰¥±”‰õìˆ€‰ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹±…ÍÑ9…µ”ñðˆ¹Õ•ÍÑ1…ÍÐñð€ˆ‰ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½Àø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰Ñ•áÐµÍ´Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ÑÉÕ¹…Ñ”ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹•µ…¥±ôƒŠˆíˆ¹Á¡½¹•ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½Àø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à…À´È™±•àµÍ¡É¥¹¬´À™±•àµÝÉ…Àˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ	…‘”Ù…É¥…¹Ðô‰‘•ÍÑÉÕÑ¥Ù”ˆ±…ÍÍ9…µ”ô‰Ñ•áÐµáÌˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€911Q4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½	…‘”ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ	…‘”4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”õíÑ•áÐµáÌÑ•áÐµÝ¡¥Ñ”€‘ì4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ˆ¹½É¥¥¸€ôôô€‰‰½½­¥¹œˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ü€‰‰œµ‰±Õ”´ØÀÀˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€èˆ¹½É¥¥¸€ôôô€‰…¥É‰¹ˆˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ü€‰‰œµÁ¥¹¬´ØÀÀˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€èˆ¹½É¥¥¸€ôôô€‰•áÁ•‘¥„ˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ü€‰‰œµå•±±½Ü´ØÀÀˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€è€‰‰œµlŒå„àÑtˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€õô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹½É¥¥¸€ôôô€‰‘¥É•Ðˆ€ü€‰¥É•ÑÑ„ˆ€èˆ¹½É¥¥¹ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½	…‘”ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ	…‘”±…ÍÍ9…µ”ô‰Ñ•áÐµáÌ±¥¹”µÑ¡É½Õ ˆûŠ
-±ì¡ˆ…Ì…¹ä¤¹Ñ½Ñ…±µ½Õ¹Ðñðˆ¹Ñ½Ñ…°ñð€ˆÀ‰ôð½	…‘”ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à™±•àµ½°Í´é™±•àµÉ½ÜÍ´é¥Ñ•µÌµ•¹Ñ•È…À´ÄÍ´é…À´ÐÑ•áÐµÍ´Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰ÑÉÕ¹…Ñ”ˆùíˆ¹É½½µ9…µ•ôð½ÍÁ…¸ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰Ñ•áÐµáÌÍ´éÑ•áÐµÍ´ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€í™½Éµ…Ñ…Ñ”¡ˆ¹¡•­%¸¥ôƒŠHí™½Éµ…Ñ…Ñ”¡ˆ¹¡•­=ÕÐ¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹É•™Õ¹‘µ½Õ¹Ð€„ôôÕ¹‘•™¥¹•€˜˜ˆ¹É•™Õ¹‘µ½Õ¹Ð€ø€À€˜˜€ 4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰Ñ•áÐµáÌÑ•áÐµÉ••¸´ØÀÀ™½¹ÐµÍ•µ¥‰½±ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€I¥µ‰½ÉÍ¼‘„•±…‰½É…É”èƒŠ
-±í9Õµ‰•È¹Á…ÉÍ•±½…Ð¡ˆ¹É•™Õ¹‘µ½Õ¹Ð¹Ñ½MÑÉ¥¹œ ¤¤¹Ñ½¥á• È¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹Á•¹…±Ñä€„ôôÕ¹‘•™¥¹•€˜˜ˆ¹Á•¹…±Ñä€ø€À€˜˜€ 4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰Ñ•áÐµáÌÑ•áÐµ‘•ÍÑÉÕÑ¥Ù”™½¹ÐµÍ•µ¥‰½±ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€A•¹…±”…ÁÁ±¥…Ñ„èƒŠ
-±í9Õµ‰•È¹Á…ÉÍ•±½…Ð¡ˆ¹Á•¹…±Ñä¹Ñ½MÑÉ¥¹œ ¤¤¹Ñ½¥á• È¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰Ñ•áÐµáÌÑ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€…¹•±±…Ñ„¥°éìˆ€‰ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€€íˆ¹…¹•±±•‘Ð€ü¹•Ü…Ñ”¡ˆ¹…¹•±±•‘Ð¹Ñ½…Ñ” ¤¤¹Ñ½1½…±•…Ñ•MÑÉ¥¹œ ‰¥Ðµ%Pˆ¤€è€‰8½‰ô4(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€¤¤4(€€€€€€€€€€€€€€€€€€€€€€¥ô4(€€€€€€€€€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø4(€€€€€€€€€€€€€€€€€€ð½Q…‰Ìø4(€€€€€€€€€€€€€€€€ð½…É‘½¹Ñ•¹Ðø4(€€€€€€€€€€€€€€ð½…Éø4(€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø4(4(€€€€€€€€€€€€ñQ…‰Í½¹Ñ•¹ÐÙ…±Õ”ô‰É½½µÌˆ±…ÍÍ9…µ”ô‰ÍÁ…”µä´ÐÍ´éÍÁ…”µä´Øˆø4(€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É¥É¥µ½±Ì´Ä±œéÉ¥µ½±Ì´È…À´ÐÍ´é…À´Øˆø4(€€€€€€€€€€€€€€€íÉ½½µÌ¹µ…À ¡É½½´¤€ôø€ 4(€€€€€€€€€€€€€€€€€€ñI½½µMÑ…ÑÕÍQ½±”­•äõíÉ½½´¹¥‘ôÉ½½´õíÉ½½µô€¼ø4(€€€€€€€€€€€€€€€€¤¥ô4(€€€€€€€€€€€€€€ð½‘¥Øø4(4(€€€€€€€€€€€€€€ñ…Éø4(€€€€€€€€€€€€€€€€ñ…É‘!•…‘•Èø4(€€€€€€€€€€€€€€€€€€ñ…É‘Q¥Ñ±”±…ÍÍ9…µ”ô‰™½¹Ðµ¥¹é•°Ñ•áÐµÁÉ¥µ…Éäˆù…±•¹‘…É¥¼…µ•É”ð½…É‘Q¥Ñ±”ø4(€€€€€€€€€€€€€€€€€€ñ…É‘•ÍÉ¥ÁÑ¥½¸ùY¥ÍÕ…±¥éé„±”ÁÉ•¹½Ñ…é¥½¹¤Á•È…µ•É„ð½…É‘•ÍÉ¥ÁÑ¥½¸ø4(€€€€€€€€€€€€€€€€ð½…É‘!•…‘•Èø4(€€€€€€€€€€€€€€€€ñ…É‘½¹Ñ•¹Ðø4(€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰ÍÁ…”µä´Ðˆø4(€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à…À´È™±•àµÝÉ…Àˆø4(€€€€€€€€€€€€€€€€€€€€€€ñ	ÕÑÑ½¸4(€€€€€€€€€€€€€€€€€€€€€€€Ù…É¥…¹ÐõíÍ•±•Ñ•‘I½½µ%€ôôô¹Õ±°€ü€‰‘•™…Õ±Ðˆ€è€‰½ÕÑ±¥¹”‰ô4(€€€€€€€€€€€€€€€€€€€€€€€½¹±¥¬õì ¤€ôøÍ•ÑM•±•Ñ•‘I½½µ%¡¹Õ±°¥ô4(€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰™±•à´ÄÍ´é™±•àµ¹½¹”ˆ4(€€€€€€€€€€€€€€€€€€€€€€ø4(€€€€€€€€€€€€€€€€€€€€€€€QÕÑÑ”±”…µ•É”4(€€€€€€€€€€€€€€€€€€€€€€ð½	ÕÑÑ½¸ø4(€€€€€€€€€€€€€€€€€€€€€íÉ½½µÌ¹µ…À ¡É½½´¤€ôø€ 4(€€€€€€€€€€€€€€€€€€€€€€€€ñ	ÕÑÑ½¸4(€€€€€€€€€€€€€€€€€€€€€€€€€­•äõíÉ½½´¹¥‘ô4(€€€€€€€€€€€€€€€€€€€€€€€€€Ù…É¥…¹ÐõíÍ•±•Ñ•‘I½½µ%€ôôôÉ½½´¹¥€ü€‰‘•™…Õ±Ðˆ€è€‰½ÕÑ±¥¹”‰ô4(€€€€€€€€€€€€€€€€€€€€€€€€€½¹±¥¬õì ¤€ôøÍ•ÑM•±•Ñ•‘I½½µ%¡É½½´¹¥¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰™±•à´ÄÍ´é™±•àµ¹½¹”ˆ4(€€€€€€€€€€€€€€€€€€€€€€€€ø4(€€€€€€€€€€€€€€€€€€€€€€€€€íÉ½½´¹¹…µ•ô4(€€€€€€€€€€€€€€€€€€€€€€€€ð½	ÕÑÑ½¸ø4(€€€€€€€€€€€€€€€€€€€€€€¤¥ô4(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(4(€€€€€€€€€€€€€€€€€€€íÍ•±•Ñ•‘I½½µ%€˜˜Í•±•Ñ•‘I½½´€ü€ 4(€€€€€€€€€€€€€€€€€€€€€€ñ	½½­¥¹…±•¹‘…É¥±Ñ•É•4(€€€€€€€€€€€€€€€€€€€€€€€‰½½­¥¹Ìõí‰½½­¥¹Íô4(€€€€€€€€€€€€€€€€€€€€€€€É½½µ%õíÍ•±•Ñ•‘I½½µ%‘ô4(€€€€€€€€€€€€€€€€€€€€€€€É½½µ9…µ”õíÍ•±•Ñ•‘I½½´¹¹…µ•ô4(€€€€€€€€€€€€€€€€€€€€€€¼ø4(€€€€€€€€€€€€€€€€€€€€¤€è€ 4(€€€€€€€€€€€€€€€€€€€€€€ñ	½½­¥¹…±•¹‘…È€¼ø4(€€€€€€€€€€€€€€€€€€€€¥ô4(€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€ð½…É‘½¹Ñ•¹Ðø4(€€€€€€€€€€€€€€ð½…Éø4(€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø4(4(€€€€€€€€€€€€ñQ…‰Í½¹Ñ•¹ÐÙ…±Õ”ô‰Õ•ÍÑÌˆ±…ÍÍ9…µ”ô‰ÍÁ…”µä´ÐÍ´éÍÁ…”µä´Øˆø(€€€€€€€€€€€€€€ñÕ•ÍÑÍQÉ…­¥¹œ€¼ø(€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø((€€€€€€€€€€€€ñQ…‰Í½¹Ñ•¹ÐÙ…±Õ”ô‰½¹Ñ…ÑÌˆ±…ÍÍ9…µ”ô‰ÍÁ…”µä´ÐÍ´éÍÁ…”µä´Øˆø(€€€€€€€€€€€€€€ñ9•ÝÍ±•ÑÑ•É½¹Ñ…ÑÍ‘µ¥¸€¼ø(€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø(4(€€€€€€€€€€€€ñQ…‰Í½¹Ñ•¹ÐÙ…±Õ”ô‰ÁÉ¥¥¹œˆ±…ÍÍ9…µ”ô‰ÍÁ…”µä´ÐÍ´éÍÁ…”µä´Øˆø4(€€€€€€€€€€€€€€ñå¹…µ¥AÉ¥¥¹5…¹…•µ•¹Ð€¼ø4(€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø4(4(€€€€€€€€€€€€ñQ…‰Í½¹Ñ•¹ÐÙ…±Õ”ô‰Í•ÉÙ¥•Ìˆ±…ÍÍ9…µ”ô‰ÍÁ…”µä´ÐÍ´éÍÁ…”µä´Øˆø4(€€€€€€€€€€€€€€ñáÑÉ…M•ÉÙ¥•ÍI•ÅÕ•ÍÑÍ‘µ¥¸€¼ø4(€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø4(4(€€€€€€€€€€€€ñQ…‰Í½¹Ñ•¹ÐÙ…±Õ”ô‰Í•ÑÑ¥¹Ìˆ±…ÍÍ9…µ”ô‰ÍÁ…”µä´ÐÍ´éÍÁ…”µä´Øˆø4(€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É¥É¥µ½±Ì´Ä±œéÉ¥µ½±Ì´È…À´ÐÍ´é…À´Øˆø4(€€€€€€€€€€€€€€€€ñMµ½½‰ÕMå¹A…¹•°€¼ø4(€€€€€€€€€€€€€€€€ñMµ½½‰ÕI•Ù¥•ÝÍMå¹Œ€¼ø4(€€€€€€€€€€€€€€ð½‘¥Øø4(4(€€€€€€€€€€€€€€ñ	½½­¥¹	±½­…Ñ•Ì€¼ø4(4(€€€€€€€€€€€€€€ñ‘µ¥¹M•ÕÉ¥ÑåM•ÑÑ¥¹Ì€¼ø4(4(€€€€€€€€€€€€€€ñ…Éø4(€€€€€€€€€€€€€€€€ñ…É‘!•…‘•Èø4(€€€€€€€€€€€€€€€€€€ñ…É‘Q¥Ñ±”±…ÍÍ9…µ”ô‰™½¹Ðµ¥¹é•°Ñ•áÐµÁÉ¥µ…Éäˆù%µÁ½ÍÑ…é¥½¹¤™ð½…É‘Q¥Ñ±”ø4(€€€€€€€€€€€€€€€€€€ñ…É‘•ÍÉ¥ÁÑ¥½¸ù½¹™¥ÕÉ„±”¥µÁ½ÍÑ…é¥½¹¤‘¥¹…µ¥¡”‘•°™ð½…É‘•ÍÉ¥ÁÑ¥½¸ø4(€€€€€€€€€€€€€€€€ð½…É‘!•…‘•Èø4(€€€€€€€€€€€€€€€€ñ…É‘½¹Ñ•¹Ð±…ÍÍ9…µ”ô‰ÍÁ…”µä´Øˆø4(€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰ÍÁ…”µä´ÐÁˆ´Ø‰½É‘•Èµˆˆø4(€€€€€€€€€€€€€€€€€€€€ñ Ì±…ÍÍ9…µ”ô‰Ñ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆù%¹™½Éµ…é¥½¹¤¥ÍÍ”ð½ Ìø4(€€€€€€€€€€€€€€€€€€€€ñ‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€ñ1…‰•°±…ÍÍ9…µ”ô‰Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆù9½µ”€¡™¥ÍÍ¼¤ð½1…‰•°ø4(€€€€€€€€€€€€€€€€€€€€€€ñ%¹ÁÕÐ4(€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰µÐ´È‰œµµÕÑ•¼ÔÀÕÉÍ½Èµ¹½Ðµ…±±½Ý•ˆ4(€€€€€€€€€€€€€€€€€€€€€€€Ù…±Õ”ô‰0€ÈÈMÕ¥Ñ”€˜MA1UaUIdaAI%9ˆ4(€€€€€€€€€€€€€€€€€€€€€€€‘¥Í…‰±•4(€€€€€€€€€€€€€€€€€€€€€€¼ø4(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É¥É¥µ½±Ì´ÄÍ´éÉ¥µ½±Ì´È…À´Ðˆø4(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€ñ1…‰•°±…ÍÍ9…µ”ô‰Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆù%¹‘¥É¥éé¼ð½1…‰•°ø4(€€€€€€€€€€€€€€€€€€€€€€€€ñ%¹ÁÕÐ±…ÍÍ9…µ”ô‰µÐ´È‰œµµÕÑ•¼ÔÀÕÉÍ½Èµ¹½Ðµ…±±½Ý•ˆÙ…±Õ”ô‰Y¥¼•±Í¼$¸€ÈÈˆ‘¥Í…‰±•€¼ø4(€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€ñ1…‰•°±…ÍÍ9…µ”ô‰Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆùQ•±•™½¹¼ð½1…‰•°ø4(€€€€€€€€€€€€€€€€€€€€€€€€ñ%¹ÁÕÐ±…ÍÍ9…µ”ô‰µÐ´È‰œµµÕÑ•¼ÔÀÕÉÍ½Èµ¹½Ðµ…±±½Ý•ˆÙ…±Õ”ôˆ¬Ìä€ÌÜÔ€ÜÀÄ€ÜØàäˆ‘¥Í…‰±•€¼ø4(€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€ñ‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€ñ1…‰•°±…ÍÍ9…µ”ô‰Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆùµ…¥°ð½1…‰•°ø4(€€€€€€€€€€€€€€€€€€€€€€ñ%¹ÁÕÐ±…ÍÍ9…µ”ô‰µÐ´È‰œµµÕÑ•¼ÔÀÕÉÍ½Èµ¹½Ðµ…±±½Ý•ˆÙ…±Õ”ô‰ÁÉ½•Ñ±½…±•µ…¥°¹½´ˆ‘¥Í…‰±•€¼ø4(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(4(€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰ÍÁ…”µä´Ðˆø4(€€€€€€€€€€€€€€€€€€€€ñ Ì±…ÍÍ9…µ”ô‰Ñ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµÁÉ¥µ…Éäˆù%µÁ½ÍÑ…é¥½¹¤¥¹…µ¥¡”ð½ Ìø4(€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É¥É¥µ½±Ì´ÄÍ´éÉ¥µ½±Ì´È…À´Ðˆø4(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€ñ1…‰•°¡Ñµ±½Èô‰¡•­%¸ˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñ±½¬±…ÍÍ9…µ”ô‰Ü´Ð ´Ð¥¹±¥¹”µÈ´Èˆ€¼ø4(€€€€€€€€€€€€€€€€€€€€€€€€€¡•¬µ¥¸4(€€€€€€€€€€€€€€€€€€€€€€€€ð½1…‰•°ø4(€€€€€€€€€€€€€€€€€€€€€€€€ñ%¹ÁÕÐ4(€€€€€€€€€€€€€€€€€€€€€€€€€¥ô‰¡•­%¸ˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€ÑåÁ”ô‰Ñ¥µ”ˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰µÐ´Èˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€Ù…±Õ”õí‰¹‰M•ÑÑ¥¹Ì¹¡•­%¹Q¥µ•ô4(€€€€€€€€€€€€€€€€€€€€€€€€€½¹¡…¹”õì¡”¤€ôøÍ•Ñ	¹‰M•ÑÑ¥¹Ì¡ì€¸¸¹‰¹‰M•ÑÑ¥¹Ì°¡•­%¹Q¥µ”è”¹Ñ…É•Ð¹Ù…±Õ”ô¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€¼ø4(€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€€€ñ1…‰•°¡Ñµ±½Èô‰¡•­=ÕÐˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñ±½¬±…ÍÍ9…µ”ô‰Ü´Ð ´Ð¥¹±¥¹”µÈ´Èˆ€¼ø4(€€€€€€€€€€€€€€€€€€€€€€€€€¡•¬µ½ÕÐ4(€€€€€€€€€€€€€€€€€€€€€€€€ð½1…‰•°ø4(€€€€€€€€€€€€€€€€€€€€€€€€ñ%¹ÁÕÐ4(€€€€€€€€€€€€€€€€€€€€€€€€€¥ô‰¡•­=ÕÐˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€ÑåÁ”ô‰Ñ¥µ”ˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰µÐ´Èˆ4(€€€€€€€€€€€€€€€€€€€€€€€€€Ù…±Õ”õí‰¹‰M•ÑÑ¥¹Ì¹¡•­=ÕÑQ¥µ•ô4(€€€€€€€€€€€€€€€€€€€€€€€€€½¹¡…¹”õì¡”¤€ôøÍ•Ñ	¹‰M•ÑÑ¥¹Ì¡ì€¸¸¹‰¹‰M•ÑÑ¥¹Ì°¡•­=ÕÑQ¥µ”è”¹Ñ…É•Ð¹Ù…±Õ”ô¥ô4(€€€€€€€€€€€€€€€€€€€€€€€€¼ø4(€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€ñ‘¥Øø4(€€€€€€€€€€€€€€€€€€€€€€ñ1…‰•°¡Ñµ±½Èô‰…¹•±±…Ñ¥½¸ˆùA½±¥Ñ¥„‘¤…¹•±±…é¥½¹”ð½1…‰•°ø4(€€€€€€€€€€€€€€€€€€€€€€ñM•±•Ð4(€€€€€€€€€€€€€€€€€€€€€€€Ù…±Õ”õí‰¹‰M•ÑÑ¥¹Ì¹…¹•±±…Ñ¥½¹A½±¥åô4(€€€€€€€€€€€€€€€€€€€€€€€½¹Y…±Õ•¡…¹”õì¡Ù…±Õ”¤€ôøÍ•Ñ	¹‰M•ÑÑ¥¹Ì¡ì€¸¸¹‰¹‰M•ÑÑ¥¹Ì°…¹•±±…Ñ¥½¹A½±¥äèÙ…±Õ”ô¥ô4(€€€€€€€€€€€€€€€€€€€€€€ø4(€€€€€€€€€€€€€€€€€€€€€€€€ñM•±•ÑQÉ¥•È¥ô‰…¹•±±…Ñ¥½¸ˆ±…ÍÍ9…µ”ô‰µÐ´Èˆø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñM•±•ÑY…±Õ”€¼ø4(€€€€€€€€€€€€€€€€€€€€€€€€ð½M•±•ÑQÉ¥•Èø4(€€€€€€€€€€€€€€€€€€€€€€€€ñM•±•Ñ½¹Ñ•¹Ðø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñM•±•Ñ%Ñ•´Ù…±Õ”ô‰™É•”ÈÑ ˆù…¹•±±…é¥½¹”É…ÑÕ¥Ñ„™¥¹¼„€ÈÑ ð½M•±•Ñ%Ñ•´ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñM•±•Ñ%Ñ•´Ù…±Õ”ô‰™É•”Ðá ˆù…¹•±±…é¥½¹”É…ÑÕ¥Ñ„™¥¹¼„€Ðá ð½M•±•Ñ%Ñ•´ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñM•±•Ñ%Ñ•´Ù…±Õ”ô‰™É•”Ý‘…åÌˆù…¹•±±…é¥½¹”É…ÑÕ¥Ñ„™¥¹¼„€Ü¥½É¹¤ð½M•±•Ñ%Ñ•´ø4(€€€€€€€€€€€€€€€€€€€€€€€€€€ñM•±•Ñ%Ñ•´Ù…±Õ”ô‰¹½¹I•™Õ¹‘…‰±”ˆù9½¸É¥µ‰½ÉÍ…‰¥±”ð½M•±•Ñ%Ñ•´ø4(€€€€€€€€€€€€€€€€€€€€€€€€ð½M•±•Ñ½¹Ñ•¹Ðø4(€€€€€€€€€€€€€€€€€€€€€€ð½M•±•Ðø4(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€€€€€ñ	ÕÑÑ½¸½¹±¥¬õíÍ…Ù•M•ÑÑ¥¹Íô‘¥Í…‰±•õíÍ…Ù¥¹M•ÑÑ¥¹Íô±…ÍÍ9…µ”ô‰Üµ™Õ±°Í´éÜµ…ÕÑ¼ˆø4(€€€€€€€€€€€€€€€€€€€€€íÍ…Ù¥¹M•ÑÑ¥¹Ì€ü€‰M…±Ù…Ñ…¥¼¸¸¸ˆ€è€‰M…±Ù„%µÁ½ÍÑ…é¥½¹¤‰ô4(€€€€€€€€€€€€€€€€€€€€ð½	ÕÑÑ½¸ø4(€€€€€€€€€€€€€€€€€€ð½‘¥Øø4(€€€€€€€€€€€€€€€€ð½…É‘½¹Ñ•¹Ðø4(€€€€€€€€€€€€€€ð½…Éø4(€€€€€€€€€€€€ð½Q…‰Í½¹Ñ•¹Ðø4(€€€€€€€€€€ð½Q…‰Ìø4(€€€€€€€€ð½‘¥Øø4(€€€€€€ð½‘¥Øø4(€€€€€€ñ½½Ñ•È€¼ø4(€€€€ð½µ…¥¸ø4(€€¤4)ô4(4(
+                      {rooms.map((r) => (
+                        <div
+                          key={r.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{r.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {r.capacity} ospiti â€¢ â‚¬{r.price}/notte
+                            </p>
+                          </div>
+                          <Badge
+                            className={
+                              r.status === "available"
+                                ? "bg-[#c9a84c] text-xs"
+                                : r.status === "booked"
+                                  ? "bg-red-600 text-xs"
+                                  : "bg-yellow-600 text-xs"
+                            }
+                          >
+                            {r.status === "available"
+                              ? "Disponibile"
+                              : r.status === "booked"
+                                ? "Prenotata"
+                                : "Manutenzione"}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="bookings" className="space-y-4 sm:space-y-6">
+              <BookingCalendar />
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-cinzel text-primary">Tutte le Prenotazioni</CardTitle>
+                  <CardDescription>Gestisci tutte le prenotazioni correnti e future</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="all" className="space-y-4">
+                    <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
+                      <TabsTrigger value="all" className="whitespace-nowrap">
+                        Tutte ({currentAndUpcoming.length})
+                      </TabsTrigger>
+                      <TabsTrigger value="booking" className="whitespace-nowrap">
+                        Booking.com ({bookingComBookings.length})
+                      </TabsTrigger>
+                      <TabsTrigger value="airbnb" className="whitespace-nowrap">
+                        Airbnb ({airbnbBookings.length})
+                      </TabsTrigger>
+                      <TabsTrigger value="expedia" className="whitespace-nowrap">
+                        Expedia ({expediaBookings.length})
+                      </TabsTrigger>
+                      <TabsTrigger value="site" className="whitespace-nowrap">
+                        Sito / Dirette ({siteAndDirectBookings.length})
+                      </TabsTrigger>
+                      <TabsTrigger value="cancelled" className="whitespace-nowrap">
+                        Cancellate ({cancelledBookings.length})
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="all" className="space-y-3">
+                      {currentAndUpcoming.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nessuna prenotazione corrente o futura</p>
+                      ) : (
+                        currentAndUpcoming.map((b) => (
+                          <div
+                            key={b.id}
+                            className="flex flex-col gap-2 p-3 sm:p-4 border rounded-lg hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">
+                                  {b.guestFirst || b.firstName || "Nome non disponibile"}{" "}
+                                  {b.guestLast || b.lastName || ""}
+                                </p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {b.email} â€¢ {b.phone}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                <Badge
+                                  className={`text-xs text-white ${
+                                    b.origin === "booking"
+                                      ? "bg-blue-600"
+                                      : b.origin === "airbnb"
+                                        ? "bg-pink-600"
+                                        : b.origin === "expedia"
+                                          ? "bg-yellow-600"
+                                          : "bg-[#c9a84c]"
+                                  }`}
+                                >
+                                  {b.origin === "direct" ? "Diretta" : b.origin}
+                                </Badge>
+                                <Badge className="text-xs">â‚¬{b.total || (b as any).totalAmount || "0"}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
+                              <span className="truncate">{b.roomName}</span>
+                              <span className="text-xs sm:text-sm">
+                                {formatDate(b.checkIn)} â†’ {formatDate(b.checkOut)}
+                              </span>
+                              {b.origin === "site" && b.services && b.services.length > 0 && (
+                                <span className="text-xs text-primary">+ {b.services.join(", ")}</span>
+                              )}
+                              {b.origin === "site" && (!b.services || b.services.length === 0) && (
+                                <span className="text-xs text-muted-foreground">Senza servizi aggiuntivi</span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="booking" className="space-y-3">
+                      {bookingComBookings.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nessuna prenotazione da Booking.com</p>
+                      ) : (
+                        bookingComBookings.map((b) => (
+                          <div
+                            key={b.id}
+                            className="flex flex-col gap-2 p-3 sm:p-4 border rounded-lg hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">
+                                  {b.guestFirst || b.firstName || "Nome non disponibile"}{" "}
+                                  {b.guestLast || b.lastName || ""}
+                                </p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {b.email} â€¢ {b.phone}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                <Badge className="bg-blue-600 text-xs">Booking.com</Badge>
+                                <Badge className="text-xs">â‚¬{b.total || b.totalAmount || "0"}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
+                              <span className="truncate">{b.roomName}</span>
+                              <span className="text-xs sm:text-sm">
+                                {formatDate(b.checkIn)} â†’ {formatDate(b.checkOut)}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="airbnb" className="space-y-3">
+                      {airbnbBookings.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nessuna prenotazione da Airbnb</p>
+                      ) : (
+                        airbnbBookings.map((b) => (
+                          <div
+                            key={b.id}
+                            className="flex flex-col gap-2 p-3 sm:p-4 border rounded-lg hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">
+                                  {b.guestFirst || b.firstName || "Nome non disponibile"}{" "}
+                                  {b.guestLast || b.lastName || ""}
+                                </p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {b.email} â€¢ {b.phone}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                <Badge className="bg-pink-600 text-xs">Airbnb</Badge>
+                                <Badge className="text-xs">â‚¬{b.total || b.totalAmount || "0"}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
+                              <span className="truncate">{b.roomName}</span>
+                              <span className="text-xs sm:text-sm">
+                                {formatDate(b.checkIn)} â†’ {formatDate(b.checkOut)}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="expedia" className="space-y-3">
+                      {expediaBookings.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nessuna prenotazione da Expedia</p>
+                      ) : (
+                        expediaBookings.map((b) => (
+                          <div
+                            key={b.id}
+                            className="flex flex-col gap-2 p-3 sm:p-4 border rounded-lg hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">
+                                  {b.guestFirst || (b as any).firstName || "Nome non disponibile"}{" "}
+                                  {b.guestLast || (b as any).lastName || ""}
+                                </p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {b.email} â€¢ {b.phone}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                <Badge className="bg-yellow-600 text-white text-xs">Expedia</Badge>
+                                <Badge className="text-xs">â‚¬{b.total || (b as any).totalAmount || "0"}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
+                              <span className="truncate">{b.roomName}</span>
+                              <span className="text-xs sm:text-sm">
+                                {formatDate(b.checkIn)} â†’ {formatDate(b.checkOut)}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="site" className="space-y-3">
+                      {siteAndDirectBookings.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nessuna prenotazione dal sito web o diretta</p>
+                      ) : (
+                        siteAndDirectBookings.map((b) => (
+                          <div
+                            key={b.id}
+                            className="flex flex-col gap-2 p-3 sm:p-4 border rounded-lg hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">
+                                  {b.guestFirst || (b as any).firstName || "Nome non disponibile"}{" "}
+                                  {b.guestLast || (b as any).lastName || ""}
+                                </p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {b.email} â€¢ {b.phone}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                <Badge className="bg-[#c9a84c] text-white text-xs">
+                                  {b.origin === "direct" ? "Diretta" : "Sito Web"}
+                                </Badge>
+                                <Badge className="text-xs">â‚¬{b.total || (b as any).totalAmount || "0"}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
+                              <span className="truncate">{b.roomName}</span>
+                              <span className="text-xs sm:text-sm">
+                                {formatDate(b.checkIn)} â†’ {formatDate(b.checkOut)}
+                              </span>
+                              {b.services && b.services.length > 0 && (
+                                <span className="text-xs text-primary">+ {b.services.join(", ")}</span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="cancelled" className="space-y-3">
+                      {cancelledBookings.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nessuna prenotazione cancellata</p>
+                      ) : (
+                        cancelledBookings.map((b) => (
+                          <div
+                            key={b.id}
+                            className="flex flex-col gap-2 p-3 sm:p-4 border border-destructive/30 rounded-lg bg-destructive/5 hover:bg-destructive/10 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">
+                                  {b.firstName || b.guestFirst || "Nome non disponibile"}{" "}
+                                  {b.lastName || b.guestLast || ""}
+                                </p>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {b.email} â€¢ {b.phone}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0 flex-wrap">
+                                <Badge variant="destructive" className="text-xs">
+                                  CANCELLATA
+                                </Badge>
+                                <Badge
+                                  className={`text-xs text-white ${
+                                    b.origin === "booking"
+                                      ? "bg-blue-600"
+                                      : b.origin === "airbnb"
+                                        ? "bg-pink-600"
+                                        : b.origin === "expedia"
+                                          ? "bg-yellow-600"
+                                          : "bg-[#c9a84c]"
+                                  }`}
+                                >
+                                  {b.origin === "direct" ? "Diretta" : b.origin}
+                                </Badge>
+                                <Badge className="text-xs line-through">â‚¬{(b as any).totalAmount || b.total || "0"}</Badge>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
+                              <span className="truncate">{b.roomName}</span>
+                              <span className="text-xs sm:text-sm">
+                                {formatDate(b.checkIn)} â†’ {formatDate(b.checkOut)}
+                              </span>
+                            </div>
+                            {b.refundAmount !== undefined && b.refundAmount > 0 && (
+                              <div className="text-xs text-green-600 font-semibold">
+                                Rimborso da elaborare: â‚¬{Number.parseFloat(b.refundAmount.toString()).toFixed(2)}
+                              </div>
+                            )}
+                            {b.penalty !== undefined && b.penalty > 0 && (
+                              <div className="text-xs text-destructive font-semibold">
+                                Penale applicata: â‚¬{Number.parseFloat(b.penalty.toString()).toFixed(2)}
+                              </div>
+                            )}
+                            <div className="text-xs text-muted-foreground">
+                              Cancellata il:{" "}
+                              {b.cancelledAt ? new Date(b.cancelledAt.toDate()).toLocaleDateString("it-IT") : "N/A"}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="rooms" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                {rooms.map((room) => (
+                  <RoomStatusToggle key={room.id} room={room} />
+                ))}
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-cinzel text-primary">Calendario Camere</CardTitle>
+                  <CardDescription>Visualizza le prenotazioni per camera</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        variant={selectedRoomId === null ? "default" : "outline"}
+                        onClick={() => setSelectedRoomId(null)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        Tutte le Camere
+                      </Button>
+                      {rooms.map((room) => (
+                        <Button
+                          key={room.id}
+                          variant={selectedRoomId === room.id ? "default" : "outline"}
+                          onClick={() => setSelectedRoomId(room.id)}
+                          className="flex-1 sm:flex-none"
+                        >
+                          {room.name}
+                        </Button>
+                      ))}
+                    </div>
+
+                    {selectedRoomId && selectedRoom ? (
+                      <BookingCalendarFiltered
+                        bookings={bookings}
+                        roomId={selectedRoomId}
+                        roomName={selectedRoom.name}
+                      />
+                    ) : (
+                      <BookingCalendar />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="guests" className="space-y-4 sm:space-y-6">
+              <GuestsTracking />
+            </TabsContent>
+
+            <TabsContent value="pricing" className="space-y-4 sm:space-y-6">
+              <DynamicPricingManagement />
+            </TabsContent>
+
+            <TabsContent value="services" className="space-y-4 sm:space-y-6">
+              <ExtraServicesRequestsAdmin />
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <SmoobuSyncPanel />
+                <SmoobuReviewsSync />
+              </div>
+
+              <BookingBlockDates />
+
+              <AdminSecuritySettings />
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-cinzel text-primary">Impostazioni B&B</CardTitle>
+                  <CardDescription>Configura le impostazioni dinamiche del B&B</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4 pb-6 border-b">
+                    <h3 className="text-sm font-semibold text-muted-foreground">Informazioni Fisse</h3>
+                    <div>
+                      <Label className="text-muted-foreground">Nome (fisso)</Label>
+                      <Input
+                        className="mt-2 bg-muted/50 cursor-not-allowed"
+                        value="AL 22 Suite & SPA LUXURY EXPERIENCE"
+                        disabled
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-muted-foreground">Indirizzo</Label>
+                        <Input className="mt-2 bg-muted/50 cursor-not-allowed" value="Vico Gelso I n 22" disabled />
+                      </div>
+                      <div>
+                        <Label className="text-muted-foreground">Telefono</Label>
+                        <Input className="mt-2 bg-muted/50 cursor-not-allowed" value="+39 375 701 7689" disabled />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Email</Label>
+                      <Input className="mt-2 bg-muted/50 cursor-not-allowed" value="progetlocale@gmail.com" disabled />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-primary">Impostazioni Dinamiche</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="checkIn">
+                          <Clock className="w-4 h-4 inline mr-2" />
+                          Check-in
+                        </Label>
+                        <Input
+                          id="checkIn"
+                          type="time"
+                          className="mt-2"
+                          value={bnbSettings.checkInTime}
+                          onChange={(e) => setBnbSettings({ ...bnbSettings, checkInTime: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="checkOut">
+                          <Clock className="w-4 h-4 inline mr-2" />
+                          Check-out
+                        </Label>
+                        <Input
+                          id="checkOut"
+                          type="time"
+                          className="mt-2"
+                          value={bnbSettings.checkOutTime}
+                          onChange={(e) => setBnbSettings({ ...bnbSettings, checkOutTime: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="cancellation">Politica di Cancellazione</Label>
+                      <Select
+                        value={bnbSettings.cancellationPolicy}
+                        onValueChange={(value) => setBnbSettings({ ...bnbSettings, cancellationPolicy: value })}
+                      >
+                        <SelectTrigger id="cancellation" className="mt-2">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free24h">Cancellazione gratuita fino a 24h</SelectItem>
+                          <SelectItem value="free48h">Cancellazione gratuita fino a 48h</SelectItem>
+                          <SelectItem value="free7days">Cancellazione gratuita fino a 7 giorni</SelectItem>
+                          <SelectItem value="nonRefundable">Non rimborsabile</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={saveSettings} disabled={savingSettings} className="w-full sm:w-auto">
+                      {savingSettings ? "Salvataggio..." : "Salva Impostazioni"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+      <Footer />
+    </main>
+  )
+}
+

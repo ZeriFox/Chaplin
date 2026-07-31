@@ -1,17 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
-import { Resend } from "resend"
-
-// Lazy Resend init - wrapped in closure to avoid build-time evaluation
-const getResend = (() => {
-  let instance: Resend | null = null
-  return (): Resend | null => {
-    if (!instance && process.env.RESEND_API_KEY) {
-      instance = new Resend(process.env.RESEND_API_KEY)
-    }
-    return instance
-  }
-})()
+import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,9 +10,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const resend = getResend()
-    if (!resend) {
-      return NextResponse.json({ error: "Email service not configured" }, { status: 500 })
+    const emailConfig = getEmailConfigStatus()
+    if (!emailConfig.resend && !emailConfig.smtp) {
+      return NextResponse.json({ error: "Email service not configured" }, { status: 503 })
     }
 
     const db = getAdminDb()
@@ -57,7 +46,7 @@ export async function GET(request: NextRequest) {
 
       // Send balance payment reminder email
       try {
-        await resend.emails.send({
+        await sendEmail({
           from: process.env.RESEND_FROM_EMAIL || "noreply@al22suite.com",
           to: booking.email,
           subject: `Promemoria: Pagamento saldo per il tuo soggiorno ad AL 22 Suite`,

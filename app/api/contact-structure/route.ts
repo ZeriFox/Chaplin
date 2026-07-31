@@ -1,21 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { Resend } from "resend"
+import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 
 export const runtime = "nodejs"
 
 const RECIPIENT_EMAIL = "chaplinviterbo@gmail.com"
-
-const getResend = (() => {
-  let instance: Resend | null = null
-
-  return () => {
-    if (!instance && process.env.RESEND_API_KEY) {
-      instance = new Resend(process.env.RESEND_API_KEY)
-    }
-
-    return instance
-  }
-})()
 
 function escapeHtml(value: string) {
   return value
@@ -52,9 +40,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Inserisci un indirizzo email valido." }, { status: 400 })
     }
 
-    const resend = getResend()
+    const emailConfig = getEmailConfigStatus()
 
-    if (!resend) {
+    if (!emailConfig.resend && !emailConfig.smtp) {
       return NextResponse.json(
         { error: "Il servizio email non è ancora configurato. Riprova più tardi." },
         { status: 503 },
@@ -71,7 +59,7 @@ export async function POST(request: NextRequest) {
       timeZone: "Europe/Rome",
     }).format(new Date())
 
-    const result = await resend.emails.send({
+    const result = await sendEmail({
       from: process.env.RESEND_FROM_EMAIL || "Chaplin Luxury Holiday House <onboarding@resend.dev>",
       to: [RECIPIENT_EMAIL],
       replyTo: email,
