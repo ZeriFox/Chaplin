@@ -28,6 +28,32 @@ import { BookingCalendarPicker, type DateRange } from "@/components/booking-cale
 import { useLanguage } from "@/components/language-provider"
 import { useDynamicPrice } from "@/hooks/use-dynamic-price"
 
+// Resolve a promise but reject if it doesn't settle within `ms`, so a hanging
+// Firestore write (e.g. Firebase unreachable/misconfigured) can never freeze the
+// booking flow on "Invio in corso...".
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("BOOKING_SAVE_TIMEOUT")), ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        clearTimeout(timer)
+        reject(error)
+      },
+    )
+  })
+}
+
+// Local fallback request code used when the Firestore write fails, so the
+// confirmation email can still be sent and the guest still gets a reference.
+function generateFallbackBookingId() {
+  const random = Math.random().toString(36).slice(2, 8).toUpperCase()
+  return `REQ-${Date.now().toString(36).toUpperCase()}-${random}`
+}
+
 const ROOM_IDS: Record<string, string> = { deluxe: "1", suite: "2" }
 const ROOM_NAMES: Record<string, string> = {
   deluxe: "Camera Familiare con Balcone",
@@ -136,7 +162,12 @@ export default function PrenotaPage() {
         setIsCheckingAvailability(true)
         try {
           const roomId = ROOM_IDS[formData.roomType]
-          const isAvailable = await checkRoomAvailability(roomId, formData.checkIn, formData.checkOut)
+          // Cap the availability read so a hanging Firestore query can never leave
+          // the form stuck in the "checking" state and keep the submit disabled.
+          const isAvailable = await withTimeout(
+            checkRoomAvailability(roomId, formData.checkIn, formData.checkOut),
+            6000,
+          )
           setAvailabilityStatus({
             available: isAvailable,
             message: isAvailable
@@ -229,7 +260,16 @@ export default function PrenotaPage() {
         roomId: ROOM_IDS[formData.roomType],
         roomName: ROOM_NAMES[formData.roomType],
       }
-      const bookingId = await createBooking(bookingPayload)
+      // The confirmation email is the essential deliverable. Try to persist the
+      // booking to Firestore first, but never let a slow/failed write block the
+      // email: on timeout or error we fall back to a locally generated code.
+      let bookingId = ""
+      try {
+        bookingId = await withTimeout(createBooking(bookingPayload), 8000)
+      } catch (bookingError) {
+        console.error("[booking] Firestore save failed, sending email only:", bookingError)
+        bookingId = generateFallbackBookingId()
+      }
 
       const response = await fetch("/api/bookings/request", {
         method: "POST",
