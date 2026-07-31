@@ -394,13 +394,28 @@ export default function PrenotaPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-md border border-[#c9a84c]/40 bg-[#c9a84c]/10 px-4 py-3">
-                    <p className="font-semibold">Suite con SPA (MAX 2 PERSONE)</p>
-                    <input type="hidden" name="guests" value="2" />
-                  </div>
+                  <button
+  type="button"
+  onClick={() =>
+    setFormData((prev) => ({
+      ...prev,
+      roomType: "suite",
+      guests: "2",
+    }))
+  }
+  className={`w-full rounded-md border px-4 py-3 text-left transition-colors ${
+    formData.roomType === "suite"
+      ? "border-[#c9a84c] bg-[#c9a84c]/10"
+      : "border-[#c9a84c]/40 bg-background hover:bg-[#c9a84c]/5"
+  }`}
+>
+  <p className="font-semibold">Suite con SPA (MAX 2 PERSONE)</p>
+</button>
 
-                  {/* Appartamento unico - selezione camera nascosta */}
-                  <input type="hidden" name="roomType" value="suite" />
+<input type="hidden" name="guests" value={formData.guests} />
+<input type="hidden" name="roomType" value={formData.roomType} />
+<input type="hidden" name="roomId" value={ROOM_IDS[formData.roomType] || ""} />
+<input type="hidden" name="roomName" value={ROOM_NAMES[formData.roomType] || ""} />
 
                   <div>
                     <Label htmlFor="specialRequests">{t("bookingFormSpecialRequests") || "Richieste Speciali"}</Label>
