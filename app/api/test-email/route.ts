@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server"
 import { sendBookingConfirmationEmail } from "@/lib/email"
+import { getEmailConfigStatus } from "@/lib/email-transport"
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { email } = body
 
-    if (!email) {
-      return NextResponse.json({ error: "Email address is required" }, { status: 400 })
+    if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return NextResponse.json({ error: "A valid email address is required" }, { status: 400 })
     }
-
-    console.log("[Test Email] Testing email send to:", email)
 
     // Send test email with dummy data
     const result = await sendBookingConfirmationEmail({
@@ -33,6 +32,7 @@ export async function POST(req: Request) {
         success: true,
         message: "Test email sent successfully",
         emailId: result.emailId,
+        provider: result.provider,
       })
     } else {
       console.error("[Test Email] ❌ Test email failed:", result.error)
@@ -59,10 +59,6 @@ export async function POST(req: Request) {
 export async function GET() {
   return NextResponse.json({
     message: "Email test endpoint. Use POST with { email: 'your@email.com' } to test.",
-    configured: {
-      resendApiKey: !!process.env.RESEND_API_KEY,
-      resendFromEmail: !!process.env.RESEND_FROM_EMAIL,
-      fromEmail: process.env.RESEND_FROM_EMAIL,
-    },
+    configured: getEmailConfigStatus(),
   })
 }

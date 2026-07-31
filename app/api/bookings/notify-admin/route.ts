@@ -1,30 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
-
-// Lazy Resend init - wrapped in closure to avoid build-time evaluation
-const getResend = (() => {
-  let instance: Resend | null = null
-  return (): Resend | null => {
-    if (!instance && process.env.RESEND_API_KEY) {
-      instance = new Resend(process.env.RESEND_API_KEY)
-    }
-    return instance
-  }
-})()
+import { sendEmail } from '@/lib/email-transport'
 
 export async function POST(request: NextRequest) {
   try {
-    const resend = getResend()
-    if (!resend) {
-      console.error('[v0] Resend API key not configured')
-      return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
-    }
-
     const { bookingId, roomName, checkIn, checkOut, guestName } = await request.json()
 
     const beds24BlockUrl = `https://beds24.com/control2.php?pagetype=calendar`
 
-    await resend.emails.send({
+    await sendEmail({
       from: process.env.RESEND_FROM_EMAIL!,
       to: process.env.RESEND_FROM_EMAIL!,
       subject: `⚠️ Nuova Prenotazione Sito - Bloccare su Beds24`,

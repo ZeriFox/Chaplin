@@ -1,17 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
-import { Resend } from "resend"
-
-// Lazy Resend init - wrapped in closure to avoid build-time evaluation
-const getResend = (() => {
-  let instance: Resend | null = null
-  return (): Resend | null => {
-    if (!instance && process.env.RESEND_API_KEY) {
-      instance = new Resend(process.env.RESEND_API_KEY)
-    }
-    return instance
-  }
-})()
+import { sendEmail } from "@/lib/email-transport"
 
 function generateOTP(): string {
   return Math.floor(1000 + Math.random() * 9000).toString()
@@ -51,17 +40,7 @@ export async function POST(request: NextRequest) {
     const adminEmail = adminSnapshot.docs[0].data().email
 
     // Send OTP via email
-    const resend = getResend()
-    if (!resend) {
-      console.log(`[v0] RESEND_API_KEY not configured - OTP for phone change: ${otp}`)
-      return NextResponse.json({ 
-        success: true, 
-        message: "Email service non configurato. OTP loggato in console per testing.",
-        devOtp: process.env.NODE_ENV === "development" ? otp : undefined
-      })
-    }
-    
-    await resend.emails.send({
+    await sendEmail({
       from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
       to: adminEmail,
       subject: "Codice OTP per Cambio Numero di Telefono",

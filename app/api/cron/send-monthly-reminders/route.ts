@@ -1,15 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
-import { Resend } from "resend"
+import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 
 export async function GET(request: NextRequest) {
   try {
     const cronSecret = process.env.CRON_SECRET
-    const resendApiKey = process.env.RESEND_API_KEY
+    const emailConfig = getEmailConfigStatus()
     const firebaseConfigured =
       process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY
 
-    if (!cronSecret || !resendApiKey || !firebaseConfigured) {
+    if (!cronSecret || (!emailConfig.resend && !emailConfig.smtp) || !firebaseConfigured) {
       return NextResponse.json({ error: "Monthly reminders are not configured yet" }, { status: 503 })
     }
 
@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const resend = new Resend(resendApiKey)
     const db = getAdminDb()
     const today = new Date()
     const todayStr = today.toISOString().split("T")[0]
@@ -64,7 +63,7 @@ export async function GET(request: NextRequest) {
 
       // Send monthly reminder email
       try {
-        await resend.emails.send({
+        await sendEmail({
           from: process.env.RESEND_FROM_EMAIL || "noreply@al22suite.com",
           to: booking.email,
           subject: `Promemoria: La tua prenotazione ad AL 22 Suite tra ${daysUntilCheckIn} giorni`,

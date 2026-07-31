@@ -1,22 +1,12 @@
 // lib/email.ts
 // NOTE: file riscritto per CHAPLIN Luxury Holiday House + aggiunta sendBookingUpdateEmail
-// @ts-ignore: Module 'resend' may not have bundled type declarations in this project
-import { Resend } from "resend"
+import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 
 const BRAND = {
   name: "CHAPLIN Luxury Holiday House",
   city: "Viterbo, Italia",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://chaplin-house.vercel.app",
   fromFallback: "CHAPLIN <noreply@chaplin-house.com>",
-}
-
-let resendClient: Resend | null = null
-
-function getResendClient() {
-  const key = process.env.RESEND_API_KEY
-  if (!key) return null
-  if (!resendClient) resendClient = new Resend(key)
-  return resendClient
 }
 
 interface BookingEmailData {
@@ -91,8 +81,9 @@ type BookingUpdateEmailData = {
 }
 
 function requireEmailConfig() {
-  if (!process.env.RESEND_API_KEY) return { ok: false as const, error: "RESEND_API_KEY not configured" }
-  if (!process.env.RESEND_FROM_EMAIL) return { ok: false as const, error: "RESEND_FROM_EMAIL not configured" }
+  const config = getEmailConfigStatus()
+  if (!config.from) return { ok: false as const, error: "Email sender not configured" }
+  if (!config.resend && !config.smtp) return { ok: false as const, error: "Email service not configured" }
   return { ok: true as const }
 }
 
@@ -101,8 +92,6 @@ function moneyFromCents(cents: number) {
 }
 
 export async function sendBookingConfirmationEmail(data: BookingEmailData) {
-  const resend = getResendClient()
-if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
   try {
     const cfg = requireEmailConfig()
     if (!cfg.ok) return { success: false, error: cfg.error }
@@ -195,7 +184,7 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
 </body>
 </html>`
 
-    const { data: emailData, error } = await resend.emails.send({
+    const { data: emailData, error } = await sendEmail({
       from: process.env.RESEND_FROM_EMAIL || BRAND.fromFallback,
       to: data.to,
       subject: `✨ Prenotazione Confermata - ${data.bookingId}`,
@@ -203,15 +192,13 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
     })
 
     if (error) return { success: false, error: error.message }
-    return { success: true, emailId: emailData?.id }
+    return { success: true, emailId: emailData?.id, provider: emailData?.provider }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
 }
 
 export async function sendCancellationEmail(data: CancellationEmailData) {
-  const resend = getResendClient()
-if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
   try {
     const cfg = requireEmailConfig()
     if (!cfg.ok) return { success: false, error: cfg.error }
@@ -316,7 +303,7 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
 </body>
 </html>`
 
-    const { data: emailData, error } = await resend.emails.send({
+    const { data: emailData, error } = await sendEmail({
       from: process.env.RESEND_FROM_EMAIL || BRAND.fromFallback,
       to: data.to,
       subject,
@@ -324,15 +311,13 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
     })
 
     if (error) return { success: false, error: error.message }
-    return { success: true, emailId: emailData?.id }
+    return { success: true, emailId: emailData?.id, provider: emailData?.provider }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
 }
 
 export async function sendModificationEmail(data: ModificationEmailData) {
-  const resend = getResendClient()
-if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
   try {
     const cfg = requireEmailConfig()
     if (!cfg.ok) return { success: false, error: cfg.error }
@@ -478,7 +463,7 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
 </body>
 </html>`
 
-    const { data: emailData, error } = await resend.emails.send({
+    const { data: emailData, error } = await sendEmail({
       from: process.env.RESEND_FROM_EMAIL || BRAND.fromFallback,
       to: data.to,
       subject: `✏️ Prenotazione Modificata - ${data.bookingId}`,
@@ -486,7 +471,7 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
     })
 
     if (error) return { success: false, error: error.message }
-    return { success: true, emailId: emailData?.id }
+    return { success: true, emailId: emailData?.id, provider: emailData?.provider }
   } catch (error: any) {
     return { success: false, error: error.message }
   }
@@ -497,8 +482,6 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
  * usata da /app/api/bookings/update-after-payment/route.ts
  */
 export async function sendBookingUpdateEmail(data: BookingUpdateEmailData) {
-  const resend = getResendClient()
-if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
   try {
     const cfg = requireEmailConfig()
     if (!cfg.ok) return { success: false, error: cfg.error }
@@ -568,7 +551,7 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
 </body>
 </html>`
 
-    const { data: emailData, error } = await resend.emails.send({
+    const { data: emailData, error } = await sendEmail({
       from: process.env.RESEND_FROM_EMAIL || BRAND.fromFallback,
       to: data.to,
       subject: `✅ Aggiornamento Prenotazione - ${data.bookingId}`,
@@ -576,7 +559,7 @@ if (!resend) return { success: false, error: "RESEND_API_KEY not configured" }
     })
 
     if (error) return { success: false, error: error.message }
-    return { success: true, emailId: emailData?.id }
+    return { success: true, emailId: emailData?.id, provider: emailData?.provider }
   } catch (error: any) {
     return { success: false, error: error.message }
   }

@@ -1,19 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { Resend } from "resend"
+import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
 
 export async function POST(request: NextRequest) {
   try {
-    const resendApiKey = process.env.RESEND_API_KEY
+    const emailConfig = getEmailConfigStatus()
     const firebaseConfigured =
       process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY
 
-    if (!resendApiKey || !firebaseConfigured) {
+    if ((!emailConfig.resend && !emailConfig.smtp) || !firebaseConfigured) {
       return NextResponse.json({ error: "Extra services are not configured yet" }, { status: 503 })
     }
-
-    const resend = new Resend(resendApiKey)
     const body = await request.json()
     const { bookingId, roomId, checkIn, checkOut, guests, userEmail, userName, services, notes } = body
 
@@ -56,7 +54,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    await resend.emails.send({
+    await sendEmail({
       from: fromEmail,
       to: propertyEmail,
       replyTo: userEmail,
@@ -143,7 +141,7 @@ export async function POST(request: NextRequest) {
       `,
     })
 
-    await resend.emails.send({
+    await sendEmail({
       from: fromEmail,
       to: userEmail,
       subject: "✨ Richiesta servizi extra ricevuta - Al 22 Suite & Spa",

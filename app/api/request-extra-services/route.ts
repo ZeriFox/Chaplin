@@ -1,16 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { Resend } from "resend"
+import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 import { getBookingById } from "@/lib/firebase"
 
 export async function POST(request: NextRequest) {
   try {
-    const resendApiKey = process.env.RESEND_API_KEY
+    const emailConfig = getEmailConfigStatus()
 
-    if (!resendApiKey) {
+    if (!emailConfig.resend && !emailConfig.smtp) {
       return NextResponse.json({ error: "Email notifications are not configured yet" }, { status: 503 })
     }
-
-    const resend = new Resend(resendApiKey)
     const body = await request.json()
     const { bookingId, services, notes } = body
 
@@ -30,7 +28,7 @@ export async function POST(request: NextRequest) {
     const total = services.reduce((sum: number, service: any) => sum + service.price, 0)
 
     // Send email to structure
-    await resend.emails.send({
+    await sendEmail({
       from: process.env.RESEND_FROM_EMAIL || "noreply@al22suite.com",
       to: serviceEmail,
       replyTo: booking.email,

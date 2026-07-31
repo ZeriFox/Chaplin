@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
+import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 
 export const dynamic = "force-dynamic"
 
@@ -67,10 +67,10 @@ function getErrorMessage(reason: unknown) {
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.RESEND_API_KEY
-    const fromEmail = process.env.RESEND_FROM_EMAIL
+    const emailConfig = getEmailConfigStatus()
+    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || process.env.SMTP_FROM_EMAIL
 
-    if (!apiKey || !fromEmail) {
+    if ((!emailConfig.resend && !emailConfig.smtp) || !fromEmail) {
       return NextResponse.json({ error: "Servizio email non configurato" }, { status: 503 })
     }
 
@@ -135,9 +135,7 @@ export async function POST(request: Request) {
       <tr><td style="padding:8px 0;font-weight:600">Totale indicativo</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#b28b2e">${formattedTotal}</td></tr>
     `
 
-    const resend = new Resend(apiKey)
-
-    const customerEmail = resend.emails.send({
+    const customerEmail = sendEmail({
       from: fromEmail,
       to: email,
       replyTo: STRUCTURE_EMAIL,
@@ -164,7 +162,7 @@ export async function POST(request: Request) {
       `,
     })
 
-    const structureEmail = resend.emails.send({
+    const structureEmail = sendEmail({
       from: fromEmail,
       to: STRUCTURE_EMAIL,
       replyTo: email,
