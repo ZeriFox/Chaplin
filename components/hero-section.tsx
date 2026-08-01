@@ -5,15 +5,14 @@ import Image from "next/image"
 import Link from "next/link"
 import { useLanguage } from "@/components/language-provider"
 
-const HERO_SLIDES = [
-  { src: "/images/bb-hero.jpg", alt: "CHAPLIN Holiday House" },
-  { src: "/images/pool.jpg", alt: "Piscina privata" },
-]
-
 export function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [animationStep, setAnimationStep] = useState(0)
   const { t } = useLanguage()
+  const heroSlides = [
+    { src: "/images/bb-hero.jpg", alt: "CHAPLIN Holiday House" },
+    { src: "/images/pool.jpg", alt: t("homePrivatePoolAlt") },
+  ]
 
   // Staggered animation sequence
   useEffect(() => {
@@ -30,7 +29,7 @@ export function HeroSection() {
   // Auto slide
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length)
+      setCurrentSlide((prev) => (prev + 1) % 2)
     }, 6000)
     return () => clearInterval(timer)
   }, [])
@@ -38,7 +37,7 @@ export function HeroSection() {
   return (
     <section className="relative h-screen w-full overflow-hidden">
       {/* Background Images with crossfade */}
-      {HERO_SLIDES.map((slide, index) => (
+      {heroSlides.map((slide, index) => (
         <div
           key={slide.src}
           className="absolute inset-0 transition-opacity duration-1000"
@@ -122,7 +121,7 @@ export function HeroSection() {
 
       {/* Slide indicators - horizontal lines */}
       <div className="absolute bottom-10 right-6 sm:right-10 flex gap-2">
-        {HERO_SLIDES.map((_, index) => (
+        {heroSlides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}

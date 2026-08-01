@@ -153,6 +153,7 @@ export function RoomsPreview() {
   }
 
   const content = sectionContent[language] || sectionContent.it
+  const formatDistance = (distance: string) => (language === "it" ? distance : distance.replace(" mt", " m"))
 
   return (
     <section className="py-16 sm:py-20 md:py-24 bg-[#f5f5f0]">
@@ -183,7 +184,7 @@ export function RoomsPreview() {
               {content.nearby.map((place, index) => (
                 <li key={index} className="flex justify-between text-sm text-[#6b6560] py-2 border-b border-[#e0ddd5]">
                   <span>{place.name}</span>
-                  <span className="text-[#c9a84c] font-medium">{place.distance}</span>
+                  <span className="text-[#c9a84c] font-medium">{formatDistance(place.distance)}</span>
                 </li>
               ))}
             </ul>
@@ -201,7 +202,7 @@ export function RoomsPreview() {
                 {content.airports.map((airport, index) => (
                   <li key={index} className="flex justify-between text-sm text-[#6b6560]">
                     <span>{airport.name}</span>
-                    <span className="text-[#c9a84c] font-medium">{airport.distance}</span>
+                    <span className="text-[#c9a84c] font-medium">{formatDistance(airport.distance)}</span>
                   </li>
                 ))}
               </ul>
@@ -217,7 +218,7 @@ export function RoomsPreview() {
                 {content.stations.map((station, index) => (
                   <li key={index} className="flex justify-between text-sm text-[#6b6560]">
                     <span>{station.name}</span>
-                    <span className="text-[#c9a84c] font-medium">{station.distance}</span>
+                    <span className="text-[#c9a84c] font-medium">{formatDistance(station.distance)}</span>
                   </li>
                 ))}
               </ul>

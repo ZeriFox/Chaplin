@@ -299,15 +299,15 @@ export default function PrenotaPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        const requestCode = result.bookingId ? ` Codice richiesta: ${result.bookingId}.` : ` Codice richiesta: ${bookingId}.`
-        throw new Error(`${result.error || "Impossibile inviare la richiesta."}${requestCode}`)
+        const requestCode = result.bookingId ? result.bookingId : bookingId
+        throw new Error(`${t("bookingRequestSendFailure")} ${t("bookingRequestCode")}: ${requestCode}.`)
       }
 
       setSubmittedBookingId(bookingId)
       setShowSuccessModal(true)
     } catch (error) {
       console.error("[booking] Request error:", error)
-      setErrorMessage(error instanceof Error ? error.message : "Si è verificato un problema con la prenotazione.")
+      setErrorMessage(error instanceof Error ? error.message : t("bookingGenericError"))
       setShowErrorModal(true)
     } finally {
       setIsSubmitting(false)
@@ -452,7 +452,7 @@ export default function PrenotaPage() {
       : "border-[#c9a84c]/40 bg-background hover:bg-[#c9a84c]/5"
   }`}
 >
-  <p className="font-semibold">Suite con SPA (MAX 2 PERSONE)</p>
+  <p className="font-semibold">{t("suiteSpaCapacity")}</p>
 </button>
 
 <input type="hidden" name="guests" value={formData.guests} />
@@ -478,7 +478,7 @@ export default function PrenotaPage() {
                       {nights > 0
                         ? `${nights} ${
                             nights > 1 ? t("bookingNightsPlural") || "notti" : t("bookingNights") || "notte"
-                          } • ${adults} ${adults > 1 ? "adulti" : "adulto"}${children > 0 ? ` + ${children} ${children > 1 ? "bambini" : "bambino"}` : ""}`
+                          } • ${adults} ${adults > 1 ? t("adultPlural") : t("adultSingular")}${children > 0 ? ` + ${children} ${children > 1 ? t("childPlural") : t("childSingular")}` : ""}`
                         : t("bookingSummaryCompleteDates") || "Completa date e camera"}
                     </div>
                     <div className="text-xl font-semibold">
@@ -504,10 +504,10 @@ export default function PrenotaPage() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Invio in corso...
+                        {t("bookingSending")}
                       </>
                     ) : (
-                      "Invia richiesta di prenotazione"
+                      t("bookingSubmitRequest")
                     )}
                   </Button>
                 </CardContent>
@@ -535,7 +535,7 @@ export default function PrenotaPage() {
                           </li>
                           <li className="flex items-center gap-2">
                             <Users className="h-4 w-4 text-primary" />
-                            <span>Max 2 ospiti</span>
+                            <span>{t("maxTwoGuests")}</span>
                           </li>
                         </ul>
                       </div>
@@ -553,10 +553,10 @@ export default function PrenotaPage() {
                           {t("bookingHowToReachTitle") || "Come Raggiungerci"}
                         </h3>
                         <div className="space-y-1 text-sm text-muted-foreground">
-                          <p>Via della Pettinara, 48 - Viterbo</p>
-                          <p>Aeroporto FCO: ~95 km</p>
-                          <p>Stazione Viterbo P.R.: ~2 km</p>
-                          <p>Centro Storico: ~1 km</p>
+                          <p>{t("bookingAddressLine")}</p>
+                          <p>{t("bookingAirportLine")}</p>
+                          <p>{t("bookingStationLine")}</p>
+                          <p>{t("bookingCenterLine")}</p>
                         </div>
                       </div>
                     </div>
@@ -573,7 +573,7 @@ export default function PrenotaPage() {
         <AlertDialog open={showErrorModal} onOpenChange={setShowErrorModal}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Errore nella prenotazione</AlertDialogTitle>
+              <AlertDialogTitle>{t("bookingErrorTitle")}</AlertDialogTitle>
               <AlertDialogDescription>{errorMessage}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -590,20 +590,19 @@ export default function PrenotaPage() {
               <div className="mb-2 flex justify-center">
                 <CheckCircle2 className="h-12 w-12 text-primary" />
               </div>
-              <AlertDialogTitle className="text-center">Richiesta inviata</AlertDialogTitle>
+              <AlertDialogTitle className="text-center">{t("bookingRequestSentTitle")}</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3 text-center">
                 <span className="block">
-                  Abbiamo inviato il riepilogo a <strong>{formData.email}</strong>. La struttura ti contatterà per
-                  confermare disponibilità e dettagli.
+                  {t("bookingRequestSentBeforeEmail")} <strong>{formData.email}</strong>. {t("bookingRequestSentAfterEmail")}
                 </span>
-                <span className="block font-medium text-foreground">Nessun pagamento è stato effettuato.</span>
+                <span className="block font-medium text-foreground">{t("bookingNoPayment")}</span>
                 {submittedBookingId && (
-                  <span className="block text-xs">Codice richiesta: {submittedBookingId}</span>
+                  <span className="block text-xs">{t("bookingRequestCode")}: {submittedBookingId}</span>
                 )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogAction onClick={() => router.push("/")}>Torna alla home</AlertDialogAction>
+              <AlertDialogAction onClick={() => router.push("/")}>{t("backHome")}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

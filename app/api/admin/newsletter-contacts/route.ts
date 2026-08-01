@@ -35,10 +35,9 @@ export async function GET(request: NextRequest) {
       const data = document.data()
       return {
         id: document.id,
-        email: data.email || "",
         phone: data.phone || "",
         status: data.status || "active",
-        source: data.source || "website-newsletter",
+        source: data.source || "website-whatsapp-promotions",
         createdAt: serializeTimestamp(data.createdAt),
         updatedAt: serializeTimestamp(data.updatedAt),
       }

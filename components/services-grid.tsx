@@ -4,12 +4,13 @@ import { useMemo, useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Clock, Users, Star, Phone, Heart, Share2, Sparkles } from "lucide-react"
+import { Clock, Star, Phone, Heart, Share2, Sparkles } from "lucide-react"
 import { useStaggeredAnimation } from "@/hooks/use-scroll-animation"
+import { useLanguage } from "@/components/language-provider"
 
 type Service = {
   id: number
-  category: "Benessere" | "Esperienze" | "Comfort" | "Extra"
+  category: string
   name: string
   description: string
   image: string
@@ -26,17 +27,17 @@ type Service = {
 
 const WHATSAPP_PHONE = "393517196320"
 
-function openWhatsApp(service: Service) {
+function openWhatsApp(service: Service, t: (key: string) => string) {
   const text = [
-    `Ciao! 😊`,
-    `Vorrei prenotare un servizio per *CHAPLIN Luxury Holiday House*.`,
+    t("whatsappGreeting"),
+    t("whatsappServiceRequest"),
     ``,
-    `✅ Servizio: *${service.name}*`,
-    `🕒 Durata: ${service.duration}`,
-    `👥 Persone: max ${service.capacity}`,
-    ...(service.price === null ? [] : [`💶 Prezzo: €${service.price}`]),
+    `✅ ${t("whatsappServiceLabel")}: *${service.name}*`,
+    ...(service.duration ? [`🕒 ${t("whatsappDurationLabel")}: ${service.duration}`] : []),
+    `👥 ${t("whatsappPeopleLabel")}: max ${service.capacity}`,
+    ...(service.price === null ? [] : [`💶 ${t("whatsappPriceLabel")}: €${service.price}`]),
     ``,
-    `Mi dite disponibilità e come procedere?`,
+    t("whatsappAvailabilityQuestion"),
   ].join("\n")
 
   const url = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`
@@ -44,6 +45,7 @@ function openWhatsApp(service: Service) {
 }
 
 export function ServicesGrid() {
+  const { t } = useLanguage()
   const [favorites, setFavorites] = useState<Set<number>>(new Set())
   const { ref, visibleItems } = useStaggeredAnimation(150)
 
@@ -51,12 +53,11 @@ export function ServicesGrid() {
     () => [
       {
         id: 1,
-        category: "Benessere",
-        name: "Accesso SPA Privata",
-        description:
-          "Minipiscina riscaldata ad uso esclusivo per la coppia con atmosfera soft e luci rilassanti. Cromoterapia, idromassaggio professionale",
+        category: t("categoryWellness"),
+        name: t("privateSpaAccessTitle"),
+        description: t("privateSpaAccessDescription"),
         image: "/chaplin/services/0013.JPG",
-        duration: "Dalle 15:00 alle 3:00",
+        duration: t("privateSpaSchedule"),
         price: 40,
         capacity: 2,
         rating: 4.9,
@@ -66,10 +67,9 @@ export function ServicesGrid() {
       },
       {
         id: 6,
-        category: "Esperienze",
-        name: "Allestimento Romantico (Coppia)",
-        description:
-          "Decorazioni romantiche in casa (petali, luci soft, dettagli a tema). Ideale per anniversari o sorprese.",
+        category: t("categoryExperiences"),
+        name: t("romanticSetupTitle"),
+        description: t("romanticSetupDescription"),
         image: "/chaplin/services/romantic-setup.jpg",
         duration: "—",
         price: null,
@@ -81,10 +81,9 @@ export function ServicesGrid() {
       },
       {
         id: 7,
-        category: "Esperienze",
-        name: "Pacchetto silver SPA",
-        description:
-          "Frutta fresca coreografica con bottiglia a scelta serviti a bordo vasca. Consigliato per anniversari o compleanni.",
+        category: t("categoryExperiences"),
+        name: t("silverSpaTitle"),
+        description: t("silverSpaDescription"),
         image: "/images/service-mosaic-vino-giallo.jpeg",
         mosaicImages: [
           "/images/service-mosaic-vino-giallo.jpeg",
@@ -101,7 +100,7 @@ export function ServicesGrid() {
         popular: true,
       },
     ],
-    [],
+    [t],
   )
 
   const toggleFavorite = (serviceId: number) => {
@@ -133,7 +132,7 @@ export function ServicesGrid() {
                       <div key={image} className="relative overflow-hidden">
                         <Image
                           src={image}
-                          alt={`${service.name} - dettaglio ${imageIndex + 1}`}
+                          alt={`${service.name} - ${t("photoDetailLabel")} ${imageIndex + 1}`}
                           fill
                           sizes="(max-width: 768px) 50vw, 200px"
                           className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -167,15 +166,15 @@ export function ServicesGrid() {
                           : "bg-gradient-to-r from-[#c9a84c] to-[#d4af37] text-white text-sm font-medium"
                       }
                     >
-                      <Sparkles className="w-3.5 h-3.5 mr-1" /> {service.id === 1 ? "Incluso" : "Consigliato"}
+                      <Sparkles className="w-3.5 h-3.5 mr-1" /> {service.id === 1 ? t("includedLabel") : t("recommendedLabel")}
                     </Badge>
                   )}
 
                   {service.draft ? (
-                    <Badge className="bg-white/90 text-[#1a1a1a] text-sm backdrop-blur-sm">In arrivo</Badge>
+                    <Badge className="bg-white/90 text-[#1a1a1a] text-sm backdrop-blur-sm">{t("comingSoonLabel")}</Badge>
                   ) : !service.available ? (
                     <Badge variant="destructive" className="text-sm backdrop-blur-sm">
-                      Non Disponibile
+                      {t("unavailableLabel")}
                     </Badge>
                   ) : null}
                 </div>
@@ -208,7 +207,7 @@ export function ServicesGrid() {
                         const shareText = `${service.name}${priceText} (${service.duration})`
                         navigator.clipboard?.writeText?.(shareText)
                       }}
-                      title="Copia info servizio"
+                      title={t("copyServiceInfo")}
                     >
                       <Share2 className="w-4 h-4" />
                     </Button>
@@ -243,14 +242,14 @@ export function ServicesGrid() {
                 {/* Reviews */}
                 {!service.draft && service.reviews > 0 && (
                   <div className="text-xs text-muted-foreground mb-4">
-                    {service.reviews} recensioni • Valutazione media {service.rating}/5
+                    {service.reviews} {t("reviewsLabel")} • {t("averageRatingLabel")} {service.rating}/5
                   </div>
                 )}
 
                 {/* Actions */}
                 {service.draft ? (
                   <Button size="sm" className="w-full text-sm font-medium" disabled>
-                    Dettagli in arrivo
+                    {t("detailsComingSoon")}
                   </Button>
                 ) : (
                   <div className="flex gap-3">
@@ -260,17 +259,17 @@ export function ServicesGrid() {
                         service.available ? "bg-[#1a1a1a] hover:bg-[#333] text-[#f5f5f0] shadow-lg" : ""
                       }`}
                       disabled={!service.available}
-                      onClick={() => service.available && openWhatsApp(service)}
+                      onClick={() => service.available && openWhatsApp(service, t)}
                     >
-                      {service.available ? "Prenota su WhatsApp" : "Non Disponibile"}
+                      {service.available ? t("bookOnWhatsApp") : t("unavailableLabel")}
                     </Button>
 
                     <Button
                       size="sm"
                       variant="outline"
                       className="px-4 bg-transparent border-emerald-300/70 hover:bg-[#c9a84c]/10 transition-all duration-300"
-                      onClick={() => openWhatsApp(service)}
-                      title="Contatta su WhatsApp"
+                      onClick={() => openWhatsApp(service, t)}
+                      title={t("contactOnWhatsApp")}
                     >
                       <Phone className="w-4 h-4 text-[#c9a84c]" />
                     </Button>
@@ -283,7 +282,7 @@ export function ServicesGrid() {
 
         {services.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-muted-foreground text-xl">Nessun servizio trovato per la categoria selezionata.</p>
+            <p className="text-muted-foreground text-xl">{t("noServicesFound")}</p>
           </div>
         )}
       </div>

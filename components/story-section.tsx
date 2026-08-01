@@ -5,7 +5,7 @@ import { useLanguage } from "@/components/language-provider"
 import { Wifi, Home, Utensils, Car, KeyRound, Snowflake, Flame } from "lucide-react"
 
 export function StorySection() {
-  const { language } = useLanguage()
+  const { language, t } = useLanguage()
 
   const storyContent: Record<string, { title: string; subtitle: string; paragraph1: string; paragraph2: string; galleryTitle: string }> = {
     it: {
@@ -58,20 +58,20 @@ export function StorySection() {
   const content = storyContent[language] || storyContent.it
 
   const amenities = [
-    { icon: Wifi, label: "WiFi Gratis" },
-    { icon: Home, label: "Suite Esclusiva" },
-    { icon: Utensils, label: "Cucina" },
-    { icon: Car, label: "Parcheggio" },
-    { icon: KeyRound, label: "Self Check-in" },
-    { icon: Snowflake, label: "Aria condiz." },
-    { icon: Flame, label: "Riscaldamento" },
+    { icon: Wifi, label: t("storyFreeWifi") },
+    { icon: Home, label: t("storyExclusiveSuite") },
+    { icon: Utensils, label: t("storyKitchen") },
+    { icon: Car, label: t("storyParking") },
+    { icon: KeyRound, label: t("storySelfCheckIn") },
+    { icon: Snowflake, label: t("storyAirConditioning") },
+    { icon: Flame, label: t("storyHeating") },
   ]
 
   const galleryImages = [
-    { src: "/images/viterbo-palazzo-papi.jpeg", alt: "Palazzo dei Papi di Viterbo" },
-    { src: "/images/viterbo-macchina-santa-rosa.jpeg", alt: "Macchina di Santa Rosa a Viterbo" },
-    { src: "/images/viterbo-quartiere-medievale.jpeg", alt: "Quartiere medievale di Viterbo" },
-    { src: "/images/viterbo-piazza-plebiscito.jpeg", alt: "Piazza del Plebiscito a Viterbo" },
+    { src: "/images/viterbo-palazzo-papi.jpeg", alt: t("viterboPapalPalaceAlt") },
+    { src: "/images/viterbo-macchina-santa-rosa.jpeg", alt: t("viterboSantaRosaAlt") },
+    { src: "/images/viterbo-quartiere-medievale.jpeg", alt: t("viterboMedievalQuarterAlt") },
+    { src: "/images/viterbo-piazza-plebiscito.jpeg", alt: t("viterboPlebiscitoAlt") },
   ]
 
   return (

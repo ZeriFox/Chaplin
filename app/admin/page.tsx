@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, BarChart3, Home, Settings, Users, Clock, Euro, Sparkles, TestTube } from "lucide-react"
+import { Calendar, BarChart3, Home, Settings, Users, Clock, Euro, Sparkles, TestTube, ContactRound } from "lucide-react"
 import { RequireAdmin } from "@/components/route-guards"
 import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
@@ -23,6 +23,8 @@ import { BookingCalendarFiltered } from "@/components/booking-calendar-filtered"
 import { AdminSecuritySettings } from "@/components/admin-security-settings"
 import { DynamicPricingManagement } from "@/components/dynamic-pricing-management"
 import { ExtraServicesRequestsAdmin } from "@/components/extra-services-requests-admin"
+import { NewsletterContactsAdmin } from "@/components/newsletter-contacts-admin"
+import { useLanguage } from "@/components/language-provider"
 import type { Booking, Room } from "@/lib/booking-utils"
 
 interface BnBSettings {
@@ -46,6 +48,7 @@ export default function AdminPage() {
 }
 
 function AdminInner() {
+  const { t } = useLanguage()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
@@ -172,7 +175,7 @@ function AdminInner() {
             </Button>
           </div>
           <Tabs defaultValue="dashboard" className="space-y-4 sm:space-y-6">
-            <TabsList className="grid w-full grid-cols-8 h-auto gap-1 p-1">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 h-auto gap-1 p-1">
               <TabsTrigger value="dashboard" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -188,6 +191,10 @@ function AdminInner() {
               <TabsTrigger value="guests" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Ospiti</span>
+              </TabsTrigger>
+              <TabsTrigger value="contacts" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
+                <ContactRound className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("contacts")}</span>
               </TabsTrigger>
               <TabsTrigger value="pricing" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <Euro className="h-4 w-4" />
@@ -703,6 +710,10 @@ function AdminInner() {
 
             <TabsContent value="guests" className="space-y-4 sm:space-y-6">
               <GuestsTracking />
+            </TabsContent>
+
+            <TabsContent value="contacts" className="space-y-4 sm:space-y-6">
+              <NewsletterContactsAdmin />
             </TabsContent>
 
             <TabsContent value="pricing" className="space-y-4 sm:space-y-6">

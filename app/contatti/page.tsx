@@ -4,13 +4,14 @@ import { useState, useCallback } from "react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { useLanguage } from "@/components/language-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { AlertCircle, Award, CheckCircle2, Clock, Heart, Loader2, Mail, MapPin, Phone, Send, Users } from "lucide-react"
+import { AlertCircle, Award, CheckCircle2, Clock, Heart, Loader2, MapPin, MessageCircle, Phone, Send } from "lucide-react"
 
 const CONTACT_INFO = {
   name: "CHAPLIN Luxury Holiday House",
@@ -26,8 +27,8 @@ const getEmail = () => {
 }
 
 export default function ContactsPage() {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" })
-  const [newsletterEmail, setNewsletterEmail] = useState("")
   const [newsletterPhone, setNewsletterPhone] = useState("")
   const [newsletterConsent, setNewsletterConsent] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
@@ -44,7 +45,7 @@ export default function ContactsPage() {
     const submittedForm = new FormData(e.currentTarget)
 
     if (!notRobot) {
-      alert("Per favore conferma di non essere un robot")
+      alert(t("confirmNotRobot"))
       return
     }
 
@@ -64,16 +65,16 @@ export default function ContactsPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || "Non è stato possibile inviare il messaggio.")
+        throw new Error(t("contactSendFailure"))
       }
 
       setFormData({ name: "", email: "", subject: "", message: "" })
       setNotRobot(false)
       setSubmitStatus("success")
-      setSubmitMessage("Messaggio inviato correttamente. Ti risponderemo entro 24 ore.")
+      setSubmitMessage(t("contactSendSuccess"))
     } catch (error) {
       setSubmitStatus("error")
-      setSubmitMessage(error instanceof Error ? error.message : "Non è stato possibile inviare il messaggio.")
+      setSubmitMessage(error instanceof Error ? error.message : t("contactSendFailure"))
     } finally {
       setIsSubmitting(false)
     }
@@ -81,12 +82,12 @@ export default function ContactsPage() {
 
   const handleEmailClick = useCallback(() => {
     if (!notRobot) {
-      alert("Per favore conferma di non essere un robot prima di inviare un'email")
+      alert(t("confirmNotRobotEmail"))
       return
     }
     setEmailButtonClicked(true)
     window.location.href = `mailto:${getEmail()}`
-  }, [notRobot])
+  }, [notRobot, t])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -97,7 +98,7 @@ export default function ContactsPage() {
     const submittedForm = new FormData(e.currentTarget)
 
     if (!newsletterConsent) {
-      setNewsletterError("Devi accettare l’informativa per iscriverti alla newsletter.")
+      setNewsletterError(t("whatsappConsentRequired"))
       return
     }
 
@@ -109,7 +110,6 @@ export default function ContactsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: newsletterEmail,
           phone: newsletterPhone,
           marketingConsent: newsletterConsent,
           website: submittedForm.get("newsletter-website"),
@@ -117,14 +117,13 @@ export default function ContactsPage() {
       })
       const result = await response.json()
 
-      if (!response.ok) throw new Error(result.error || "Non è stato possibile completare l’iscrizione.")
+      if (!response.ok) throw new Error(t("whatsappSubscribeFailure"))
 
       setIsSubscribed(true)
-      setNewsletterEmail("")
       setNewsletterPhone("")
       setNewsletterConsent(false)
     } catch (error) {
-      setNewsletterError(error instanceof Error ? error.message : "Non è stato possibile completare l’iscrizione.")
+      setNewsletterError(error instanceof Error ? error.message : t("whatsappSubscribeFailure"))
     } finally {
       setNewsletterSubmitting(false)
     }
@@ -137,9 +136,9 @@ export default function ContactsPage() {
       <div className="pt-20 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10 animate-fade-in-up">
-            <h1 className="text-4xl md:text-6xl font-cinzel font-bold text-roman-gradient mb-4">Contatti</h1>
+            <h1 className="text-4xl md:text-6xl font-cinzel font-bold text-roman-gradient mb-4">{t("contacts")}</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Siamo qui per rendere il tuo soggiorno indimenticabile
+              {t("contactsPageSubtitle")}
             </p>
           </div>
 
@@ -149,7 +148,7 @@ export default function ContactsPage() {
                 <MapPin className="h-5 w-5 text-[#c9a84c] mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-cinzel font-semibold text-[#c9a84c] dark:text-[#d4af37] mb-2 text-base">
-                    Dove Siamo
+                    {t("whereWeAre")}
                   </h3>
                   <p className="text-sm font-medium">{CONTACT_INFO.name}</p>
                   <p className="text-sm text-muted-foreground">{CONTACT_INFO.address}</p>
@@ -163,7 +162,7 @@ export default function ContactsPage() {
                 <Phone className="h-5 w-5 text-[#c9a84c] mt-1 flex-shrink-0" />
                 <div className="flex-1">
                   <h3 className="font-cinzel font-semibold text-[#c9a84c] dark:text-[#d4af37] mb-2 text-base">
-                    Contatti Diretti
+                    {t("directContacts")}
                   </h3>
                   <div className="space-y-3">
                     <div>
@@ -173,7 +172,7 @@ export default function ContactsPage() {
                       >
                         {CONTACT_INFO.phone}
                       </a>
-                      <p className="text-xs text-muted-foreground">Disponibile 24/7</p>
+                      <p className="text-xs text-muted-foreground">{t("available247")}</p>
                     </div>
                     <div className="pt-2 border-t border-[#c9a84c]/20">
                       <div className="flex items-center gap-2 mb-2">
@@ -184,7 +183,7 @@ export default function ContactsPage() {
                           className="border-[#c9a84c]/50"
                         />
                         <label htmlFor="notRobot" className="text-xs text-muted-foreground cursor-pointer">
-                          Non sono un robot
+                          {t("notRobot")}
                         </label>
                       </div>
                       <Button
@@ -195,7 +194,7 @@ export default function ContactsPage() {
                         className="w-full bg-transparent text-sm border-[#c9a84c]/40 hover:bg-[#c9a84c]/10 hover:border-[#c9a84c] disabled:opacity-50"
                       >
                         <Send className="w-4 h-4 mr-2" />
-                        Invia Email
+                        {t("sendEmail")}
                       </Button>
                     </div>
                   </div>
@@ -208,15 +207,15 @@ export default function ContactsPage() {
                 <Clock className="h-5 w-5 text-[#c9a84c] mt-1 flex-shrink-0" />
                 <div className="flex-1">
                   <h3 className="font-cinzel font-semibold text-[#c9a84c] dark:text-[#d4af37] mb-2 text-base">
-                    Servizio Informazioni
+                    {t("informationService")}
                   </h3>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between gap-2">
-                      <span className="font-medium">Lun-Ven</span>
+                      <span className="font-medium">{t("weekdaysShort")}</span>
                       <span className="text-muted-foreground">08:00 - 22:00</span>
                     </div>
                     <div className="flex justify-between gap-2">
-                      <span className="font-medium">Sab-Dom</span>
+                      <span className="font-medium">{t("weekendsShort")}</span>
                       <span className="text-muted-foreground">09:00 - 21:00</span>
                     </div>
                   </div>
@@ -226,10 +225,10 @@ export default function ContactsPage() {
 
             <div className="lg:col-span-3 card-invisible p-5">
               <h3 className="font-cinzel text-base font-semibold text-[#c9a84c] dark:text-[#d4af37] mb-2">
-                Servizio Concierge
+                {t("conciergeService")}
               </h3>
               <p className="text-sm text-muted-foreground mb-3">
-                Il nostro team è a disposizione per organizzare esperienze uniche e personalizzate
+                {t("conciergeUpdatedDescription")}
               </p>
 
               <Button
@@ -237,7 +236,7 @@ export default function ContactsPage() {
                 size="sm"
                 className="bg-transparent text-sm border-[#c9a84c]/40 hover:bg-[#c9a84c]/10 hover:border-[#c9a84c]"
               >
-                Scopri i Servizi
+                {t("discoverServices")}
               </Button>
             </div>
           </div>
@@ -248,16 +247,16 @@ export default function ContactsPage() {
                 <Card className="card-semi-transparent animate-slide-in-left">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-xl font-cinzel text-[#c9a84c] dark:text-[#d4af37]">
-                      Invia un Messaggio
+                      {t("sendMessage")}
                     </CardTitle>
-                    <CardDescription className="text-sm">Ti risponderemo entro 24 ore</CardDescription>
+                    <CardDescription className="text-sm">{t("responseTime")}</CardDescription>
                   </CardHeader>
 
                   <CardContent>
                     <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
                       <div className="md:col-span-1">
                         <Label htmlFor="name" className="text-sm">
-                          Nome Completo
+                          {t("fullName")}
                         </Label>
                         <Input
                           id="name"
@@ -272,7 +271,7 @@ export default function ContactsPage() {
 
                       <div className="md:col-span-1">
                         <Label htmlFor="email" className="text-sm">
-                          Email
+                          {t("email")}
                         </Label>
                         <Input
                           id="email"
@@ -288,7 +287,7 @@ export default function ContactsPage() {
 
                       <div className="md:col-span-2">
                         <Label htmlFor="subject" className="text-sm">
-                          Oggetto
+                          {t("subject")}
                         </Label>
                         <Input
                           id="subject"
@@ -303,14 +302,14 @@ export default function ContactsPage() {
 
                       <div className="md:col-span-2">
                         <Label htmlFor="message" className="text-sm">
-                          Messaggio
+                          {t("message")}
                         </Label>
                         <Textarea
                           id="message"
                           name="message"
                           value={formData.message}
                           onChange={handleInputChange}
-                          placeholder="Scrivi il tuo messaggio..."
+                          placeholder={t("writeMessage")}
                           className="mt-1 focus-visible:ring-[#c9a84c]"
                           rows={4}
                           maxLength={5000}
@@ -335,7 +334,7 @@ export default function ContactsPage() {
                           className="border-[#c9a84c]/50"
                         />
                         <label htmlFor="notRobotForm" className="text-sm text-muted-foreground cursor-pointer">
-                          Non sono un robot
+                          {t("notRobot")}
                         </label>
                       </div>
 
@@ -348,10 +347,10 @@ export default function ContactsPage() {
                           {isSubmitting ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Invio in corso...
+                              {t("sendingMessage")}
                             </>
                           ) : (
-                            "Invia"
+                            t("send")
                           )}
                         </Button>
                       </div>
@@ -386,14 +385,14 @@ export default function ContactsPage() {
               <CardContent className="p-5">
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <Mail className="w-5 h-5 text-[#c9a84c]" />
+                    <MessageCircle className="w-5 h-5 text-[#c9a84c]" />
                     <h2 className="text-lg font-cinzel font-bold text-[#c9a84c] dark:text-[#d4af37]">
-                      Newsletter Esclusiva
+                      {t("whatsappOffersTitle")}
                     </h2>
                   </div>
 
                   <p className="text-sm text-muted-foreground mb-4">
-                    Ricevi offerte speciali e aggiornamenti direttamente nella tua casella di posta
+                    {t("whatsappOffersDescription")}
                   </p>
 
                   {!isSubscribed ? (
@@ -406,19 +405,10 @@ export default function ContactsPage() {
                         aria-hidden="true"
                         className="hidden"
                       />
-                      <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-                        <Input
-                          type="email"
-                          placeholder="La tua email"
-                          value={newsletterEmail}
-                          onChange={(e) => setNewsletterEmail(e.target.value)}
-                          autoComplete="email"
-                          required
-                          className="h-10 focus-visible:ring-[#c9a84c]"
-                        />
+                      <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                         <Input
                           type="tel"
-                          placeholder="Numero di telefono"
+                          placeholder={t("whatsappPhonePlaceholder")}
                           value={newsletterPhone}
                           onChange={(e) => setNewsletterPhone(e.target.value)}
                           autoComplete="tel"
@@ -431,7 +421,7 @@ export default function ContactsPage() {
                           disabled={newsletterSubmitting || !newsletterConsent}
                           className="h-10 bg-[#1a1a1a] hover:bg-[#333] text-[#f5f5f0]"
                         >
-                          {newsletterSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Iscriviti"}
+                          {newsletterSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("whatsappSubscribe")}
                         </Button>
                       </div>
                       <div className="flex items-start justify-center gap-2 text-left text-xs text-muted-foreground">
@@ -442,9 +432,9 @@ export default function ContactsPage() {
                           className="mt-0.5"
                         />
                         <Label htmlFor="newsletter-consent" className="cursor-pointer text-xs font-normal leading-relaxed">
-                          Acconsento a ricevere comunicazioni e offerte da Chaplin. Ho letto l’
+                          {t("whatsappConsentText")}
                           <Link href="/privacy" className="underline hover:text-foreground">
-                            informativa privacy
+                            {t("privacyNotice")}
                           </Link>
                           .
                         </Label>
@@ -459,19 +449,19 @@ export default function ContactsPage() {
                     <div className="bg-[#c9a84c]/10 border border-[#c9a84c]/30 rounded-lg p-3 max-w-md mx-auto">
                       <div className="flex items-center justify-center gap-2 text-[#1a1a1a]">
                         <Heart className="w-4 h-4 fill-current" />
-                        <span className="text-sm font-medium">Grazie per esserti iscritto!</span>
+                        <span className="text-sm font-medium">{t("whatsappSubscribeThanks")}</span>
                       </div>
                     </div>
                   )}
 
                   <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      <span>2.500+ iscritti</span>
+                      <MessageCircle className="w-3 h-3" />
+                      <span>{t("whatsappPromotionalMessages")}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Award className="w-3 h-3" />
-                      <span>Offerte esclusive</span>
+                      <span>{t("exclusiveOffers")}</span>
                     </div>
                   </div>
                 </div>

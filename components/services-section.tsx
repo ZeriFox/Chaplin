@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
 
 export function ServicesSection() {
-  const { language } = useLanguage()
+  const { language, t } = useLanguage()
 
   const sectionContent: Record<string, { 
     title: string
@@ -79,8 +79,8 @@ export function ServicesSection() {
   const content = sectionContent[language] || sectionContent.it
 
   const images = [
-    { src: "/images/chaplin-camera-matrimoniale.jpeg", alt: "Camera matrimoniale della suite" },
-    { src: "/images/spa1.jpg", alt: "Vasca idromassaggio" },
+    { src: "/images/chaplin-camera-matrimoniale.jpeg", alt: t("homeBedroomAlt") },
+    { src: "/images/spa1.jpg", alt: t("homeJacuzziAlt") },
     { src: "/images/room-1.jpg", alt: "Zona notte suite" },
   ]
 
@@ -105,7 +105,7 @@ export function ServicesSection() {
             <div className="col-span-2 aspect-video relative overflow-hidden">
               <Image
                 src="/images/pool.jpg"
-                alt="Piscina CHAPLIN"
+                alt={t("homePoolAlt")}
                 fill
                 className="object-cover"
               />

@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, isSameDay } from "date-fns"
-import { it } from "date-fns/locale"
+import { de, enUS, es, fr, it } from "date-fns/locale"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/components/language-provider"
 
 export type DateRange = {
   from?: Date
@@ -44,6 +45,7 @@ type SpecialPeriod = {
 }
 
 export function BookingCalendarPicker({ value, onChange, roomId, className, compact = false }: Props) {
+  const { language, t } = useLanguage()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [seasons, setSeasons] = useState<Season[]>([])
   const [specialPeriods, setSpecialPeriods] = useState<SpecialPeriod[]>([])
@@ -190,6 +192,10 @@ export function BookingCalendarPicker({ value, onChange, roomId, className, comp
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd })
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const dateLocale = { it, en: enUS, fr, es, de }[language]
+  const weekDays = Array.from({ length: 7 }, (_, index) =>
+    format(new Date(2021, 7, index + 1), "EEE", { locale: dateLocale }),
+  )
 
   return (
     <Card className={cn(compact ? "p-2" : "p-3", className)}>
@@ -201,17 +207,19 @@ export function BookingCalendarPicker({ value, onChange, roomId, className, comp
             size={compact ? "icon" : "sm"}
             onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}
             className={compact ? "h-7 w-7" : ""}
+            aria-label={t("calendarPreviousMonth")}
           >
             <ChevronLeft className={cn(compact ? "h-3 w-3" : "h-4 w-4")} />
           </Button>
           <h3 className={cn(compact ? "text-sm" : "text-base", "font-semibold")}>
-            {format(currentMonth, "MMMM yyyy", { locale: it })}
+            {format(currentMonth, "MMMM yyyy", { locale: dateLocale })}
           </h3>
           <Button
             variant="outline"
             size={compact ? "icon" : "sm"}
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
             className={compact ? "h-7 w-7" : ""}
+            aria-label={t("calendarNextMonth")}
           >
             <ChevronRight className={cn(compact ? "h-3 w-3" : "h-4 w-4")} />
           </Button>
@@ -219,7 +227,7 @@ export function BookingCalendarPicker({ value, onChange, roomId, className, comp
 
         {/* Calendar Grid - USER CALENDAR: NO PRICES DISPLAYED */}
         <div className={cn("grid grid-cols-7", compact ? "gap-0.5" : "gap-1")}>
-          {["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"].map((day) => (
+          {weekDays.map((day) => (
             <div key={day} className={cn("text-center font-semibold p-1", compact ? "text-[10px]" : "text-xs")}>
               {day}
             </div>
@@ -262,8 +270,8 @@ export function BookingCalendarPicker({ value, onChange, roomId, className, comp
           >
             <CalendarIcon className={cn(compact ? "h-3 w-3" : "h-3 w-3", "text-primary")} />
             <span className="font-semibold">
-              {format(value.from, "dd MMM yyyy", { locale: it })}
-              {value.to && ` → ${format(value.to, "dd MMM yyyy", { locale: it })}`}
+              {format(value.from, "dd MMM yyyy", { locale: dateLocale })}
+              {value.to && ` → ${format(value.to, "dd MMM yyyy", { locale: dateLocale })}`}
             </span>
           </div>
         )}

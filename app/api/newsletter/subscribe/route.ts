@@ -25,7 +25,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const email = cleanText(body.email, 254).toLowerCase()
     const rawPhone = cleanText(body.phone, 40)
     const website = cleanText(body.website, 200)
     const marketingConsent = body.marketingConsent === true
@@ -35,36 +34,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true })
     }
 
-    if (!email || !rawPhone || !marketingConsent) {
+    if (!rawPhone || !marketingConsent) {
       return NextResponse.json(
-        { error: "Inserisci email, numero di telefono e consenso alla newsletter." },
+        { code: "WHATSAPP_CONTACT_REQUIRED", error: "Inserisci il numero WhatsApp e presta il consenso." },
         { status: 400 },
       )
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: "Inserisci un indirizzo email valido." }, { status: 400 })
     }
 
     const phone = normalizePhone(rawPhone)
     const phoneDigits = phone.replace(/\D/g, "")
 
     if (phoneDigits.length < 7 || phoneDigits.length > 15) {
-      return NextResponse.json({ error: "Inserisci un numero di telefono valido." }, { status: 400 })
+      return NextResponse.json(
+        { code: "INVALID_WHATSAPP_NUMBER", error: "Inserisci un numero WhatsApp valido." },
+        { status: 400 },
+      )
     }
 
     const db = getAdminDb()
-    const contactId = createHash("sha256").update(email).digest("hex")
+    const contactId = createHash("sha256").update(`whatsapp:${phoneDigits}`).digest("hex")
     const contactRef = db.collection("newsletter_contacts").doc(contactId)
     const existingContact = await contactRef.get()
     const timestamp = FieldValue.serverTimestamp()
 
     await contactRef.set(
       {
-        email,
         phone,
+        channel: "whatsapp",
         status: "active",
-        source: "website-newsletter",
+        source: "website-whatsapp-promotions",
         marketingConsent: true,
         consentAt: timestamp,
         updatedAt: timestamp,

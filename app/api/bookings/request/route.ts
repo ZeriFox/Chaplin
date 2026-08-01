@@ -5,6 +5,9 @@ export const dynamic = "force-dynamic"
 
 const STRUCTURE_EMAIL = "chaplinviterbo@gmail.com"
 const MAX_TEXT_LENGTH = 2_000
+const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://chaplin-two.vercel.app")
+  .replace(/\/+$/, "")
+const BOOKING_EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-readable.png`
 
 type BookingRequestBody = {
   bookingId?: string
@@ -63,6 +66,24 @@ function formatMoney(cents: number) {
 
 function getErrorMessage(reason: unknown) {
   return reason instanceof Error ? reason.message : String(reason)
+}
+
+function emailHeader(subtitle: string) {
+  return `
+    <table role="presentation" style="width:100%;border-collapse:collapse;background:#f5f2e9;border-bottom:3px solid #d3b25d">
+      <tr>
+        <td style="padding:24px 28px;text-align:center">
+          <img
+            src="${BOOKING_EMAIL_LOGO_URL}"
+            width="300"
+            alt="CHAPLIN Luxury Holiday House"
+            style="display:block;width:100%;max-width:300px;height:auto;margin:0 auto;border:0"
+          />
+          <p style="margin:14px 0 0;color:#9a7626;font-size:15px;font-weight:600">${subtitle}</p>
+        </td>
+      </tr>
+    </table>
+  `
 }
 
 export async function POST(request: Request) {
@@ -142,10 +163,7 @@ export async function POST(request: Request) {
       subject: `Richiesta di prenotazione ricevuta - ${roomName}`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#262626">
-          <div style="background:#171717;color:#fff;padding:28px;text-align:center">
-            <h1 style="margin:0;font-size:24px">CHAPLIN Luxury Holiday House</h1>
-            <p style="margin:8px 0 0;color:#d3b25d">Richiesta di prenotazione ricevuta</p>
-          </div>
+          ${emailHeader("Richiesta di prenotazione ricevuta")}
           <div style="padding:28px;background:#faf9f5">
             <p>Gentile ${safeName},</p>
             <p>abbiamo ricevuto la tua richiesta di soggiorno. La struttura ti contatterà per confermare disponibilità e dettagli.</p>
@@ -169,9 +187,7 @@ export async function POST(request: Request) {
       subject: `Nuova richiesta di prenotazione - ${firstName} ${lastName}`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#262626">
-          <div style="background:#171717;color:#fff;padding:24px">
-            <h1 style="margin:0;font-size:22px">Nuova richiesta dal sito</h1>
-          </div>
+          ${emailHeader("Nuova richiesta di prenotazione dal sito")}
           <div style="padding:24px;background:#faf9f5">
             <p><strong>Contattare il cliente per confermare la prenotazione.</strong></p>
             <table style="width:100%;border-collapse:collapse;background:#fff;padding:16px;margin:20px 0">

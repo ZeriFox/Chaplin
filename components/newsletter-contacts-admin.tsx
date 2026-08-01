@@ -1,15 +1,15 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Download, Loader2, Mail, Phone, RefreshCw, Trash2, UserCheck, UserX } from "lucide-react"
+import { Download, Loader2, Phone, RefreshCw, Trash2, UserCheck, UserX } from "lucide-react"
 import { auth } from "@/lib/firebase"
+import { useLanguage } from "@/components/language-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 type NewsletterContact = {
   id: string
-  email: string
   phone: string
   status: "active" | "unsubscribed"
   source: string
@@ -17,9 +17,9 @@ type NewsletterContact = {
   updatedAt: string | null
 }
 
-async function authenticatedRequest(url: string, options: RequestInit = {}) {
+async function authenticatedRequest(url: string, t: (key: string) => string, options: RequestInit = {}) {
   const currentUser = auth.currentUser
-  if (!currentUser) throw new Error("Sessione amministratore non disponibile")
+  if (!currentUser) throw new Error(t("adminSessionUnavailable"))
 
   const token = await currentUser.getIdToken()
   const response = await fetch(url, {
@@ -32,11 +32,12 @@ async function authenticatedRequest(url: string, options: RequestInit = {}) {
   })
   const result = await response.json()
 
-  if (!response.ok) throw new Error(result.error || "Operazione non riuscita")
+  if (!response.ok) throw new Error(t("operationFailed"))
   return result
 }
 
 export function NewsletterContactsAdmin() {
+  const { language, t } = useLanguage()
   const [contacts, setContacts] = useState<NewsletterContact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -47,14 +48,14 @@ export function NewsletterContactsAdmin() {
     setError("")
 
     try {
-      const result = await authenticatedRequest("/api/admin/newsletter-contacts")
+      const result = await authenticatedRequest("/api/admin/newsletter-contacts", t)
       setContacts(result.contacts || [])
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Impossibile caricare i contatti")
+      setError(loadError instanceof Error ? loadError.message : t("loadContactsFailed"))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     void loadContacts()
@@ -66,7 +67,7 @@ export function NewsletterContactsAdmin() {
     setError("")
 
     try {
-      await authenticatedRequest("/api/admin/newsletter-contacts", {
+      await authenticatedRequest("/api/admin/newsletter-contacts", t, {
         method: "PATCH",
         body: JSON.stringify({ id: contact.id, status: nextStatus }),
       })
@@ -74,25 +75,25 @@ export function NewsletterContactsAdmin() {
         current.map((item) => (item.id === contact.id ? { ...item, status: nextStatus } : item)),
       )
     } catch (updateError) {
-      setError(updateError instanceof Error ? updateError.message : "Impossibile aggiornare il contatto")
+      setError(updateError instanceof Error ? updateError.message : t("updateContactFailed"))
     } finally {
       setUpdatingId(null)
     }
   }
 
   const deleteContact = async (contact: NewsletterContact) => {
-    if (!window.confirm(`Eliminare definitivamente ${contact.email} dalla lista contatti?`)) return
+    if (!window.confirm(`${t("deleteContactConfirm")} ${contact.phone}`)) return
 
     setUpdatingId(contact.id)
     setError("")
 
     try {
-      await authenticatedRequest(`/api/admin/newsletter-contacts?id=${encodeURIComponent(contact.id)}`, {
+      await authenticatedRequest(`/api/admin/newsletter-contacts?id=${encodeURIComponent(contact.id)}`, t, {
         method: "DELETE",
       })
       setContacts((current) => current.filter((item) => item.id !== contact.id))
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Impossibile eliminare il contatto")
+      setError(deleteError instanceof Error ? deleteError.message : t("deleteContactFailed"))
     } finally {
       setUpdatingId(null)
     }
@@ -101,13 +102,12 @@ export function NewsletterContactsAdmin() {
   const exportCsv = () => {
     const escapeCell = (value: string) => `"${value.replaceAll('"', '""')}"`
     const rows = [
-      ["Email", "Telefono", "Stato", "Origine", "Data iscrizione"],
+      [t("phone"), t("contactStatusLabel"), t("contactSourceLabel"), t("registeredOn")],
       ...contacts.map((contact) => [
-        contact.email,
         contact.phone,
-        contact.status === "active" ? "Attivo" : "Disiscritto",
+        contact.status === "active" ? t("activeStatus") : t("unsubscribedStatus"),
         contact.source,
-        contact.createdAt ? new Date(contact.createdAt).toLocaleString("it-IT") : "",
+        contact.createdAt ? new Date(contact.createdAt).toLocaleString(language) : "",
       ]),
     ]
     const csv = rows.map((row) => row.map(escapeCell).join(",")).join("\n")
@@ -126,35 +126,35 @@ export function NewsletterContactsAdmin() {
       <CardHeader>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Contatti newsletter</CardTitle>
-            <CardDescription>Email e numeri di telefono raccolti dal modulo del sito.</CardDescription>
+            <CardTitle>{t("whatsappContactsTitle")}</CardTitle>
+            <CardDescription>{t("whatsappContactsDescription")}</CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => void loadContacts()} disabled={loading}>
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              Aggiorna
+              {t("refreshContacts")}
             </Button>
             <Button variant="outline" size="sm" onClick={exportCsv} disabled={contacts.length === 0}>
               <Download className="mr-2 h-4 w-4" />
-              Esporta CSV
+              {t("exportCsv")}
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2 text-sm">
-          <Badge variant="secondary">{contacts.length} contatti totali</Badge>
-          <Badge className="bg-emerald-600 text-white">{activeContacts} attivi</Badge>
+          <Badge variant="secondary">{contacts.length} {t("totalContactsLabel")}</Badge>
+          <Badge className="bg-emerald-600 text-white">{activeContacts} {t("activeContactsLabel")}</Badge>
         </div>
 
         {error && <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
         {loading ? (
           <div className="flex items-center justify-center py-12 text-muted-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Caricamento contatti…
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t("loadingContacts")}
           </div>
         ) : contacts.length === 0 ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">Nessun contatto newsletter registrato.</p>
+          <p className="py-12 text-center text-sm text-muted-foreground">{t("noWhatsappContacts")}</p>
         ) : (
           <div className="space-y-3">
             {contacts.map((contact) => (
@@ -163,20 +163,17 @@ export function NewsletterContactsAdmin() {
                 className="flex flex-col gap-3 rounded-xl border bg-card p-4 lg:flex-row lg:items-center lg:justify-between"
               >
                 <div className="min-w-0 space-y-1">
-                  <p className="flex items-center gap-2 break-all font-medium">
-                    <Mail className="h-4 w-4 flex-shrink-0 text-[#c9a84c]" /> {contact.email}
-                  </p>
                   <p className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Phone className="h-4 w-4 flex-shrink-0 text-[#c9a84c]" /> {contact.phone}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Iscritto il {contact.createdAt ? new Date(contact.createdAt).toLocaleString("it-IT") : "—"}
+                    {t("registeredOn")} {contact.createdAt ? new Date(contact.createdAt).toLocaleString(language) : "—"}
                   </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={contact.status === "active" ? "default" : "secondary"}>
-                    {contact.status === "active" ? "Attivo" : "Disiscritto"}
+                    {contact.status === "active" ? t("activeStatus") : t("unsubscribedStatus")}
                   </Badge>
                   <Button
                     variant="outline"
@@ -189,7 +186,7 @@ export function NewsletterContactsAdmin() {
                     ) : (
                       <UserCheck className="mr-2 h-4 w-4" />
                     )}
-                    {contact.status === "active" ? "Disattiva" : "Riattiva"}
+                    {contact.status === "active" ? t("deactivateContact") : t("reactivateContact")}
                   </Button>
                   <Button
                     variant="outline"
@@ -198,7 +195,7 @@ export function NewsletterContactsAdmin() {
                     onClick={() => void deleteContact(contact)}
                     disabled={updatingId === contact.id}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" /> Elimina
+                    <Trash2 className="mr-2 h-4 w-4" /> {t("delete")}
                   </Button>
                 </div>
               </div>

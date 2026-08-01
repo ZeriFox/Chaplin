@@ -135,7 +135,7 @@ export function Header() {
                   <div className="w-8 h-8 bg-[#c9a84c] rounded-full flex items-center justify-center">
                     <Bed className="w-4 h-4 text-[#1a1a1a]" />
                   </div>
-                  <span className="font-cinzel">Suite Esclusiva</span>
+                  <span className="font-cinzel">{t("exclusiveSuite")}</span>
                 </Link>
 
                 <Link
@@ -176,7 +176,7 @@ export function Header() {
                   <div className="flex items-center gap-2 mb-4">
                     <Globe className="w-4 h-4 text-[#c9a84c]" />
                     <span className="text-xs font-cinzel text-white uppercase tracking-wider font-bold">
-                      {t("selectLanguage") || "Language"}
+                      {t("selectLanguage")}
                     </span>
                   </div>
 
@@ -205,7 +205,7 @@ export function Header() {
                 <div className="border-t border-white/20 pt-6 mt-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="w-4 h-4 text-[#c9a84c]" />
-                    <span className="text-xs font-cinzel text-white uppercase tracking-wider font-bold">Account</span>
+                    <span className="text-xs font-cinzel text-white uppercase tracking-wider font-bold">{t("accountLabel")}</span>
                   </div>
 
                   {user ? (

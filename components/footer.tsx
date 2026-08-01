@@ -5,13 +5,13 @@ import Image from "next/image"
 import { MapPin, Phone, Mail, Facebook, Instagram, Clock, MessageCircle } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 
-const BankTransferIcon = (props: any) => (
+const BankTransferIcon = ({ label, ...props }: { label: string; className?: string }) => (
   <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" {...props}>
     <rect width="48" height="32" rx="4" fill="white" />
     <path d="M24 5 10 11h28L24 5Z" fill="#233B63" />
     <path d="M12 13h24M14 13v8m7-8v8m7-8v8m7-8v8M10 23h28" stroke="#233B63" strokeWidth="2" />
     <text x="24" y="29" fill="#233B63" fontSize="4.8" fontWeight="700" fontFamily="Arial, sans-serif" textAnchor="middle">
-      BONIFICO
+      {label.toUpperCase()}
     </text>
   </svg>
 )
@@ -84,7 +84,7 @@ export function Footer() {
                 <div>
                   <p>Via della Pettinara 48</p>
                   <p>01100 Viterbo (VT)</p>
-                  <p>Italia</p>
+                  <p>{t("italy")}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -96,13 +96,13 @@ export function Footer() {
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary" />
                 <Link href="/contatti" className="hover:text-primary transition-colors">
-                  Contattaci via email
+                  {t("contactViaEmail")}
                 </Link>
               </div>
               <div className="flex items-center gap-3">
                 <Clock className="w-4 h-4 text-primary" />
                 <span>
-                  {t("checkIn")}: dalle 15:00 | {t("checkOut")}: entro le 11:00
+                  {t("checkIn")}: {t("footerCheckInTime")} | {t("checkOut")}: {t("footerCheckOutTime")}
                 </span>
               </div>
             </div>
@@ -113,7 +113,7 @@ export function Footer() {
             <h3 className="font-semibold text-lg mb-4">{t("quickLinks")}</h3>
             <div className="space-y-2 text-sm">
               <Link href="/camere" className="block hover:text-primary transition-colors">
-                Suite Esclusiva
+                {t("exclusiveSuite")}
               </Link>
               <Link href="/servizi" className="block hover:text-primary transition-colors">
                 {t("services")}
@@ -178,7 +178,7 @@ export function Footer() {
         <div className="border-t border-background/20 mt-8 pt-8">
           {/* Metodi di pagamento */}
           <div className="flex flex-col items-center gap-4 pb-8 border-b border-background/20">
-            <p className="text-xs text-background/60 uppercase tracking-wider">Metodi di Pagamento Accettati</p>
+            <p className="text-xs text-background/60 uppercase tracking-wider">{t("acceptedPaymentMethods")}</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <div
                 className="h-10 w-16 flex items-center justify-center hover:scale-105 transition-transform"
@@ -215,10 +215,10 @@ export function Footer() {
               </div>
               <div
                 className="h-10 w-16 flex items-center justify-center hover:scale-105 transition-transform"
-                aria-label="Bonifico bancario"
-                title="Bonifico bancario"
+                aria-label={t("bankTransfer")}
+                title={t("bankTransfer")}
               >
-                <BankTransferIcon className="h-full w-full" />
+                <BankTransferIcon label={t("bankTransfer")} className="h-full w-full" />
               </div>
             </div>
           </div>

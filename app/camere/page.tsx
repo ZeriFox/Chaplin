@@ -56,76 +56,75 @@ export default function CamerePage() {
   const HOME = useMemo(
     () => ({
       name: "CHAPLIN Luxury Holiday House",
-      location: "Via della Pettinara, 48, 01100 Viterbo, Italia",
+      location: t("roomLocationLine"),
       guests: 2,
       beds: "1",
       bathrooms: 1,
       size: 57,
-      priceLabel: "Prezzo variabile (verifica disponibilità)",
-      description:
-        "Suite con area SPA interna esclusiva, WiFi gratuito e cucina completa. Ideale per coppie che cercano relax, privacy e una posizione comoda per visitare Viterbo e i dintorni.",
+      priceLabel: t("roomPriceVariable"),
+      description: t("roomDescriptionCurrent"),
       chips: [
-        "Intero alloggio tutto per te",
+        t("entirePlace"),
         "57 m²",
-        "Cucina",
-        "Minipiscina",
-        "WiFi gratuito",
-        "Aria condizionata",
-        "Bagno privato",
-        "Servizio pulizie giornaliero",
-        "Riscaldamento",
+        t("kitchen"),
+        t("miniPool"),
+        t("freeWifiLower"),
+        t("airConditioning"),
+        t("privateBathroom"),
+        t("dailyCleaning"),
+        t("heating"),
       ],
       rules: {
-        checkIn: "dalle ore 15:00 in poi",
-        checkOut: "entro le 11:00",
-        notes:
-          "Le condizioni di cancellazione/pagamento anticipato possono variare: verificare prima della prenotazione.",
+        checkIn: t("checkInFrom15"),
+        checkOut: t("checkOutBy11"),
+        notes: t("roomCancellationNote"),
       },
     }),
-    [],
+    [t],
   )
 
   // ✅ FOTO: SOLO ASSET DA /public/chaplin/...
   // Se non trovi un file, mostro placeholder (così non "scompare" tutto).
+  const galleryPhotoAlt = (index: number) => `${t("roomGalleryPhotoAlt")} ${index}`
   const photos: GalleryPhoto[] = [
-    { src: "/images/pool.jpg", alt: "Copertina" },
-    { src: "/chaplin/0004.JPG", alt: "Spa" },
+    { src: "/images/pool.jpg", alt: t("roomCoverAlt") },
+    { src: "/chaplin/0004.JPG", alt: t("roomSpaAlt") },
 
-  { src: "/chaplin/0007.JPG", alt: "Area benessere" },
-  { src: "/chaplin/0012.JPG", alt: "Piscina" },
-  { src: "/chaplin/0013.JPG", alt: "Dettagli spa" },
+  { src: "/chaplin/0007.JPG", alt: t("roomWellnessAreaAlt") },
+  { src: "/chaplin/0012.JPG", alt: t("roomMiniPoolAlt") },
+  { src: "/chaplin/0013.JPG", alt: t("roomSpaDetailsAlt") },
 
-  { src: "/chaplin/0024.JPG", alt: "Zona relax" },
-  { src: "/chaplin/0026.JPG", alt: "Interni" },
-  { src: "/chaplin/0028.JPG", alt: "Camera" },
+  { src: "/chaplin/0024.JPG", alt: galleryPhotoAlt(6) },
+  { src: "/chaplin/0026.JPG", alt: galleryPhotoAlt(7) },
+  { src: "/chaplin/0028.JPG", alt: galleryPhotoAlt(8) },
 
-  { src: "/chaplin/0031.JPG", alt: "Bagno" },
-  { src: "/chaplin/0032.JPG", alt: "Dettagli" },
-  { src: "/chaplin/0035.JPG", alt: "Cucina" },
+  { src: "/chaplin/0031.JPG", alt: galleryPhotoAlt(9) },
+  { src: "/chaplin/0032.JPG", alt: galleryPhotoAlt(10) },
+  { src: "/chaplin/0035.JPG", alt: galleryPhotoAlt(11) },
 
-  { src: "/chaplin/0037.JPG", alt: "Soggiorno" },
-  { src: "/chaplin/0041.JPG", alt: "Vista" },
-  { src: "/chaplin/0045.JPG", alt: "Ambiente" },
-  { src: "/chaplin/0046.JPG", alt: "Relax" },
-  { src: "/chaplin/0047.JPG", alt: "Atmosfera" },
-  { src: "/chaplin/0049.JPG", alt: "Dettagli interni" },
+  { src: "/chaplin/0037.JPG", alt: galleryPhotoAlt(12) },
+  { src: "/chaplin/0041.JPG", alt: galleryPhotoAlt(13) },
+  { src: "/chaplin/0045.JPG", alt: galleryPhotoAlt(14) },
+  { src: "/chaplin/0046.JPG", alt: galleryPhotoAlt(15) },
+  { src: "/chaplin/0047.JPG", alt: galleryPhotoAlt(16) },
+  { src: "/chaplin/0049.JPG", alt: galleryPhotoAlt(17) },
 
-  { src: "/chaplin/0053.JPG", alt: "Area comune" },
-  { src: "/chaplin/0058.JPG", alt: "Spa privata" },
-  { src: "/chaplin/0059.JPG", alt: "Illuminazione" },
-  { src: "/chaplin/0064.JPG", alt: "Zona wellness" },
-  { src: "/chaplin/0068.JPG", alt: "Relax totale" },
-  { src: "/chaplin/0069.JPG", alt: "Dettagli architettonici" },
+  { src: "/chaplin/0053.JPG", alt: galleryPhotoAlt(18) },
+  { src: "/chaplin/0058.JPG", alt: galleryPhotoAlt(19) },
+  { src: "/chaplin/0059.JPG", alt: galleryPhotoAlt(20) },
+  { src: "/chaplin/0064.JPG", alt: galleryPhotoAlt(21) },
+  { src: "/chaplin/0068.JPG", alt: galleryPhotoAlt(22) },
+  { src: "/chaplin/0069.JPG", alt: galleryPhotoAlt(23) },
 
-  { src: "/chaplin/0071.JPG", alt: "Camera matrimoniale" },
-  { src: "/chaplin/0072.JPG", alt: "Bagno spa" },
-  { src: "/chaplin/0073.JPG", alt: "Zona notte" },
-  { src: "/chaplin/0074.JPG", alt: "Dettagli di stile" },
+  { src: "/chaplin/0071.JPG", alt: galleryPhotoAlt(24) },
+  { src: "/chaplin/0072.JPG", alt: galleryPhotoAlt(25) },
+  { src: "/chaplin/0073.JPG", alt: galleryPhotoAlt(26) },
+  { src: "/chaplin/0074.JPG", alt: galleryPhotoAlt(27) },
 
-  { src: "/chaplin/0081.JPG", alt: "Interni luxury" },
-  { src: "/chaplin/0083.JPG", alt: "Finale gallery" },
-  { src: "/images/chaplin-kit-cortesia.jpeg", alt: "Kit di cortesia" },
-  { src: "/images/chaplin-lavabo.jpeg", alt: "Lavabo e prodotti di cortesia" },
+  { src: "/chaplin/0081.JPG", alt: galleryPhotoAlt(28) },
+  { src: "/chaplin/0083.JPG", alt: galleryPhotoAlt(29) },
+  { src: "/images/chaplin-kit-cortesia.jpeg", alt: t("courtesyKitAlt") },
+  { src: "/images/chaplin-lavabo.jpeg", alt: t("courtesySinkAlt") },
   ]
 
   const [galleryOpen, setGalleryOpen] = useState(false)
@@ -140,26 +139,29 @@ export default function CamerePage() {
   const prevImage = () => setCurrentImageIndex((p) => (p - 1 + photos.length) % photos.length)
 
   // ✅ SERVIZI (come già ok)
-  const amenities = [
-    { icon: DoorClosed, label: "Intero alloggio (appartamento privato in edificio)" },
-    { icon: UtensilsCrossed, label: "Cucina completa" },
-    { icon: Waves, label: "Minipiscina coperta (Gratis) • riscaldata • solo adulti • tutto l’anno" },
-    { icon: Sparkles, label: "Spa e centro benessere • sala relax" },
-    { icon: Wifi, label: "WiFi gratuito" },
-    { icon: Wind, label: "Aria condizionata" },
-    { icon: Snowflake, label: "Riscaldamento" },
-    { icon: Bath, label: "Bagno privato" },
-    { icon: Check, label: "Servizio pulizie giornaliero" },
-    { icon: CigaretteOff, label: "Struttura interamente non fumatori" },
-    { icon: ParkingCircle, label: "Parcheggio pubblico in zona (potrebbe essere a pagamento)" },
-    { icon: Car, label: "Parcheggio in strada" },
-    { icon: Tv, label: "TV a schermo piatto" },
-    { icon: Coffee, label: "Macchina da caffè • bollitore" },
-    { icon: Refrigerator, label: "Frigorifero" },
-    { icon: Droplets, label: "Vasca idromassaggio (Jacuzzi)" },
-    { icon: ShieldCheck, label: "Sicurezza: estintori • rilevatore monossido" },
-    { icon: Languages, label: "Lingue: Italiano • Inglese" },
-  ]
+  const amenities = useMemo(
+    () => [
+      { icon: DoorClosed, label: t("amenityEntirePlace") },
+      { icon: UtensilsCrossed, label: t("amenityCompleteKitchen") },
+      { icon: Waves, label: t("amenityCoveredMiniPool") },
+      { icon: Sparkles, label: t("amenitySpaRelax") },
+      { icon: Wifi, label: t("freeWifiLower") },
+      { icon: Wind, label: t("airConditioning") },
+      { icon: Snowflake, label: t("heating") },
+      { icon: Bath, label: t("privateBathroom") },
+      { icon: Check, label: t("dailyCleaning") },
+      { icon: CigaretteOff, label: t("amenitySmokeFree") },
+      { icon: ParkingCircle, label: t("amenityPublicParking") },
+      { icon: Car, label: t("amenityStreetParking") },
+      { icon: Tv, label: t("amenityFlatTv") },
+      { icon: Coffee, label: t("amenityCoffeeKettle") },
+      { icon: Refrigerator, label: t("amenityRefrigerator") },
+      { icon: Droplets, label: t("amenityJacuzzi") },
+      { icon: ShieldCheck, label: t("amenitySafety") },
+      { icon: Languages, label: t("amenityLanguages") },
+    ],
+    [t],
+  )
 
   // ✅ Verde WhatsApp
   const greenText = "text-[#c9a84c] dark:text-[#d4af37]"
@@ -215,10 +217,10 @@ export default function CamerePage() {
               {/* ✅ ICONCINE SOTTO (come nella tua foto “vecchia”) */}
               <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
                 {[
-                  { icon: MapPin, label: "Centro Viterbo" },
-                  { icon: Wifi, label: "WiFi gratuito" },
-                  { icon: Waves, label: "Minipiscina" },
-                  { icon: Sparkles, label: "Relax premium" },
+                  { icon: MapPin, label: t("centerViterbo") },
+                  { icon: Wifi, label: t("freeWifiLower") },
+                  { icon: Waves, label: t("miniPool") },
+                  { icon: Sparkles, label: t("premiumRelax") },
                 ].map((f, i) => (
                   <div key={i} className="flex flex-col items-center gap-2">
                     <div className={`w-12 h-12 rounded-full ${greenSoftBg} flex items-center justify-center`}>
@@ -252,7 +254,7 @@ export default function CamerePage() {
             {/* disponibilità */}
             <div className={`mb-6 p-4 rounded-2xl border ${greenBorder} bg-[#c9a84c]/5 flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Disponibilità</p>
+                <p className="text-xs text-muted-foreground mb-1">{t("availabilityLabel")}</p>
                 <p className={`text-lg sm:text-xl font-semibold ${greenText}`}>{HOME.priceLabel}</p>
                 <p className="text-xs text-muted-foreground mt-1">{HOME.rules.notes}</p>
               </div>
@@ -263,12 +265,12 @@ export default function CamerePage() {
                   variant="outline"
                   className="border-[#c9a84c]/40 hover:border-[#c9a84c] hover:bg-[#c9a84c]/10"
                 >
-                  <Link href="/contatti">Contatta</Link>
+                  <Link href="/contatti">{t("contactButton")}</Link>
                 </Button>
 
                 <Button asChild className="bg-[#1a1a1a] hover:bg-[#333] text-[#f5f5f0] shadow-lg">
                   <Link href="/prenota">
-                    Controlla date <Sparkles className="w-4 h-4 ml-1" />
+                    {t("checkDatesButton")} <Sparkles className="w-4 h-4 ml-1" />
                   </Link>
                 </Button>
               </div>
@@ -283,7 +285,7 @@ export default function CamerePage() {
               >
                 <Image
                   src={photos[0]?.src || "/placeholder.svg"}
-                  alt={photos[0]?.alt || "Copertina"}
+                  alt={photos[0]?.alt || t("coverLabel")}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 58vw"
@@ -296,8 +298,8 @@ export default function CamerePage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
                 <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                  <Badge className="bg-black/60 text-white border-white/10">Copertina</Badge>
-                  <Badge className="bg-black/60 text-white border-white/10">+{Math.max(0, photos.length - 1)} foto</Badge>
+                  <Badge className="bg-black/60 text-white border-white/10">{t("coverLabel")}</Badge>
+                  <Badge className="bg-black/60 text-white border-white/10">+{Math.max(0, photos.length - 1)} {t("photosLabel")}</Badge>
                 </div>
               </button>
 
@@ -329,9 +331,9 @@ export default function CamerePage() {
             {/* mini stats */}
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { icon: Users, label: "Ospiti", value: HOME.guests },
-                { icon: Bed, label: "Letto", value: HOME.beds },
-                { icon: Bath, label: "Bagni", value: HOME.bathrooms },
+                { icon: Users, label: t("guestsLabel"), value: HOME.guests },
+                { icon: Bed, label: t("bedLabel"), value: HOME.beds },
+                { icon: Bath, label: t("bathroomsLabel"), value: HOME.bathrooms },
                 { icon: Maximize, label: "m²", value: HOME.size },
               ].map((s, i) => (
                 <div key={i} className={`p-4 rounded-2xl border ${greenBorder} bg-white/60 dark:bg-black/20`}>
@@ -352,14 +354,14 @@ export default function CamerePage() {
             <div className={`mt-6 p-4 rounded-2xl border ${greenBorder} bg-[#c9a84c]/5`}>
               <h3 className="text-lg font-semibold flex items-center gap-2 mb-2">
                 <CalendarClock className={`w-5 h-5 ${greenText}`} />
-                Orari della Struttura
+                {t("propertyHoursTitle")}
               </h3>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>
-                  <span className="font-medium text-foreground">Check-in:</span> {HOME.rules.checkIn}
+                  <span className="font-medium text-foreground">{t("checkIn")}:</span> {HOME.rules.checkIn}
                 </li>
                 <li>
-                  <span className="font-medium text-foreground">Check-Out:</span> {HOME.rules.checkOut}
+                  <span className="font-medium text-foreground">{t("checkOut")}:</span> {HOME.rules.checkOut}
                 </li>
               </ul>
             </div>
@@ -371,7 +373,7 @@ export default function CamerePage() {
               <div className={`w-11 h-11 ${greenSoftBg} rounded-full flex items-center justify-center`}>
                 <Sparkles className={`w-6 h-6 ${greenText}`} />
               </div>
-              Servizi della casa
+              {t("houseAmenitiesTitle")}
             </h3>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -455,7 +457,7 @@ export default function CamerePage() {
                     {shouldLoad ? (
                       <Image 
                         src={p.src} 
-                        alt={`Thumbnail ${index + 1}`} 
+                        alt={`${t("roomThumbnailAlt")} ${index + 1}`}
                         fill 
                         className="object-cover" 
                         sizes="64px"

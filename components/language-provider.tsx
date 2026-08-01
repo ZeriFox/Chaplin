@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { recentTranslations } from "@/components/recent-translations"
 
 type Language = "it" | "en" | "fr" | "es" | "de"
 
@@ -3364,7 +3365,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations.it] || key
+    const recent = recentTranslations[language] as Record<string, string>
+    const legacy = translations[language] as Record<string, string>
+    return recent[key] || legacy[key] || key
   }
 
   return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>

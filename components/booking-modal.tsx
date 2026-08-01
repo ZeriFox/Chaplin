@@ -32,7 +32,7 @@ interface BookingModalProps {
 }
 
 export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
 
   const [step, setStep] = useState(1)
   const [firstName, setFirstName] = useState("")
@@ -136,21 +136,23 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
       const result = await response.json()
 
       if (!response.ok) {
-        const requestCode = result.bookingId ? ` Codice richiesta: ${result.bookingId}.` : ` Codice richiesta: ${bookingId}.`
-        throw new Error(`${result.error || "Impossibile inviare la richiesta."}${requestCode}`)
+        const requestCode = result.bookingId || bookingId
+        throw new Error(`${t("bookingRequestSendFailure")} ${t("bookingRequestCode")}: ${requestCode}.`)
       }
 
-      toast.success("Richiesta inviata. Abbiamo spedito il riepilogo via email.")
+      toast.success(t("bookingRequestEmailSent"))
       onClose()
     } catch (error) {
       console.error("[booking] Request error:", error)
-      toast.error(error instanceof Error ? error.message : "Errore durante l'invio della richiesta")
+      toast.error(error instanceof Error ? error.message : t("bookingRequestError"))
     } finally {
       setIsProcessing(false)
     }
   }
 
-  const formatMoney = (n: number) => `€${Intl.NumberFormat("it-IT", { minimumFractionDigits: 0 }).format(n)}`
+  const locale = { it: "it-IT", en: "en-GB", fr: "fr-FR", es: "es-ES", de: "de-DE" }[language]
+  const formatMoney = (n: number) =>
+    new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -158,11 +160,11 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
         <DialogHeader>
           <DialogTitle>
             {step === 1 && (t("guestInformation") || "Informazioni Ospite")}
-            {step === 2 && "Riepilogo prenotazione"}
+            {step === 2 && t("bookingSummary")}
           </DialogTitle>
           <DialogDescription>
             {step === 1 && (t("enterGuestDetails") || "Inserisci i tuoi dati per continuare con la prenotazione")}
-            {step === 2 && "Controlla i dati e invia la richiesta. Nessun pagamento verrà effettuato."}
+            {step === 2 && t("bookingReviewDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -209,13 +211,13 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
               <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                 <h4 className="font-semibold text-sm mb-3">{t("bookingSummary") || "Riepilogo Prenotazione"}</h4>
                 <div className="flex justify-between text-sm">
-                  <span>Periodo</span>
+                  <span>{t("periodLabel")}</span>
                   <span>
                     {bookingData.checkIn} – {bookingData.checkOut}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Ospiti</span>
+                  <span>{t("guests")}</span>
                   <span>{bookingData.guests}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -266,7 +268,7 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
                   {t("processing") || "Elaborazione..."}
                 </>
               ) : (
-                "Invia richiesta"
+                t("sendRequest")
               )}
             </Button>
           )}
