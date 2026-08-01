@@ -113,6 +113,7 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId,
+          language,
           checkIn: bookingData.checkIn,
           checkOut: bookingData.checkOut,
           guests: bookingData.guests,

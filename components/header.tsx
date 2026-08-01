@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
 import { useAuth } from "@/components/auth-provider"
-import { Menu, X, User, LogOut, Home, Bed, Calendar, Phone, Crown, Sparkles, Star, Globe } from "lucide-react"
+import { Menu, X, LogOut, Home, Bed, Calendar, Phone, Crown, Sparkles, Star, Globe } from "lucide-react"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -53,13 +53,13 @@ export function Header() {
 
               {/* Desktop Navigation - Hidden on mobile */}
               <div className="hidden md:flex items-center gap-4">
-                {/* User Section */}
-                {user ? (
+                {/* Admin Section */}
+                {user?.role === "admin" ? (
                   <div className="flex items-center gap-2">
-                    <Link href={user.role === "admin" ? "/admin" : "/user"}>
+                    <Link href="/admin">
                       <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span>{user.name}</span>
+                        <Crown className="h-4 w-4" />
+                        <span>{t("admin")}</span>
                       </Button>
                     </Link>
                     <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
@@ -68,10 +68,10 @@ export function Header() {
                     </Button>
                   </div>
                 ) : (
-                  <Link href="/login">
+                  <Link href="/admin-login">
                     <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <span>{t("login")}</span>
+                      <Crown className="h-4 w-4" />
+                      <span>{t("admin")}</span>
                     </Button>
                   </Link>
                 )}
@@ -201,24 +201,23 @@ export function Header() {
                   </div>
                 </div>
 
-                {/* Account Section */}
+                {/* Admin Section */}
                 <div className="border-t border-white/20 pt-6 mt-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="w-4 h-4 text-[#c9a84c]" />
-                    <span className="text-xs font-cinzel text-white uppercase tracking-wider font-bold">{t("accountLabel")}</span>
+                    <span className="text-xs font-cinzel text-white uppercase tracking-wider font-bold">{t("admin")}</span>
                   </div>
-
-                  {user ? (
+                  {user?.role === "admin" ? (
                     <>
                       <Link
-                        href={user.role === "admin" ? "/admin" : "/user"}
+                        href="/admin"
                         className="flex items-center gap-3 text-white hover:text-[#c9a84c] transition-colors text-sm font-medium mb-3"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <div className="w-6 h-6 bg-[#c9a84c] rounded-full flex items-center justify-center">
                           <Star className="w-3 h-3 text-[#1a1a1a]" />
                         </div>
-                        <span className="font-cinzel">{user.role === "admin" ? t("admin") : t("user")}</span>
+                        <span className="font-cinzel">{t("admin")}</span>
                       </Link>
                       <button
                         onClick={handleLogout}
@@ -231,30 +230,18 @@ export function Header() {
                       </button>
                     </>
                   ) : (
-                    <>
-                      <Link
-                        href="/login"
-                        className="flex items-center gap-3 text-white hover:text-[#c9a84c] transition-colors text-sm font-medium mb-3"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <div className="w-6 h-6 bg-[#c9a84c] rounded-full flex items-center justify-center">
-                          <User className="w-3 h-3 text-[#1a1a1a]" />
-                        </div>
-                        <span className="font-cinzel">{t("login")}</span>
-                      </Link>
-                      <Link
-                        href="/register"
-                        className="flex items-center gap-3 text-white hover:text-[#c9a84c] transition-colors text-sm font-medium"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <div className="w-6 h-6 bg-[#c9a84c] rounded-full flex items-center justify-center">
-                          <Sparkles className="w-3 h-3 text-[#1a1a1a]" />
-                        </div>
-                        <span className="font-cinzel">{t("register")}</span>
-                      </Link>
-                    </>
+                    <Link
+                      href="/admin-login"
+                      className="flex items-center gap-3 text-white hover:text-[#c9a84c] transition-colors text-sm font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <div className="w-6 h-6 bg-[#c9a84c] rounded-full flex items-center justify-center">
+                        <Crown className="w-3 h-3 text-[#1a1a1a]" />
+                      </div>
+                      <span className="font-cinzel">{t("admin")}</span>
+                    </Link>
                   )}
-                </div>
+                  </div>
               </nav>
             </div>
           </div>

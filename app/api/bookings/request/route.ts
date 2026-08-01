@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
+import { FieldValue } from "firebase-admin/firestore"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
+import { getAdminDb } from "@/lib/firebase-admin"
 
 export const dynamic = "force-dynamic"
 
@@ -11,6 +13,7 @@ const BOOKING_EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-readable.
 
 type BookingRequestBody = {
   bookingId?: string
+  language?: string
   email?: string
   firstName?: string
   lastName?: string
@@ -31,6 +34,138 @@ type BookingRequestBody = {
   specialRequests?: string
 }
 
+type BookingLanguage = "it" | "en" | "fr" | "es" | "de"
+
+type CustomerEmailCopy = {
+  locale: string
+  subject: string
+  subtitle: string
+  greeting: string
+  intro: string
+  labels: {
+    bookingCode: string
+    suite: string
+    checkIn: string
+    checkOut: string
+    nights: string
+    guests: string
+    total: string
+  }
+  specialRequests: string
+  noSpecialRequests: string
+  noPayment: string
+  confirmationNotice: string
+  closing: string
+}
+
+const CUSTOMER_EMAIL_COPY: Record<BookingLanguage, CustomerEmailCopy> = {
+  it: {
+    locale: "it-IT",
+    subject: "Richiesta di prenotazione ricevuta",
+    subtitle: "Richiesta di prenotazione ricevuta",
+    greeting: "Gentile",
+    intro: "Abbiamo ricevuto la tua richiesta di soggiorno. La struttura ti contatterà per confermare disponibilità e dettagli.",
+    labels: {
+      bookingCode: "Codice richiesta",
+      suite: "Suite",
+      checkIn: "Check-in",
+      checkOut: "Check-out",
+      nights: "Notti",
+      guests: "Ospiti",
+      total: "Totale indicativo",
+    },
+    specialRequests: "Richieste speciali",
+    noSpecialRequests: "Nessuna",
+    noPayment: "Nessun pagamento è stato effettuato.",
+    confirmationNotice: "Questa email conferma soltanto la ricezione della richiesta; la prenotazione diventerà definitiva dopo la conferma della struttura.",
+    closing: "A presto",
+  },
+  en: {
+    locale: "en-GB",
+    subject: "Booking request received",
+    subtitle: "Booking request received",
+    greeting: "Dear",
+    intro: "We have received your stay request. The property will contact you to confirm availability and details.",
+    labels: {
+      bookingCode: "Request code",
+      suite: "Suite",
+      checkIn: "Check-in",
+      checkOut: "Check-out",
+      nights: "Nights",
+      guests: "Guests",
+      total: "Estimated total",
+    },
+    specialRequests: "Special requests",
+    noSpecialRequests: "None",
+    noPayment: "No payment has been made.",
+    confirmationNotice: "This email only confirms receipt of your request; the booking will become final once it has been confirmed by the property.",
+    closing: "See you soon",
+  },
+  fr: {
+    locale: "fr-FR",
+    subject: "Demande de réservation reçue",
+    subtitle: "Demande de réservation reçue",
+    greeting: "Bonjour",
+    intro: "Nous avons bien reçu votre demande de séjour. L’établissement vous contactera pour confirmer les disponibilités et les détails.",
+    labels: {
+      bookingCode: "Code de la demande",
+      suite: "Suite",
+      checkIn: "Arrivée",
+      checkOut: "Départ",
+      nights: "Nuits",
+      guests: "Personnes",
+      total: "Total estimatif",
+    },
+    specialRequests: "Demandes particulières",
+    noSpecialRequests: "Aucune",
+    noPayment: "Aucun paiement n’a été effectué.",
+    confirmationNotice: "Cet e-mail confirme uniquement la réception de votre demande ; la réservation deviendra définitive après confirmation de l’établissement.",
+    closing: "À bientôt",
+  },
+  es: {
+    locale: "es-ES",
+    subject: "Solicitud de reserva recibida",
+    subtitle: "Solicitud de reserva recibida",
+    greeting: "Estimado/a",
+    intro: "Hemos recibido tu solicitud de estancia. El alojamiento se pondrá en contacto contigo para confirmar la disponibilidad y los detalles.",
+    labels: {
+      bookingCode: "Código de solicitud",
+      suite: "Suite",
+      checkIn: "Entrada",
+      checkOut: "Salida",
+      nights: "Noches",
+      guests: "Huéspedes",
+      total: "Total estimado",
+    },
+    specialRequests: "Peticiones especiales",
+    noSpecialRequests: "Ninguna",
+    noPayment: "No se ha realizado ningún pago.",
+    confirmationNotice: "Este correo solo confirma la recepción de tu solicitud; la reserva será definitiva después de la confirmación del alojamiento.",
+    closing: "Hasta pronto",
+  },
+  de: {
+    locale: "de-DE",
+    subject: "Buchungsanfrage erhalten",
+    subtitle: "Buchungsanfrage erhalten",
+    greeting: "Guten Tag",
+    intro: "Wir haben Ihre Aufenthaltsanfrage erhalten. Die Unterkunft wird Sie kontaktieren, um Verfügbarkeit und Einzelheiten zu bestätigen.",
+    labels: {
+      bookingCode: "Anfragecode",
+      suite: "Suite",
+      checkIn: "Check-in",
+      checkOut: "Check-out",
+      nights: "Nächte",
+      guests: "Gäste",
+      total: "Voraussichtlicher Gesamtbetrag",
+    },
+    specialRequests: "Besondere Wünsche",
+    noSpecialRequests: "Keine",
+    noPayment: "Es wurde keine Zahlung vorgenommen.",
+    confirmationNotice: "Diese E-Mail bestätigt nur den Eingang Ihrer Anfrage; die Buchung wird erst nach Bestätigung durch die Unterkunft verbindlich.",
+    closing: "Bis bald",
+  },
+}
+
 function cleanText(value: unknown, maxLength = 200) {
   return String(value ?? "").trim().slice(0, maxLength)
 }
@@ -49,16 +184,22 @@ function escapeHtml(value: unknown) {
   )
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("it-IT", {
+function getBookingLanguage(value: unknown): BookingLanguage {
+  return ["it", "en", "fr", "es", "de"].includes(String(value))
+    ? (String(value) as BookingLanguage)
+    : "it"
+}
+
+function formatDate(value: string, locale = "it-IT") {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   }).format(new Date(`${value}T12:00:00`))
 }
 
-function formatMoney(cents: number) {
-  return new Intl.NumberFormat("it-IT", {
+function formatMoney(cents: number, locale = "it-IT") {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "EUR",
   }).format(cents / 100)
@@ -88,15 +229,9 @@ function emailHeader(subtitle: string) {
 
 export async function POST(request: Request) {
   try {
-    const emailConfig = getEmailConfigStatus()
-    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || process.env.SMTP_FROM_EMAIL
-
-    if ((!emailConfig.resend && !emailConfig.smtp) || !fromEmail) {
-      return NextResponse.json({ error: "Servizio email non configurato" }, { status: 503 })
-    }
-
     const body = (await request.json()) as BookingRequestBody
     const bookingId = cleanText(body.bookingId, 100)
+    const bookingLanguage = getBookingLanguage(body.language)
     const firstName = cleanText(body.firstName)
     const lastName = cleanText(body.lastName)
     const email = cleanText(body.email).toLowerCase()
@@ -136,45 +271,132 @@ export async function POST(request: Request) {
     }
 
     const nights = calculatedNights
+    const bookingDocumentId = bookingId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 100)
+
+    if (!bookingDocumentId) {
+      return NextResponse.json({ error: "Codice richiesta non valido" }, { status: 400 })
+    }
+
+    const bookingRef = getAdminDb().collection("bookings").doc(bookingDocumentId)
+    const existingBooking = await bookingRef.get()
+    const bookingData: Record<string, unknown> = {
+      bookingId,
+      guestFirst: firstName,
+      guestLast: lastName,
+      firstName,
+      lastName,
+      email,
+      phone,
+      checkIn,
+      checkOut,
+      guests,
+      numberOfChildren: children,
+      children,
+      roomId,
+      roomType,
+      roomName,
+      nights,
+      pricePerNight,
+      subtotal,
+      taxes,
+      serviceFee,
+      total: totalAmount,
+      totalAmount,
+      currency: "EUR",
+      language: bookingLanguage,
+      specialRequests,
+      notes: specialRequests,
+      origin: existingBooking.get("origin") || "site",
+      status: existingBooking.get("status") || "pending",
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+
+    if (!existingBooking.exists) {
+      bookingData.createdAt = FieldValue.serverTimestamp()
+      bookingData.services = []
+      bookingData.paymentProvider = null
+      bookingData.paymentId = null
+      bookingData.paidAt = null
+    }
+
+    await bookingRef.set(bookingData, { merge: true })
+
+    const emailConfig = getEmailConfigStatus()
+    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || process.env.SMTP_FROM_EMAIL
+
+    if ((!emailConfig.resend && !emailConfig.smtp) || !fromEmail) {
+      await bookingRef.set(
+        {
+          emailDelivery: {
+            customer: false,
+            structure: false,
+            error: "email_not_configured",
+          },
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      )
+
+      return NextResponse.json(
+        { error: "Richiesta registrata, ma il servizio email non è configurato", bookingId },
+        { status: 503 },
+      )
+    }
+
+    const customerCopy = CUSTOMER_EMAIL_COPY[bookingLanguage]
     const safeBookingId = escapeHtml(bookingId)
     const safeName = `${escapeHtml(firstName)} ${escapeHtml(lastName)}`
     const safeEmail = escapeHtml(email)
     const safePhone = escapeHtml(phone || "Non indicato")
     const safeRoomName = escapeHtml(roomName)
-    const safeRequests = escapeHtml(specialRequests || "Nessuna")
-    const formattedCheckIn = formatDate(checkIn)
-    const formattedCheckOut = formatDate(checkOut)
-    const formattedTotal = formatMoney(totalAmount)
+    const safeCustomerRequests = escapeHtml(specialRequests || customerCopy.noSpecialRequests)
+    const safeStructureRequests = escapeHtml(specialRequests || "Nessuna")
+    const customerCheckIn = formatDate(checkIn, customerCopy.locale)
+    const customerCheckOut = formatDate(checkOut, customerCopy.locale)
+    const customerTotal = formatMoney(totalAmount, customerCopy.locale)
+    const structureCheckIn = formatDate(checkIn)
+    const structureCheckOut = formatDate(checkOut)
+    const structureTotal = formatMoney(totalAmount)
 
-    const summaryRows = `
+    const customerSummaryRows = `
+      <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.bookingCode}</td><td style="padding:8px 0;text-align:right">${safeBookingId}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.suite}</td><td style="padding:8px 0;text-align:right">${safeRoomName}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.checkIn}</td><td style="padding:8px 0;text-align:right">${customerCheckIn}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.checkOut}</td><td style="padding:8px 0;text-align:right">${customerCheckOut}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.nights}</td><td style="padding:8px 0;text-align:right">${nights}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.guests}</td><td style="padding:8px 0;text-align:right">${guests}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.total}</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#b28b2e">${customerTotal}</td></tr>
+    `
+
+    const structureSummaryRows = `
       <tr><td style="padding:8px 0;font-weight:600">Codice richiesta</td><td style="padding:8px 0;text-align:right">${safeBookingId}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">Suite</td><td style="padding:8px 0;text-align:right">${safeRoomName}</td></tr>
-      <tr><td style="padding:8px 0;font-weight:600">Check-in</td><td style="padding:8px 0;text-align:right">${formattedCheckIn}</td></tr>
-      <tr><td style="padding:8px 0;font-weight:600">Check-out</td><td style="padding:8px 0;text-align:right">${formattedCheckOut}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">Check-in</td><td style="padding:8px 0;text-align:right">${structureCheckIn}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">Check-out</td><td style="padding:8px 0;text-align:right">${structureCheckOut}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">Notti</td><td style="padding:8px 0;text-align:right">${nights}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">Ospiti</td><td style="padding:8px 0;text-align:right">${guests}</td></tr>
-      <tr><td style="padding:8px 0;font-weight:600">Totale indicativo</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#b28b2e">${formattedTotal}</td></tr>
+      <tr><td style="padding:8px 0;font-weight:600">Totale indicativo</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#b28b2e">${structureTotal}</td></tr>
     `
 
     const customerEmail = sendEmail({
       from: fromEmail,
       to: email,
       replyTo: STRUCTURE_EMAIL,
-      subject: `Richiesta di prenotazione ricevuta - ${roomName}`,
+      subject: `${customerCopy.subject} - ${roomName}`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#262626">
-          ${emailHeader("Richiesta di prenotazione ricevuta")}
+          ${emailHeader(customerCopy.subtitle)}
           <div style="padding:28px;background:#faf9f5">
-            <p>Gentile ${safeName},</p>
-            <p>abbiamo ricevuto la tua richiesta di soggiorno. La struttura ti contatterà per confermare disponibilità e dettagli.</p>
-            <table style="width:100%;border-collapse:collapse;background:#fff;padding:16px;margin:22px 0">${summaryRows}</table>
+            <p>${customerCopy.greeting} ${safeName},</p>
+            <p>${customerCopy.intro}</p>
+            <table style="width:100%;border-collapse:collapse;background:#fff;padding:16px;margin:22px 0">${customerSummaryRows}</table>
             <div style="background:#fff;border-left:4px solid #d3b25d;padding:14px 16px;margin:20px 0">
-              <strong>Richieste speciali</strong>
-              <p style="margin:8px 0 0;white-space:pre-wrap">${safeRequests}</p>
+              <strong>${customerCopy.specialRequests}</strong>
+              <p style="margin:8px 0 0;white-space:pre-wrap">${safeCustomerRequests}</p>
             </div>
-            <p style="font-weight:600">Nessun pagamento è stato effettuato.</p>
-            <p>Questa email conferma soltanto la ricezione della richiesta; la prenotazione diventerà definitiva dopo la conferma della struttura.</p>
-            <p style="margin-top:28px">A presto,<br><strong>CHAPLIN Luxury Holiday House</strong></p>
+            <p style="font-weight:600">${customerCopy.noPayment}</p>
+            <p>${customerCopy.confirmationNotice}</p>
+            <p style="margin-top:28px">${customerCopy.closing},<br><strong>CHAPLIN Luxury Holiday House</strong></p>
           </div>
         </div>
       `,
@@ -194,11 +416,12 @@ export async function POST(request: Request) {
               <tr><td style="padding:8px 0;font-weight:600">Cliente</td><td style="padding:8px 0;text-align:right">${safeName}</td></tr>
               <tr><td style="padding:8px 0;font-weight:600">Email</td><td style="padding:8px 0;text-align:right">${safeEmail}</td></tr>
               <tr><td style="padding:8px 0;font-weight:600">Telefono</td><td style="padding:8px 0;text-align:right">${safePhone}</td></tr>
-              ${summaryRows}
+              <tr><td style="padding:8px 0;font-weight:600">Lingua cliente</td><td style="padding:8px 0;text-align:right">${bookingLanguage.toUpperCase()}</td></tr>
+              ${structureSummaryRows}
             </table>
             <div style="background:#fff;border-left:4px solid #d3b25d;padding:14px 16px;margin:20px 0">
               <strong>Richieste speciali</strong>
-              <p style="margin:8px 0 0;white-space:pre-wrap">${safeRequests}</p>
+              <p style="margin:8px 0 0;white-space:pre-wrap">${safeStructureRequests}</p>
             </div>
             <p>Rispondendo a questa email, la risposta verrà indirizzata direttamente al cliente.</p>
           </div>
@@ -211,6 +434,17 @@ export async function POST(request: Request) {
       customerResult.status === "fulfilled" && !customerResult.value.error
     const structureDelivered =
       structureResult.status === "fulfilled" && !structureResult.value.error
+
+    await bookingRef.set(
+      {
+        emailDelivery: {
+          customer: customerDelivered,
+          structure: structureDelivered,
+        },
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    )
 
     if (!customerDelivered || !structureDelivered) {
       console.error("[Booking Request] Email delivery failed", {
@@ -232,6 +466,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, bookingId })
   } catch (error) {
     console.error("[Booking Request] Unexpected error:", error)
-    return NextResponse.json({ error: "Impossibile inviare la richiesta di prenotazione" }, { status: 500 })
+    return NextResponse.json({ error: "Impossibile registrare la richiesta di prenotazione" }, { status: 500 })
   }
 }

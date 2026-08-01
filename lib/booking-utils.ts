@@ -5,6 +5,8 @@ export interface Booking {
   id: string
   guestFirst: string
   guestLast: string
+  firstName?: string
+  lastName?: string
   email: string
   phone: string
   roomId: string
@@ -13,6 +15,7 @@ export interface Booking {
   checkOut: string
   guests: number
   total: number
+  totalAmount?: number
   origin: "site" | "booking" | "airbnb" | "expedia" | "direct"
   status: "pending" | "confirmed" | "cancelled"
   createdAt: Timestamp
@@ -29,6 +32,10 @@ export interface Booking {
     total: number
   }
   notes?: string
+  specialRequests?: string
+  refundAmount?: number
+  penalty?: number
+  cancelledAt?: Timestamp
 }
 
 export interface Room {

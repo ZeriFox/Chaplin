@@ -24,6 +24,7 @@ import { AdminSecuritySettings } from "@/components/admin-security-settings"
 import { DynamicPricingManagement } from "@/components/dynamic-pricing-management"
 import { ExtraServicesRequestsAdmin } from "@/components/extra-services-requests-admin"
 import { NewsletterContactsAdmin } from "@/components/newsletter-contacts-admin"
+import { AdminBookingActions, AdminBookingCreateButton } from "@/components/admin-booking-management"
 import { useLanguage } from "@/components/language-provider"
 import type { Booking, Room } from "@/lib/booking-utils"
 
@@ -367,9 +368,12 @@ function AdminInner() {
               <BookingCalendar />
 
               <Card>
-                <CardHeader>
-                  <CardTitle className="font-cinzel text-primary">Tutte le Prenotazioni</CardTitle>
-                  <CardDescription>Gestisci tutte le prenotazioni correnti e future</CardDescription>
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle className="font-cinzel text-primary">Tutte le Prenotazioni</CardTitle>
+                    <CardDescription>Gestisci tutte le prenotazioni correnti e future</CardDescription>
+                  </div>
+                  <AdminBookingCreateButton rooms={rooms} />
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="all" className="space-y-4">
@@ -414,6 +418,9 @@ function AdminInner() {
                                 </p>
                               </div>
                               <div className="flex gap-2 flex-shrink-0">
+                                <Badge variant="outline" className="text-xs">
+                                  {b.status === "pending" ? "In attesa" : "Confermata"}
+                                </Badge>
                                 <Badge
                                   className={`text-xs text-white ${
                                     b.origin === "booking"
@@ -441,6 +448,9 @@ function AdminInner() {
                               {b.origin === "site" && (!b.services || b.services.length === 0) && (
                                 <span className="text-xs text-muted-foreground">Senza servizi aggiuntivi</span>
                               )}
+                            </div>
+                            <div className="border-t pt-3">
+                              <AdminBookingActions booking={b as any} rooms={rooms} />
                             </div>
                           </div>
                         ))
@@ -586,6 +596,9 @@ function AdminInner() {
                               {b.services && b.services.length > 0 && (
                                 <span className="text-xs text-primary">+ {b.services.join(", ")}</span>
                               )}
+                            </div>
+                            <div className="border-t pt-3">
+                              <AdminBookingActions booking={b as any} rooms={rooms} />
                             </div>
                           </div>
                         ))

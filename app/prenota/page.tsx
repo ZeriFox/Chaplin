@@ -276,6 +276,7 @@ export default function PrenotaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId,
+          language,
           checkIn: formData.checkIn,
           checkOut: formData.checkOut,
           guests: adults,
