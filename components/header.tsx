@@ -5,18 +5,11 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/language-provider"
-import { useAuth } from "@/components/auth-provider"
-import { Menu, X, LogOut, Home, Bed, Calendar, Phone, Crown, Sparkles, Star, Globe } from "lucide-react"
+import { Menu, X, Home, Bed, Calendar, Phone, Crown, Globe } from "lucide-react"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { t, language, setLanguage } = useLanguage()
-  const { user, logout } = useAuth()
-
-  const handleLogout = () => {
-    logout()
-    setIsMenuOpen(false)
-  }
 
   const languages = [
     { code: "it" as const, name: "Italiano", flag: "🇮🇹" },
@@ -53,22 +46,6 @@ export function Header() {
 
               {/* Desktop Navigation - Hidden on mobile */}
               <div className="hidden md:flex items-center gap-4">
-                {/* Admin Section */}
-                {user?.role === "admin" && (
-                  <div className="flex items-center gap-2">
-                    <Link href="/admin">
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                        <Crown className="h-4 w-4" />
-                        <span>{t("admin")}</span>
-                      </Button>
-                    </Link>
-                    <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
-                      <LogOut className="h-4 w-4" />
-                      <span>{t("logout")}</span>
-                    </Button>
-                  </div>
-                )}
-
                 {/* Book Now Button */}
                 <Button
                   asChild
@@ -194,36 +171,6 @@ export function Header() {
                   </div>
                 </div>
 
-                {/* Admin Section */}
-                {user?.role === "admin" && (
-                  <div className="border-t border-white/20 pt-6 mt-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="w-4 h-4 text-[#c9a84c]" />
-                      <span className="text-xs font-cinzel text-white uppercase tracking-wider font-bold">{t("admin")}</span>
-                    </div>
-                    <>
-                      <Link
-                        href="/admin"
-                        className="flex items-center gap-3 text-white hover:text-[#c9a84c] transition-colors text-sm font-medium mb-3"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <div className="w-6 h-6 bg-[#c9a84c] rounded-full flex items-center justify-center">
-                          <Star className="w-3 h-3 text-[#1a1a1a]" />
-                        </div>
-                        <span className="font-cinzel">{t("admin")}</span>
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 text-white hover:text-[#c9a84c] transition-colors text-sm font-medium"
-                      >
-                        <div className="w-6 h-6 bg-[#c9a84c] rounded-full flex items-center justify-center">
-                          <LogOut className="w-3 h-3 text-[#1a1a1a]" />
-                        </div>
-                        <span className="font-cinzel">{t("logout")}</span>
-                      </button>
-                    </>
-                  </div>
-                )}
               </nav>
             </div>
           </div>
