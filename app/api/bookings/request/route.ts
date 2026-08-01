@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { FieldValue } from "firebase-admin/firestore"
+import { FieldValue, type DocumentReference } from "firebase-admin/firestore"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 import { getAdminDb } from "@/lib/firebase-admin"
 
@@ -277,8 +277,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Codice richiesta non valido" }, { status: 400 })
     }
 
-    const bookingRef = getAdminDb().collection("bookings").doc(bookingDocumentId)
-    const existingBooking = await bookingRef.get()
+    let bookingRef: DocumentReference | null = null
+    let bookingPersisted = false
     const bookingData: Record<string, unknown> = {
       bookingId,
       guestFirst: firstName,
@@ -306,36 +306,58 @@ export async function POST(request: Request) {
       language: bookingLanguage,
       specialRequests,
       notes: specialRequests,
-      origin: existingBooking.get("origin") || "site",
-      status: existingBooking.get("status") || "pending",
+      origin: "site",
+      status: "pending",
       updatedAt: FieldValue.serverTimestamp(),
     }
 
-    if (!existingBooking.exists) {
-      bookingData.createdAt = FieldValue.serverTimestamp()
-      bookingData.services = []
-      bookingData.paymentProvider = null
-      bookingData.paymentId = null
-      bookingData.paidAt = null
-    }
+    try {
+      bookingRef = getAdminDb().collection("bookings").doc(bookingDocumentId)
+      const existingBooking = await bookingRef.get()
+      bookingData.origin = existingBooking.get("origin") || "site"
+      bookingData.status = existingBooking.get("status") || "pending"
 
-    await bookingRef.set(bookingData, { merge: true })
+      if (!existingBooking.exists) {
+        bookingData.createdAt = FieldValue.serverTimestamp()
+        bookingData.services = []
+        bookingData.paymentProvider = null
+        bookingData.paymentId = null
+        bookingData.paidAt = null
+      }
+
+      await bookingRef.set(bookingData, { merge: true })
+      bookingPersisted = true
+    } catch (storageError) {
+      console.error("[Booking Request] Persistence failed; continuing with email delivery", {
+        bookingId,
+        error: getErrorMessage(storageError),
+      })
+    }
 
     const emailConfig = getEmailConfigStatus()
     const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || process.env.SMTP_FROM_EMAIL
 
     if ((!emailConfig.resend && !emailConfig.smtp) || !fromEmail) {
-      await bookingRef.set(
-        {
-          emailDelivery: {
-            customer: false,
-            structure: false,
-            error: "email_not_configured",
-          },
-          updatedAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true },
-      )
+      if (bookingPersisted && bookingRef) {
+        try {
+          await bookingRef.set(
+            {
+              emailDelivery: {
+                customer: false,
+                structure: false,
+                error: "email_not_configured",
+              },
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true },
+          )
+        } catch (storageError) {
+          console.error("[Booking Request] Unable to record email configuration failure", {
+            bookingId,
+            error: getErrorMessage(storageError),
+          })
+        }
+      }
 
       return NextResponse.json(
         { error: "Richiesta registrata, ma il servizio email non è configurato", bookingId },
@@ -412,6 +434,11 @@ export async function POST(request: Request) {
           ${emailHeader("Nuova richiesta di prenotazione dal sito")}
           <div style="padding:24px;background:#faf9f5">
             <p><strong>Contattare il cliente per confermare la prenotazione.</strong></p>
+            ${
+              bookingPersisted
+                ? ""
+                : `<div style="background:#fff3cd;border-left:4px solid #d3b25d;padding:14px 16px;margin:20px 0"><strong>Attenzione:</strong> la richiesta non è stata salvata nel pannello admin. Conservare il codice ${safeBookingId} e gestirla manualmente.</div>`
+            }
             <table style="width:100%;border-collapse:collapse;background:#fff;padding:16px;margin:20px 0">
               <tr><td style="padding:8px 0;font-weight:600">Cliente</td><td style="padding:8px 0;text-align:right">${safeName}</td></tr>
               <tr><td style="padding:8px 0;font-weight:600">Email</td><td style="padding:8px 0;text-align:right">${safeEmail}</td></tr>
@@ -435,16 +462,25 @@ export async function POST(request: Request) {
     const structureDelivered =
       structureResult.status === "fulfilled" && !structureResult.value.error
 
-    await bookingRef.set(
-      {
-        emailDelivery: {
-          customer: customerDelivered,
-          structure: structureDelivered,
-        },
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true },
-    )
+    if (bookingPersisted && bookingRef) {
+      try {
+        await bookingRef.set(
+          {
+            emailDelivery: {
+              customer: customerDelivered,
+              structure: structureDelivered,
+            },
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        )
+      } catch (storageError) {
+        console.error("[Booking Request] Unable to record email delivery status", {
+          bookingId,
+          error: getErrorMessage(storageError),
+        })
+      }
+    }
 
     if (!customerDelivered || !structureDelivered) {
       console.error("[Booking Request] Email delivery failed", {
@@ -463,7 +499,7 @@ export async function POST(request: Request) {
       )
     }
 
-    return NextResponse.json({ success: true, bookingId })
+    return NextResponse.json({ success: true, bookingId, persisted: bookingPersisted })
   } catch (error) {
     console.error("[Booking Request] Unexpected error:", error)
     return NextResponse.json({ error: "Impossibile registrare la richiesta di prenotazione" }, { status: 500 })
