@@ -85,9 +85,8 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
     setIsProcessing(true)
 
     try {
-      const roomType = bookingData.roomId === "1" ? "deluxe" : "suite"
-      const roomName =
-        bookingData.roomId === "1" ? "Camera Familiare con Balcone" : "Camera Matrimoniale con Vasca Idromassaggio"
+      const roomType = "suite"
+      const roomName = "La Suite"
       const bookingPayload: BookingPayload = {
         checkIn: bookingData.checkIn,
         checkOut: bookingData.checkOut,

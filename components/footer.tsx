@@ -63,11 +63,11 @@ export function Footer() {
           <div>
             <div className="flex items-center space-x-3 mb-4">
               <Image
-                src="/images/chaplin-logo-readable.png"
+                src="/images/chaplin-logo-white.png"
                 alt="Chaplin Luxury Holiday House Logo"
                 width={160}
                 height={60}
-                className="brightness-0 invert"
+                className="h-auto w-40"
               />
             </div>
             <p className="text-background/80 mb-4 text-sm leading-relaxed">{t("footerDescription")}</p>

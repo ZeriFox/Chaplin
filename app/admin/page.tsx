@@ -22,6 +22,7 @@ import { BookingBlockDates } from "@/components/booking-block-dates"
 import { BookingCalendarFiltered } from "@/components/booking-calendar-filtered"
 import { AdminSecuritySettings } from "@/components/admin-security-settings"
 import { DynamicPricingManagement } from "@/components/dynamic-pricing-management"
+import { RestoreSuiteButton } from "@/components/restore-suite-button"
 import { ExtraServicesRequestsAdmin } from "@/components/extra-services-requests-admin"
 import { NewsletterContactsAdmin } from "@/components/newsletter-contacts-admin"
 import { AdminBookingActions, AdminBookingCreateButton } from "@/components/admin-booking-management"
@@ -759,7 +760,7 @@ function AdminInner() {
                       <Label className="text-muted-foreground">Nome (fisso)</Label>
                       <Input
                         className="mt-2 bg-muted/50 cursor-not-allowed"
-                        value="AL 22 Suite & SPA LUXURY EXPERIENCE"
+                        value="Chaplin Luxury Holiday House"
                         disabled
                       />
                     </div>
@@ -776,6 +777,12 @@ function AdminInner() {
                     <div>
                       <Label className="text-muted-foreground">Email</Label>
                       <Input className="mt-2 bg-muted/50 cursor-not-allowed" value="progetlocale@gmail.com" disabled />
+                    </div>
+                    <div className="pt-2">
+                      <Label className="text-muted-foreground">Gestione Camera</Label>
+                      <div className="mt-2">
+                        <RestoreSuiteButton />
+                      </div>
                     </div>
                   </div>
 
