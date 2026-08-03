@@ -48,7 +48,8 @@ export const recentTranslations = {
     contactSendFailure: "Non è stato possibile inviare il messaggio.",
     contactSendSuccess: "Messaggio inviato correttamente. Ti risponderemo entro 24 ore.",
     whatsappOffersTitle: "Promozioni su WhatsApp",
-    whatsappOffersDescription: "Lascia il tuo numero WhatsApp per ricevere offerte speciali e aggiornamenti da Chaplin.",
+    whatsappOffersDescription:
+      "Lascia il tuo numero whatsapp per ricevere promozioni e/o offerte speciali dalla nostra struttura.",
     whatsappPhonePlaceholder: "Numero WhatsApp",
     whatsappConsentText: "Acconsento a ricevere messaggi promozionali su WhatsApp da Chaplin. Ho letto l’",
     privacyNotice: "informativa privacy",
