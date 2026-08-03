@@ -54,10 +54,10 @@ function generateFallbackBookingId() {
   return `REQ-${Date.now().toString(36).toUpperCase()}-${random}`
 }
 
-const ROOM_IDS: Record<string, string> = { deluxe: "1", suite: "2" }
+const ROOM_IDS: Record<string, string> = { deluxe: "2", suite: "2" }
 const ROOM_NAMES: Record<string, string> = {
-  deluxe: "Camera Familiare con Balcone",
-  suite: "Camera Matrimoniale con Vasca Idromassaggio",
+  deluxe: "La Suite",
+  suite: "La Suite",
 }
 
 const AVAILABLE_SERVICES = [

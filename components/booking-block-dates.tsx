@@ -138,8 +138,7 @@ export function BookingBlockDates() {
               <SelectValue placeholder="Seleziona camera" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">Camera Familiare</SelectItem>
-              <SelectItem value="2">Camera Matrimoniale</SelectItem>
+              <SelectItem value="2">La Suite</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -195,9 +194,7 @@ export function BookingBlockDates() {
                   className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm"
                 >
                   <div className="flex-1">
-                    <p className="font-medium">
-                      Camera {blocked.roomId === "1" ? "Familiare" : "Matrimoniale"}
-                    </p>
+                    <p className="font-medium">La Suite</p>
                     <p className="text-muted-foreground text-xs">
                       {formatDate(blocked.from)} - {formatDate(blocked.to)}
                     </p>

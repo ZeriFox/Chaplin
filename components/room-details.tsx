@@ -14,7 +14,7 @@ interface RoomContent {
 const content: Record<Lang, RoomContent> = {
   it: {
     description:
-      "Una magnifica struttura pensata per rilassarsi. Possiede un'elegante camera matrimoniale e offre un'esperienza di soggiorno indimenticabile con il suo design raffinato e i comfort moderni.",
+      "Una magnifica struttura pensata per rilassarsi. La Suite offre un'esperienza di soggiorno indimenticabile con il suo design raffinato e i comfort moderni.",
     badges: { adults: "Max 2 adulti", beds: "1 letto", bath: "1 bagno", size: "57 m²" },
     zones: [
       {
