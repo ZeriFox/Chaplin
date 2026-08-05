@@ -1,9 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isSignedIn() { return request.auth != null }
-    function isUser(uid) { return isSignedIn() && request.auth.uid == uid }
-    function isAdmin() { return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' }
+    function isSignedIn() { return request.auth != null; }
+    function isUser(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
 
     match /users/{uid} {
       allow read: if isUser(uid) || isAdmin();
@@ -29,6 +32,24 @@ service cloud.firestore {
     }
 
     match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Public reads are needed to show and calculate current rates. Direct
+    // browser writes remain restricted to verified administrators; production
+    // API writes additionally verify the Firebase ID token server-side.
+    match /pricing_seasons/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /pricing_special_periods/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /pricing_overrides/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }
