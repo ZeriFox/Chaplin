@@ -132,8 +132,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       newPrice: totalPrice,
+      totalPrice,
+      totalAmount: Math.round(totalPrice * 100),
       nights,
-      pricePerNight: Math.round(totalPrice / nights),
+      pricePerNight: Math.round((totalPrice / nights) * 100) / 100,
       basePrice,
     })
   } catch (error) {

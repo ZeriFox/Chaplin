@@ -18,10 +18,9 @@ import { RoomStatusToggle } from "@/components/room-status-toggle"
 import { GuestsTracking } from "@/components/guests-tracking"
 import { SmoobuSyncPanel } from "@/components/smoobu-sync-panel"
 import { SmoobuReviewsSync } from "@/components/smoobu-reviews-sync"
-import { BookingBlockDates } from "@/components/booking-block-dates"
+import { SuiteCalendarManagement } from "@/components/suite-calendar-management"
 import { BookingCalendarFiltered } from "@/components/booking-calendar-filtered"
 import { AdminSecuritySettings } from "@/components/admin-security-settings"
-import { DynamicPricingManagement } from "@/components/dynamic-pricing-management"
 import { RestoreSuiteButton } from "@/components/restore-suite-button"
 import { ExtraServicesRequestsAdmin } from "@/components/extra-services-requests-admin"
 import { NewsletterContactsAdmin } from "@/components/newsletter-contacts-admin"
@@ -731,7 +730,7 @@ function AdminInner() {
             </TabsContent>
 
             <TabsContent value="pricing" className="space-y-4 sm:space-y-6">
-              <DynamicPricingManagement />
+              <SuiteCalendarManagement />
             </TabsContent>
 
             <TabsContent value="services" className="space-y-4 sm:space-y-6">
@@ -743,8 +742,6 @@ function AdminInner() {
                 <SmoobuSyncPanel />
                 <SmoobuReviewsSync />
               </div>
-
-              <BookingBlockDates />
 
               <AdminSecuritySettings />
 

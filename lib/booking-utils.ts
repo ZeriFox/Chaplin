@@ -97,8 +97,27 @@ export async function checkBookingConflicts(
 }
 
 export async function checkRoomAvailability(roomId: string, checkIn: string, checkOut: string): Promise<boolean> {
-  const result = await checkBookingConflicts(roomId, checkIn, checkOut, "site")
-  return !result.hasConflict
+  if (roomId !== "2") return false
+
+  try {
+    const response = await fetch("/api/bookings/unavailable-dates", { cache: "no-store" })
+    if (!response.ok) return false
+
+    const payload = (await response.json()) as { dates?: string[] }
+    const unavailable = new Set(payload.dates ?? [])
+    const start = new Date(`${checkIn.slice(0, 10)}T00:00:00Z`)
+    const end = new Date(`${checkOut.slice(0, 10)}T00:00:00Z`)
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start >= end) return false
+
+    for (const date = new Date(start); date < end; date.setUTCDate(date.getUTCDate() + 1)) {
+      if (unavailable.has(date.toISOString().slice(0, 10))) return false
+    }
+
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function getBookingPriority(origin: Booking["origin"]): number {
