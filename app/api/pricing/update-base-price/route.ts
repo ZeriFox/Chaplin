@@ -1,25 +1,26 @@
 import { NextResponse } from "next/server"
-import { db } from "@/lib/firebase"
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore"
+import { FieldValue } from "firebase-admin/firestore"
+import { getAdminDb } from "@/lib/firebase-admin"
+import { adminApiErrorResponse, requireAdminApi } from "@/lib/require-admin-api"
 
 export async function POST(request: Request) {
   try {
+    const admin = await requireAdminApi(request)
     const { roomId, basePrice } = await request.json()
+    const normalizedPrice = Number(basePrice)
 
-    if (!roomId || !basePrice || basePrice <= 0) {
-      return NextResponse.json({ error: "Invalid data" }, { status: 400 })
+    if (!roomId || !Number.isFinite(normalizedPrice) || normalizedPrice <= 0) {
+      return NextResponse.json({ error: "Dati non validi" }, { status: 400 })
     }
 
-    const roomRef = doc(db, "rooms", roomId)
-    await updateDoc(roomRef, {
-      price: basePrice,
-      updatedAt: serverTimestamp(),
+    await getAdminDb().doc(`rooms/${roomId}`).update({
+      price: Math.round(normalizedPrice * 100) / 100,
+      updatedAt: FieldValue.serverTimestamp(),
+      updatedBy: admin.uid,
     })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error updating base price:", error)
-    return NextResponse.json({ error: "Failed to update base price" }, { status: 500 })
+    return adminApiErrorResponse(error)
   }
 }
-
