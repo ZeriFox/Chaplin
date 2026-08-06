@@ -2,6 +2,26 @@
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
+
+  // Firebase web keys are public client configuration, not service-account
+  // secrets. Keep environment variables as the preferred source, but provide
+  // the production project's known public configuration as a fallback so a
+  // Vercel account migration cannot silently initialize the fake fallback app.
+  env: {
+    NEXT_PUBLIC_FIREBASE_API_KEY:
+      process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBKK8q78f-DuOtzIqV7EDAnUVsVp05-IHs",
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:
+      process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "chaplin-viterbo.firebaseapp.com",
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID:
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "chaplin-viterbo",
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:
+      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "chaplin-viterbo.firebasestorage.app",
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:
+      process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "669780646187",
+    NEXT_PUBLIC_FIREBASE_APP_ID:
+      process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:669780646187:web:700f8af3dea37ebb058d6e",
+  },
+
   images: {
     // Re-enabled optimization: serves resized/compressed images instead of
     // full-resolution originals. Loading the full-res /chaplin/*.JPG camera
@@ -43,4 +63,3 @@ const nextConfig = {
 };
 
 export default nextConfig;
-
