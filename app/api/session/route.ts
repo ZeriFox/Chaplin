@@ -8,6 +8,18 @@ type AppRole = "user" | "admin"
 const FIREBASE_API_KEY =
   process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBKK8q78f-DuOtzIqV7EDAnUVsVp05-IHs"
 const FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "chaplin-viterbo"
+const DEFAULT_ADMIN_EMAIL = "chaplinviterbo2@gmail.com"
+
+function getAuthorizedAdminEmails() {
+  const configured = process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL
+
+  return new Set(
+    configured
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  )
+}
 
 function getCookieDomain(req: Request) {
   const forwardedHost = req.headers.get("x-forwarded-host")
@@ -55,18 +67,21 @@ async function resolveFirebaseUser(token: string) {
   }
 
   const body = (await response.json()) as {
-    users?: Array<{ localId?: string; email?: string }>
+    users?: Array<{ localId?: string; email?: string; disabled?: boolean }>
   }
   const firebaseUser = body.users?.[0]
 
-  if (!firebaseUser?.localId) {
-    throw new Error("firebase_user_missing")
+  if (!firebaseUser?.localId || firebaseUser.disabled) {
+    throw new Error("firebase_user_missing_or_disabled")
   }
 
-  return { uid: firebaseUser.localId, email: firebaseUser.email || "" }
+  return {
+    uid: firebaseUser.localId,
+    email: (firebaseUser.email || "").trim().toLowerCase(),
+  }
 }
 
-async function resolveUserRole(token: string, uid: string): Promise<AppRole> {
+async function resolveFirestoreRole(token: string, uid: string): Promise<AppRole> {
   const documentUrl =
     `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(FIREBASE_PROJECT_ID)}` +
     `/databases/(default)/documents/users/${encodeURIComponent(uid)}`
@@ -92,6 +107,23 @@ async function resolveUserRole(token: string, uid: string): Promise<AppRole> {
   return body.fields?.role?.stringValue === "admin" ? "admin" : "user"
 }
 
+async function resolveUserRole(token: string, uid: string, email: string): Promise<AppRole> {
+  // The Firebase token has already been verified by accounts:lookup. An exact
+  // email allow-list therefore cannot be forged by the browser and keeps admin
+  // access working even when Firestore rules have not yet been deployed after
+  // a Vercel migration.
+  if (email && getAuthorizedAdminEmails().has(email)) {
+    return "admin"
+  }
+
+  try {
+    return await resolveFirestoreRole(token, uid)
+  } catch (error) {
+    console.warn("[session] Unable to read Firestore role; using standard user role", error)
+    return "user"
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as { token?: string }
@@ -101,12 +133,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Token mancante" }, { status: 400 })
     }
 
-    // Verify the ID token against the Firebase project used by the browser and
-    // read the signed-in user's own role through Firestore REST. This remains
-    // secure under Firestore rules and does not depend on service-account
-    // variables being copied to a newly migrated Vercel project.
     const firebaseUser = await resolveFirebaseUser(token)
-    const role = await resolveUserRole(token, firebaseUser.uid)
+    const role = await resolveUserRole(token, firebaseUser.uid, firebaseUser.email)
 
     const response = NextResponse.json({ ok: true, role })
     response.headers.set("Cache-Control", "no-store")
