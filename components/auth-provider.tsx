@@ -1,18 +1,14 @@
 "use client"
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
-import { onIdTokenChanged, type User as FirebaseUser } from "firebase/auth"
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { onIdTokenChanged, signInWithEmailAndPassword, type User as FirebaseUser } from "firebase/auth"
 import {
   auth,
-  db,
   registerWithEmail,
-  loginWithEmail,
   loginWithGoogle,
-  handleGoogleRedirect, // Import new redirect handler
+  handleGoogleRedirect,
   logout as fbLogout,
 } from "../lib/firebase"
-import { doc, getDoc } from "firebase/firestore"
-import { useRef } from "react"
 
 export type AppRole = "user" | "admin"
 
@@ -28,45 +24,15 @@ export interface AppUser {
 interface AuthContextType {
   user: AppUser | null
   isLoading: boolean
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string, requiredRole?: AppRole) => Promise<boolean>
   loginWithGoogleProvider: () => Promise<{ success: boolean; error?: any }>
   register: (name: string, email: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
   refreshToken: () => Promise<void>
-  isCheckingRedirect: boolean // New state to track redirect check
+  isCheckingRedirect: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// ---------- COOKIE HELPERS ----------
-function setRoleCookie(role: "user" | "admin" | "") {
-  // Persisto 7 giorni; SameSite=Lax per evitare loop.
-  const maxAge = 60 * 60 * 24 * 7
-  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:"
-  const secure = isHttps ? "Secure; " : ""
-  if (role) {
-    document.cookie = `app_role=${role}; Path=/; Max-Age=${maxAge}; ${secure}SameSite=Lax`
-  } else {
-    // clear
-    document.cookie = `app_role=; Path=/; Max-Age=0; ${secure}SameSite=Lax`
-  }
-}
-
-// ---------- HELPERS ----------
-async function readUserRole(uid: string): Promise<AppRole> {
-  try {
-    const snap = await getDoc(doc(db, "users", uid))
-    if (!snap.exists()) {
-      return "user"
-    }
-    const raw = (snap.data()?.role as string | undefined) ?? "user"
-    // normalizza: qualunque valore non "admin" diventa "user"
-    return raw === "admin" ? "admin" : "user"
-  } catch (error) {
-    console.error("Error reading user role:", error)
-    return "user"
-  }
-}
 
 function firebaseToAppUser(fbUser: FirebaseUser, idToken: string, role: AppRole): AppUser {
   return {
@@ -79,31 +45,48 @@ function firebaseToAppUser(fbUser: FirebaseUser, idToken: string, role: AppRole)
   }
 }
 
-// ---------- PROVIDER ----------
+async function establishServerSession(fbUser: FirebaseUser, forceRefresh = false): Promise<AppUser> {
+  const idToken = await fbUser.getIdToken(forceRefresh)
+  const response = await fetch("/api/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: idToken }),
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    throw new Error("Impossibile creare la sessione autenticata")
+  }
+
+  const data = (await response.json()) as { role?: AppRole }
+  const role: AppRole = data.role === "admin" ? "admin" : "user"
+  return firebaseToAppUser(fbUser, idToken, role)
+}
+
+async function clearServerSession() {
+  await fetch("/api/session", { method: "DELETE", cache: "no-store" }).catch(() => undefined)
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true) // Track redirect check
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true)
   const hasCheckedRedirectRef = useRef(false)
+
   useEffect(() => {
     if (hasCheckedRedirectRef.current) return
     hasCheckedRedirectRef.current = true
 
     const checkRedirect = async () => {
-      console.log("[v0] Checking for Google redirect result...")
       try {
         const fbUser = await handleGoogleRedirect()
         if (fbUser) {
-          console.log("[v0] Google redirect successful, user:", fbUser.email)
-          const [idToken, role] = await Promise.all([fbUser.getIdToken(true), readUserRole(fbUser.uid)])
-          setUser(firebaseToAppUser(fbUser, idToken, role))
-          setRoleCookie(role)
+          const appUser = await establishServerSession(fbUser, true)
+          setUser(appUser)
           sessionStorage.removeItem("google_auth_error")
-        } else {
-          console.log("[v0] No redirect result found")
         }
       } catch (error: any) {
-        console.error("[v0] Google redirect error:", error)
+        console.error("[auth] Google redirect error", error)
         if (error?.code) sessionStorage.setItem("google_auth_error", error.code)
       } finally {
         setIsCheckingRedirect(false)
@@ -113,47 +96,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkRedirect()
   }, [])
 
-  // Sottoscrizione token/utente
   useEffect(() => {
     const unsub = onIdTokenChanged(auth, async (fbUser) => {
       try {
         if (!fbUser) {
           setUser(null)
-          setRoleCookie("")
           setIsLoading(false)
           return
         }
-        const [idToken, role] = await Promise.all([fbUser.getIdToken(false), readUserRole(fbUser.uid)])
-        setUser(firebaseToAppUser(fbUser, idToken, role))
-        setRoleCookie(role)
-      } catch (e) {
-        console.error("onIdTokenChanged error", e)
+
+        const appUser = await establishServerSession(fbUser, false)
+        setUser(appUser)
+      } catch (error) {
+        console.error("[auth] Token/session synchronization failed", error)
         setUser(null)
-        setRoleCookie("")
+        await fbLogout().catch(() => undefined)
+        await clearServerSession()
       } finally {
         setIsLoading(false)
       }
     })
+
     return () => unsub()
   }, [])
 
   const refreshToken = async () => {
     if (!auth.currentUser) return
-    const [idToken, role] = await Promise.all([auth.currentUser.getIdToken(true), readUserRole(auth.currentUser.uid)])
-    setUser(firebaseToAppUser(auth.currentUser, idToken, role))
-    setRoleCookie(role) // <--- cookie aggiornato
+    const appUser = await establishServerSession(auth.currentUser, true)
+    setUser(appUser)
   }
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string, requiredRole?: AppRole): Promise<boolean> => {
     try {
       setIsLoading(true)
-      const fbUser = await loginWithEmail(email, password)
-      const [idToken, role] = await Promise.all([fbUser.getIdToken(true), readUserRole(fbUser.uid)])
-      setUser(firebaseToAppUser(fbUser, idToken, role))
-      setRoleCookie(role) // <--- cookie aggiornato
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password)
+      const appUser = await establishServerSession(credential.user, true)
+
+      if (requiredRole && appUser.role !== requiredRole) {
+        await fbLogout()
+        await clearServerSession()
+        setUser(null)
+        return false
+      }
+
+      setUser(appUser)
       return true
-    } catch (e) {
-      console.error("login error", e)
+    } catch (error) {
+      console.error("[auth] Login failed", error)
+      await fbLogout().catch(() => undefined)
+      await clearServerSession()
+      setUser(null)
       return false
     } finally {
       setIsLoading(false)
@@ -163,30 +155,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogleProvider = async (): Promise<{ success: boolean; error?: any }> => {
     try {
       sessionStorage.removeItem("google_auth_error")
-      const fbUser = await loginWithGoogle() // popup (dev) ritorna user, redirect (prod) ritorna null
+      const fbUser = await loginWithGoogle()
       if (fbUser) {
-        const [idToken, role] = await Promise.all([fbUser.getIdToken(true), readUserRole(fbUser.uid)])
-        setUser(firebaseToAppUser(fbUser, idToken, role))
-        setRoleCookie(role)
+        const appUser = await establishServerSession(fbUser, true)
+        setUser(appUser)
       }
       return { success: true }
-    } catch (e: any) {
-      if (e?.code) sessionStorage.setItem("google_auth_error", e.code)
-      console.error("[auth] Google login error:", e)
-      return { success: false, error: e }
+    } catch (error: any) {
+      if (error?.code) sessionStorage.setItem("google_auth_error", error.code)
+      console.error("[auth] Google login error", error)
+      return { success: false, error }
     }
   }
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true)
-      const fbUser = await registerWithEmail(email, password)
-      const [idToken, role] = await Promise.all([fbUser.getIdToken(true), readUserRole(fbUser.uid)])
-      setUser(firebaseToAppUser(fbUser, idToken, role))
-      setRoleCookie(role) // <--- cookie aggiornato
+      const fbUser = await registerWithEmail(email, password, name)
+      const appUser = await establishServerSession(fbUser, true)
+      setUser(appUser)
       return true
-    } catch (e) {
-      console.error("register error", e)
+    } catch (error) {
+      console.error("[auth] Registration failed", error)
       return false
     } finally {
       setIsLoading(false)
@@ -195,8 +185,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await fbLogout()
+    await clearServerSession()
     setUser(null)
-    setRoleCookie("") // <--- clear
   }
 
   const value = useMemo<AuthContextType>(
@@ -208,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       refreshToken,
-      isCheckingRedirect, // Expose redirect check state
+      isCheckingRedirect,
     }),
     [user, isLoading, isCheckingRedirect],
   )
@@ -221,4 +211,3 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within an AuthProvider")
   return ctx
 }
-
