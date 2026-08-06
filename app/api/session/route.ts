@@ -5,9 +5,11 @@ export const runtime = "nodejs"
 
 type AppRole = "user" | "admin"
 
-const FIREBASE_API_KEY =
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBKK8q78f-DuOtzIqV7EDAnUVsVp05-IHs"
-const FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "chaplin-viterbo"
+// These are public Firebase Web configuration values. They are intentionally
+// fixed to the production project so stale Vercel environment variables cannot
+// validate a browser token against a different Firebase project.
+const FIREBASE_API_KEY = "AIzaSyBKK8q78f-DuOtzIqV7EDAnUVsVp05-IHs"
+const FIREBASE_PROJECT_ID = "chaplin-viterbo"
 const DEFAULT_ADMIN_EMAIL = "chaplinviterbo2@gmail.com"
 
 function getAuthorizedAdminEmails() {
@@ -108,10 +110,6 @@ async function resolveFirestoreRole(token: string, uid: string): Promise<AppRole
 }
 
 async function resolveUserRole(token: string, uid: string, email: string): Promise<AppRole> {
-  // The Firebase token has already been verified by accounts:lookup. An exact
-  // email allow-list therefore cannot be forged by the browser and keeps admin
-  // access working even when Firestore rules have not yet been deployed after
-  // a Vercel migration.
   if (email && getAuthorizedAdminEmails().has(email)) {
     return "admin"
   }
