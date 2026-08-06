@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 const EXPIRES_AT = 1786023558
-const TOKEN_HASH = "8fe8b28823c8c41f4a6aa9f233e9bec3aae619cda4784d373c00cba23c730aa4"
+const TOKEN_HASH = "34d35399be6c0867c438a52467d06a3286674fdbe57aafa2236db3ae34db13b3"
 const ADMIN_EMAIL = "chaplinviterbo2@gmail.com"
 const FIREBASE_API_KEY =
   process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBKK8q78f-DuOtzIqV7EDAnUVsVp05-IHs"
