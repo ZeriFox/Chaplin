@@ -52,6 +52,8 @@ async function establishServerSession(fbUser: FirebaseUser, forceRefresh = false
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: idToken }),
     cache: "no-store",
+    credentials: "include",
+    redirect: "follow",
   })
 
   if (!response.ok) {
@@ -64,7 +66,12 @@ async function establishServerSession(fbUser: FirebaseUser, forceRefresh = false
 }
 
 async function clearServerSession() {
-  await fetch("/api/session", { method: "DELETE", cache: "no-store" }).catch(() => undefined)
+  await fetch("/api/session", {
+    method: "DELETE",
+    cache: "no-store",
+    credentials: "include",
+    redirect: "follow",
+  }).catch(() => undefined)
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
