@@ -4,7 +4,18 @@ import { useEffect, useMemo, useState } from "react"
 import { addMonths, eachDayOfInterval, endOfMonth, format, isWithinInterval, startOfMonth } from "date-fns"
 import { it } from "date-fns/locale"
 import { CalendarIcon, ChevronLeft, ChevronRight, RotateCcw, Save, TrendingUp } from "lucide-react"
-import { auth } from "@/lib/firebase"
+import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
+import {
+  collection,
+  deleteField,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore"
+import { auth, db } from "@/lib/firebase"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +29,7 @@ type RoomBasePrice = { roomId: string; roomName: string; basePrice: number }
 type Season = { id: string; name: string; startDate: string; endDate: string; priceMultiplier: number }
 type SpecialPeriod = { id: string; name: string; startDate: string; endDate: string; priceMultiplier: number }
 type PriceOverride = { id: string; roomId: string; date: string; price: number; reason?: string }
+type StoredOverride = { price?: number; reason?: string }
 
 type DayPrice = {
   price: number
@@ -25,22 +37,126 @@ type DayPrice = {
   label: string
 }
 
-async function adminFetch(input: RequestInfo | URL, init: RequestInit = {}) {
-  const token = await auth.currentUser?.getIdToken()
-  if (!token) throw new Error("Sessione amministratore non disponibile")
+const SUITE_ROOM_ID = "2"
+const SUITE_DEFAULT_PRICE = 150
+const SUITE_DEFAULT_DATA = {
+  name: "La Suite",
+  description: "Elegante suite con vasca idromassaggio, area spa privata e arredi di lusso.",
+  capacity: 2,
+  beds: 1,
+  bathrooms: 1,
+  size: 57,
+  status: "available",
+  amenities: [
+    "Vasca idromassaggio",
+    "Area spa privata",
+    "Aria condizionata",
+    "TV satellitare",
+    "WiFi gratuito",
+    "Minibar",
+    "Asciugacapelli",
+    "Cucina attrezzata",
+  ],
+  images: ["/images/chaplin-camera-matrimoniale.jpeg", "/images/spa1.jpg", "/images/room-1.jpg"],
+}
 
-  return fetch(input, {
-    ...init,
-    headers: {
-      ...(init.headers || {}),
-      Authorization: `Bearer ${token}`,
-    },
+function waitForSignedInUser(): Promise<FirebaseUser> {
+  if (auth.currentUser) return Promise.resolve(auth.currentUser)
+
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      unsubscribe()
+      reject(new Error("Sessione amministratore non disponibile"))
+    }, 8000)
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) return
+      window.clearTimeout(timeout)
+      unsubscribe()
+      resolve(user)
+    })
   })
 }
 
 function parseLocalDate(value: string) {
   const [year, month, day] = value.split("-").map(Number)
   return new Date(year, month - 1, day)
+}
+
+function dateToStorageKey(date: string) {
+  return `d_${date.replace(/-/g, "_")}`
+}
+
+function storageKeyToDate(key: string) {
+  if (/^d_\d{4}_\d{2}_\d{2}$/.test(key)) return key.slice(2).replace(/_/g, "-")
+  return key
+}
+
+function enumerateDates(startDate: string, endDate: string) {
+  const start = new Date(`${startDate}T12:00:00Z`)
+  const end = new Date(`${endDate}T12:00:00Z`)
+  const values: string[] = []
+
+  for (const current = new Date(start); current <= end; current.setUTCDate(current.getUTCDate() + 1)) {
+    values.push(current.toISOString().slice(0, 10))
+    if (values.length > 366) throw new Error("Puoi modificare al massimo 366 giorni alla volta")
+  }
+
+  return values
+}
+
+async function safeCollection<T>(name: string): Promise<T[]> {
+  try {
+    const snapshot = await getDocs(collection(db, name))
+    return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as T)
+  } catch (error) {
+    console.warn(`[pricing] Collezione opzionale ${name} non disponibile`, error)
+    return []
+  }
+}
+
+function roomOverridesToArray(raw: unknown): PriceOverride[] {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return []
+
+  return Object.entries(raw as Record<string, StoredOverride>)
+    .map(([key, value]) => ({
+      id: `${SUITE_ROOM_ID}_${storageKeyToDate(key)}`,
+      roomId: SUITE_ROOM_ID,
+      date: storageKeyToDate(key),
+      price: Number(value?.price || 0),
+      reason: value?.reason,
+    }))
+    .filter((item) => /^\d{4}-\d{2}-\d{2}$/.test(item.date) && Number.isFinite(item.price) && item.price > 0)
+}
+
+async function ensureSuiteRoom(user: FirebaseUser) {
+  const roomRef = doc(db, "rooms", SUITE_ROOM_ID)
+  let snapshot = await getDoc(roomRef)
+
+  if (!snapshot.exists()) {
+    await setDoc(roomRef, {
+      ...SUITE_DEFAULT_DATA,
+      price: SUITE_DEFAULT_PRICE,
+      priceOverrides: {},
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      updatedBy: user.uid,
+    })
+    snapshot = await getDoc(roomRef)
+  }
+
+  const data = snapshot.data() || {}
+  const basePrice = Number(data.price)
+
+  return {
+    roomRef,
+    room: {
+      roomId: SUITE_ROOM_ID,
+      roomName: String(data.name || SUITE_DEFAULT_DATA.name),
+      basePrice: Number.isFinite(basePrice) && basePrice > 0 ? basePrice : SUITE_DEFAULT_PRICE,
+    } satisfies RoomBasePrice,
+    overrides: roomOverridesToArray(data.priceOverrides),
+  }
 }
 
 export function DynamicPricingManagement() {
@@ -57,34 +173,36 @@ export function DynamicPricingManagement() {
   const [reason, setReason] = useState("")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [loadError, setLoadError] = useState("")
 
   async function loadData() {
     setLoading(true)
+    setLoadError("")
+
     try {
-      const [roomsRes, seasonsRes, periodsRes, overridesRes] = await Promise.all([
-        fetch("/api/pricing/rooms"),
-        fetch("/api/pricing/seasons"),
-        fetch("/api/pricing/special-periods"),
-        fetch("/api/pricing/overrides"),
-      ])
-      if (![roomsRes, seasonsRes, periodsRes, overridesRes].every((response) => response.ok)) {
-        throw new Error("Impossibile caricare i dati prezzi")
-      }
-
-      const [roomsData, seasonsData, periodsData, overridesData] = await Promise.all([
-        roomsRes.json(),
-        seasonsRes.json(),
-        periodsRes.json(),
-        overridesRes.json(),
+      const user = await waitForSignedInUser()
+      const suite = await ensureSuiteRoom(user)
+      const [seasonsData, periodsData, legacyOverrides] = await Promise.all([
+        safeCollection<Season>("pricing_seasons"),
+        safeCollection<SpecialPeriod>("pricing_special_periods"),
+        safeCollection<PriceOverride>("pricing_overrides"),
       ])
 
-      setRooms(roomsData)
+      const mergedOverrides = new Map<string, PriceOverride>()
+      legacyOverrides
+        .filter((item) => item.roomId === SUITE_ROOM_ID)
+        .forEach((item) => mergedOverrides.set(item.date, item))
+      suite.overrides.forEach((item) => mergedOverrides.set(item.date, item))
+
+      setRooms([suite.room])
       setSeasons(seasonsData)
       setSpecialPeriods(periodsData)
-      setOverrides(overridesData)
-      setSelectedRoom((current) => current || roomsData[0]?.roomId || "")
+      setOverrides(Array.from(mergedOverrides.values()))
+      setSelectedRoom(SUITE_ROOM_ID)
     } catch (error) {
-      toast({ title: "Errore", description: error instanceof Error ? error.message : "Caricamento fallito", variant: "destructive" })
+      const message = error instanceof Error ? error.message : "Caricamento fallito"
+      setLoadError(message)
+      toast({ title: "Errore", description: message, variant: "destructive" })
     } finally {
       setLoading(false)
     }
@@ -148,23 +266,28 @@ export function DynamicPricingManagement() {
   }
 
   async function applyManualPrice() {
-    if (!selectedRoom || !rangeStart || !rangePrice) return
+    if (!rangeStart || !rangePrice) return
     setSaving(true)
+
     try {
-      const response = await adminFetch("/api/pricing/overrides", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          roomId: selectedRoom,
-          startDate: rangeStart,
-          endDate: rangeEnd || rangeStart,
-          price: Number(rangePrice),
-          reason: reason.trim() || "Prezzo manuale da calendario",
-        }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || "Salvataggio non riuscito")
-      toast({ title: "Prezzi aggiornati", description: `${data.count} giorni modificati con successo.` })
+      const user = await waitForSignedInUser()
+      const suite = await ensureSuiteRoom(user)
+      const price = Math.round(Number(rangePrice) * 100) / 100
+      if (!Number.isFinite(price) || price <= 0) throw new Error("Prezzo non valido")
+
+      const dates = enumerateDates(rangeStart, rangeEnd || rangeStart)
+      const updates: Record<string, unknown> = {
+        updatedAt: serverTimestamp(),
+        updatedBy: user.uid,
+      }
+      const note = reason.trim() || "Prezzo manuale da calendario"
+
+      for (const date of dates) {
+        updates[`priceOverrides.${dateToStorageKey(date)}`] = { price, reason: note }
+      }
+
+      await updateDoc(suite.roomRef, updates)
+      toast({ title: "Prezzi aggiornati", description: `${dates.length} giorni modificati con successo.` })
       clearSelection()
       await loadData()
     } catch (error) {
@@ -175,18 +298,24 @@ export function DynamicPricingManagement() {
   }
 
   async function resetManualPrices() {
-    if (!selectedRoom || !rangeStart) return
+    if (!rangeStart) return
     setSaving(true)
+
     try {
-      const query = new URLSearchParams({
-        roomId: selectedRoom,
-        startDate: rangeStart,
-        endDate: rangeEnd || rangeStart,
-      })
-      const response = await adminFetch(`/api/pricing/overrides?${query}`, { method: "DELETE" })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || "Ripristino non riuscito")
-      toast({ title: "Prezzi ripristinati", description: "I giorni selezionati usano nuovamente le regole automatiche." })
+      const user = await waitForSignedInUser()
+      const suite = await ensureSuiteRoom(user)
+      const dates = enumerateDates(rangeStart, rangeEnd || rangeStart)
+      const updates: Record<string, unknown> = {
+        updatedAt: serverTimestamp(),
+        updatedBy: user.uid,
+      }
+
+      for (const date of dates) {
+        updates[`priceOverrides.${dateToStorageKey(date)}`] = deleteField()
+      }
+
+      await updateDoc(suite.roomRef, updates)
+      toast({ title: "Prezzi ripristinati", description: "I giorni selezionati usano nuovamente il prezzo automatico." })
       clearSelection()
       await loadData()
     } catch (error) {
@@ -197,16 +326,26 @@ export function DynamicPricingManagement() {
   }
 
   async function updateBasePrice() {
-    if (!selectedRoom || !rangePrice) return
+    if (!rangePrice) return
     setSaving(true)
+
     try {
-      const response = await adminFetch("/api/pricing/update-base-price", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId: selectedRoom, basePrice: Number(rangePrice) }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || "Aggiornamento non riuscito")
+      const user = await waitForSignedInUser()
+      const suite = await ensureSuiteRoom(user)
+      const basePrice = Math.round(Number(rangePrice) * 100) / 100
+      if (!Number.isFinite(basePrice) || basePrice <= 0) throw new Error("Prezzo non valido")
+
+      await setDoc(
+        suite.roomRef,
+        {
+          ...SUITE_DEFAULT_DATA,
+          price: basePrice,
+          updatedAt: serverTimestamp(),
+          updatedBy: user.uid,
+        },
+        { merge: true },
+      )
+
       toast({ title: "Prezzo base aggiornato" })
       setRangePrice("")
       await loadData()
@@ -218,7 +357,14 @@ export function DynamicPricingManagement() {
   }
 
   if (loading) return <div className="p-8 text-center">Caricamento prezzi…</div>
-  if (!room) return <div className="p-8 text-center text-destructive">La Suite non è presente nel database.</div>
+  if (!room) {
+    return (
+      <div className="space-y-4 p-8 text-center">
+        <p className="text-destructive">Impossibile caricare La Suite{loadError ? `: ${loadError}` : "."}</p>
+        <Button variant="outline" onClick={loadData}>Riprova</Button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
