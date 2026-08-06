@@ -28,13 +28,12 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setErr("")
 
-    const ok = await login(form.email, form.password)
+    const ok = await login(form.email, form.password, "admin")
     if (!ok) {
       setErr(t("invalidOrInsufficient"))
       return
     }
 
-    // I cookie httpOnly sono già stati impostati dal login → vai subito
     router.replace(next)
   }
 
@@ -140,4 +139,3 @@ export default function AdminLoginPage() {
     </main>
   )
 }
-
