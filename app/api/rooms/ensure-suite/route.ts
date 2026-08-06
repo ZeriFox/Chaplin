@@ -1,68 +1,26 @@
 import { NextResponse } from "next/server"
-import { db } from "@/lib/firebase"
-import { collection, doc, getDoc, getDocs, setDoc, serverTimestamp } from "firebase/firestore"
 
-// (Re)creates the single "La Suite" room document in Firestore.
-// The site's price calculation reads `rooms/{id}`; after a database rebuild
-// that document can be missing, which breaks prices everywhere. This endpoint
-// restores it. It never overwrites an already-configured base price.
+import { adminApiErrorResponse, requireAdminApi } from "@/lib/require-admin-api"
+import { ensureSuiteRoom } from "@/lib/suite-room"
 
-const ROOM_ID = "2"
-const DEFAULT_PRICE = 150
+export const dynamic = "force-dynamic"
 
-const SUITE = {
-  name: "La Suite",
-  description: "Elegante suite con vasca idromassaggio, area spa privata e arredi di lusso.",
-  capacity: 2,
-  beds: 1,
-  bathrooms: 1,
-  size: 57,
-  status: "available" as const,
-  amenities: [
-    "Vasca idromassaggio",
-    "Area spa privata",
-    "Aria condizionata",
-    "TV satellitare",
-    "WiFi gratuito",
-    "Minibar",
-    "Asciugacapelli",
-    "Cucina attrezzata",
-  ],
-  images: ["/images/chaplin-camera-matrimoniale.jpeg", "/images/spa1.jpg", "/images/room-1.jpg"],
-}
-
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const ref = doc(db, "rooms", ROOM_ID)
-    const snap = await getDoc(ref)
+    await requireAdminApi(request)
+    const suite = await ensureSuiteRoom()
 
-    const existing = snap.exists() ? snap.data() : null
-    const price =
-      existing && typeof existing.price === "number" && existing.price > 0 ? existing.price : DEFAULT_PRICE
-
-    await setDoc(
-      ref,
+    return NextResponse.json(
       {
-        ...SUITE,
-        price,
-        updatedAt: serverTimestamp(),
-        ...(snap.exists() ? {} : { createdAt: serverTimestamp() }),
+        success: true,
+        created: suite.created,
+        roomId: suite.roomId,
+        roomName: suite.roomName,
+        price: suite.basePrice,
       },
-      { merge: true },
+      { headers: { "Cache-Control": "no-store" } },
     )
-
-    const all = await getDocs(collection(db, "rooms"))
-    const rooms = all.docs.map((d) => ({ id: d.id, name: d.data().name, price: d.data().price }))
-
-    return NextResponse.json({
-      success: true,
-      created: !snap.exists(),
-      roomId: ROOM_ID,
-      price,
-      rooms,
-    })
   } catch (error) {
-    console.error("[ensure-suite] Error:", error)
-    return NextResponse.json({ error: "Failed to ensure Suite room" }, { status: 500 })
+    return adminApiErrorResponse(error)
   }
 }

@@ -1,21 +1,33 @@
 import { NextResponse } from "next/server"
-import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
+
+import { ensureSuiteRoom } from "@/lib/suite-room"
+
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export async function GET() {
   try {
-    const roomsRef = collection(db, "rooms")
-    const snapshot = await getDocs(roomsRef)
+    const suite = await ensureSuiteRoom()
 
-    const rooms = snapshot.docs.map((doc) => ({
-      roomId: doc.id,
-      roomName: doc.data().name,
-      basePrice: doc.data().price || 150,
-    }))
-
-    return NextResponse.json(rooms)
+    return NextResponse.json(
+      [
+        {
+          roomId: suite.roomId,
+          roomName: suite.roomName,
+          basePrice: suite.basePrice,
+        },
+      ],
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      },
+    )
   } catch (error) {
-    console.error("Error fetching rooms:", error)
-    return NextResponse.json({ error: "Failed to fetch rooms" }, { status: 500 })
+    console.error("Error ensuring Suite room:", error)
+    return NextResponse.json(
+      { error: "Failed to ensure Suite room" },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
+    )
   }
 }
