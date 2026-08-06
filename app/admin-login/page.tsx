@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -15,9 +15,9 @@ import { useLanguage } from "@/components/language-provider"
 
 export default function AdminLoginPage() {
   const { t } = useLanguage()
-  const router = useRouter()
   const params = useSearchParams()
-  const next = params.get("next") || "/admin"
+  const requestedNext = params.get("next") || "/admin"
+  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/admin"
 
   const { login, isLoading } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
@@ -34,7 +34,9 @@ export default function AdminLoginPage() {
       return
     }
 
-    router.replace(next)
+    // A full navigation guarantees that the middleware receives the freshly
+    // issued HTTP-only session cookie, including across www/apex redirects.
+    window.location.assign(next)
   }
 
   return (
