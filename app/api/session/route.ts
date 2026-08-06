@@ -7,19 +7,33 @@ export const runtime = "nodejs"
 
 type AppRole = "user" | "admin"
 
-function cookieOptions(maxAge: number) {
+function getCookieDomain(req: Request) {
+  const forwardedHost = req.headers.get("x-forwarded-host")
+  const host = (forwardedHost || req.headers.get("host") || "").split(",")[0].trim().split(":")[0].toLowerCase()
+
+  if (host === "chaplinluxuryholidayhouse.it" || host.endsWith(".chaplinluxuryholidayhouse.it")) {
+    return "chaplinluxuryholidayhouse.it"
+  }
+
+  return undefined
+}
+
+function cookieOptions(req: Request, maxAge: number) {
+  const domain = getCookieDomain(req)
+
   return {
     httpOnly: true,
     sameSite: "lax" as const,
     path: "/",
     secure: process.env.NODE_ENV === "production",
     maxAge,
+    ...(domain ? { domain } : {}),
   }
 }
 
-function clearSessionCookies(response: NextResponse) {
-  response.cookies.set("id_token", "", cookieOptions(0))
-  response.cookies.set("app_role", "", cookieOptions(0))
+function clearSessionCookies(req: Request, response: NextResponse) {
+  response.cookies.set("id_token", "", cookieOptions(req, 0))
+  response.cookies.set("app_role", "", cookieOptions(req, 0))
 }
 
 export async function POST(req: Request) {
@@ -36,19 +50,22 @@ export async function POST(req: Request) {
     const role: AppRole = userDoc.exists && userDoc.data()?.role === "admin" ? "admin" : "user"
 
     const response = NextResponse.json({ ok: true, role })
-    response.cookies.set("id_token", token, cookieOptions(60 * 60))
-    response.cookies.set("app_role", role, cookieOptions(60 * 60))
+    response.headers.set("Cache-Control", "no-store")
+    response.cookies.set("id_token", token, cookieOptions(req, 60 * 60))
+    response.cookies.set("app_role", role, cookieOptions(req, 60 * 60))
     return response
   } catch (error) {
     console.error("[session] Invalid Firebase session", error)
     const response = NextResponse.json({ ok: false, error: "Sessione non valida" }, { status: 401 })
-    clearSessionCookies(response)
+    response.headers.set("Cache-Control", "no-store")
+    clearSessionCookies(req, response)
     return response
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
   const response = NextResponse.json({ ok: true })
-  clearSessionCookies(response)
+  response.headers.set("Cache-Control", "no-store")
+  clearSessionCookies(req, response)
   return response
 }
