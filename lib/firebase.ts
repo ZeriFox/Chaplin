@@ -242,6 +242,9 @@ export type BookingPayload = {
   pricePerNight: number
   currency?: "EUR"
   totalAmount?: number
+  subtotalAmount?: number
+  couponCode?: string
+  discountAmount?: number
   nights?: number
   status?: "pending" | "paid" | "confirmed" | "cancelled"
   origin?: "site" | "booking" | "airbnb" | "manual"

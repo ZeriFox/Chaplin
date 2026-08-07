@@ -2,12 +2,14 @@ import { NextResponse } from "next/server"
 import { FieldValue, type DocumentReference } from "firebase-admin/firestore"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 import { getAdminDb } from "@/lib/firebase-admin"
+import { calculateBookingPrice } from "@/lib/pricing-engine"
+import { claimCouponForBooking, CouponError } from "@/lib/coupons"
 
 export const dynamic = "force-dynamic"
 
 const STRUCTURE_EMAIL = "chaplinviterbo@gmail.com"
 const MAX_TEXT_LENGTH = 2_000
-const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://chaplin-two.vercel.app")
+const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://chaplinluxuryholidayhouse.it")
   .replace(/\/+$/, "")
 const BOOKING_EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-readable.png`
 
@@ -31,6 +33,8 @@ type BookingRequestBody = {
   taxes?: number
   serviceFee?: number
   totalAmount?: number
+  couponCode?: string
+  discountAmount?: number
   specialRequests?: string
 }
 
@@ -244,11 +248,12 @@ export async function POST(request: Request) {
     const specialRequests = cleanText(body.specialRequests, MAX_TEXT_LENGTH)
     const guests = Math.max(1, Math.min(2, Number(body.guests) || 1))
     const children = Math.max(0, Number(body.children) || 0)
-    const pricePerNight = Math.max(0, Math.round(Number(body.pricePerNight) || 0))
-    const subtotal = Math.max(0, Math.round(Number(body.subtotal) || 0))
-    const taxes = Math.max(0, Math.round(Number(body.taxes) || 0))
-    const serviceFee = Math.max(0, Math.round(Number(body.serviceFee) || 0))
-    const totalAmount = Math.max(0, Math.round(Number(body.totalAmount) || 0))
+    let pricePerNight = Math.max(0, Number(body.pricePerNight) || 0)
+    let subtotal = Math.max(0, Math.round(Number(body.subtotal) || 0))
+    let taxes = Math.max(0, Math.round(Number(body.taxes) || 0))
+    let serviceFee = Math.max(0, Math.round(Number(body.serviceFee) || 0))
+    let totalAmount = Math.max(0, Math.round(Number(body.totalAmount) || 0))
+    const requestedCouponCode = cleanText(body.couponCode, 40).toUpperCase()
 
     if (!bookingId || !firstName || !lastName || !email || !checkIn || !checkOut || !roomId || !roomType) {
       return NextResponse.json({ error: "Compila tutti i campi obbligatori" }, { status: 400 })
@@ -277,6 +282,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Codice richiesta non valido" }, { status: 400 })
     }
 
+    const authoritativePrice = await calculateBookingPrice({ roomId, checkIn, checkOut })
+    pricePerNight = authoritativePrice.pricePerNight
+    subtotal = Math.round(authoritativePrice.totalPrice * 100)
+    taxes = 0
+    serviceFee = 0
+    totalAmount = subtotal
+
+    let couponCode = ""
+    let discountAmount = 0
+    if (requestedCouponCode) {
+      const claimedCoupon = await claimCouponForBooking({
+        code: requestedCouponCode,
+        subtotal: subtotal / 100,
+        checkIn,
+        bookingId: bookingDocumentId,
+      })
+      couponCode = claimedCoupon.code
+      discountAmount = Math.round(claimedCoupon.discount * 100)
+      totalAmount = Math.round(claimedCoupon.finalTotal * 100)
+    }
+
     let bookingRef: DocumentReference | null = null
     let bookingPersisted = false
     const bookingData: Record<string, unknown> = {
@@ -298,6 +324,9 @@ export async function POST(request: Request) {
       nights,
       pricePerNight,
       subtotal,
+      subtotalBeforeDiscount: subtotal,
+      couponCode: couponCode || null,
+      discountAmount,
       taxes,
       serviceFee,
       total: totalAmount,
@@ -375,10 +404,15 @@ export async function POST(request: Request) {
     const safeStructureRequests = escapeHtml(specialRequests || "Nessuna")
     const customerCheckIn = formatDate(checkIn, customerCopy.locale)
     const customerCheckOut = formatDate(checkOut, customerCopy.locale)
+    const customerSubtotal = formatMoney(subtotal, customerCopy.locale)
+    const customerDiscount = formatMoney(discountAmount, customerCopy.locale)
     const customerTotal = formatMoney(totalAmount, customerCopy.locale)
     const structureCheckIn = formatDate(checkIn)
     const structureCheckOut = formatDate(checkOut)
+    const structureSubtotal = formatMoney(subtotal)
+    const structureDiscount = formatMoney(discountAmount)
     const structureTotal = formatMoney(totalAmount)
+    const safeCouponCode = escapeHtml(couponCode)
 
     const customerSummaryRows = `
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.bookingCode}</td><td style="padding:8px 0;text-align:right">${safeBookingId}</td></tr>
@@ -387,6 +421,7 @@ export async function POST(request: Request) {
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.checkOut}</td><td style="padding:8px 0;text-align:right">${customerCheckOut}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.nights}</td><td style="padding:8px 0;text-align:right">${nights}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.guests}</td><td style="padding:8px 0;text-align:right">${guests}</td></tr>
+      ${couponCode ? `<tr><td style="padding:8px 0;font-weight:600">Subtotale</td><td style="padding:8px 0;text-align:right">${customerSubtotal}</td></tr><tr><td style="padding:8px 0;font-weight:600">Coupon ${safeCouponCode}</td><td style="padding:8px 0;text-align:right;color:#238636">-${customerDiscount}</td></tr>` : ""}
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.total}</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#b28b2e">${customerTotal}</td></tr>
     `
 
@@ -397,6 +432,7 @@ export async function POST(request: Request) {
       <tr><td style="padding:8px 0;font-weight:600">Check-out</td><td style="padding:8px 0;text-align:right">${structureCheckOut}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">Notti</td><td style="padding:8px 0;text-align:right">${nights}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">Ospiti</td><td style="padding:8px 0;text-align:right">${guests}</td></tr>
+      ${couponCode ? `<tr><td style="padding:8px 0;font-weight:600">Subtotale</td><td style="padding:8px 0;text-align:right">${structureSubtotal}</td></tr><tr><td style="padding:8px 0;font-weight:600">Coupon ${safeCouponCode}</td><td style="padding:8px 0;text-align:right;color:#238636">-${structureDiscount}</td></tr>` : ""}
       <tr><td style="padding:8px 0;font-weight:600">Totale indicativo</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#b28b2e">${structureTotal}</td></tr>
     `
 
@@ -501,7 +537,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, bookingId, persisted: bookingPersisted })
   } catch (error) {
+    if (error instanceof CouponError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error("[Booking Request] Unexpected error:", error)
-    return NextResponse.json({ error: "Impossibile registrare la richiesta di prenotazione" }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Impossibile registrare la richiesta di prenotazione" }, { status: 500 })
   }
 }

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, BarChart3, Home, Settings, Users, Clock, Euro, Sparkles, TestTube, ContactRound } from "lucide-react"
+import { Calendar, BarChart3, Home, Settings, Users, Clock, Euro, Sparkles, TestTube, ContactRound, TicketPercent } from "lucide-react"
 import { RequireAdmin } from "@/components/route-guards"
 import { useEffect, useState } from "react"
 import { db } from "@/lib/firebase"
@@ -26,6 +26,7 @@ import { RestoreSuiteButton } from "@/components/restore-suite-button"
 import { ExtraServicesRequestsAdmin } from "@/components/extra-services-requests-admin"
 import { NewsletterContactsAdmin } from "@/components/newsletter-contacts-admin"
 import { AdminBookingActions, AdminBookingCreateButton } from "@/components/admin-booking-management"
+import { AdminCouponManagement } from "@/components/admin-coupon-management"
 import { useLanguage } from "@/components/language-provider"
 import type { Booking, Room } from "@/lib/booking-utils"
 
@@ -177,7 +178,7 @@ function AdminInner() {
             </Button>
           </div>
           <Tabs defaultValue="dashboard" className="space-y-4 sm:space-y-6">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 h-auto gap-1 p-1">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-10 h-auto gap-1 p-1">
               <TabsTrigger value="dashboard" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -201,6 +202,10 @@ function AdminInner() {
               <TabsTrigger value="pricing" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <Euro className="h-4 w-4" />
                 <span className="hidden sm:inline">Prezzi</span>
+              </TabsTrigger>
+              <TabsTrigger value="coupons" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
+                <TicketPercent className="h-4 w-4" />
+                <span className="hidden sm:inline">Coupon</span>
               </TabsTrigger>
               <TabsTrigger value="services" className="flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
                 <Sparkles className="h-4 w-4" />
@@ -734,6 +739,10 @@ function AdminInner() {
               <DynamicPricingManagement />
             </TabsContent>
 
+            <TabsContent value="coupons" className="space-y-4 sm:space-y-6">
+              <AdminCouponManagement />
+            </TabsContent>
+
             <TabsContent value="services" className="space-y-4 sm:space-y-6">
               <ExtraServicesRequestsAdmin />
             </TabsContent>
@@ -767,7 +776,7 @@ function AdminInner() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-muted-foreground">Indirizzo</Label>
-                        <Input className="mt-2 bg-muted/50 cursor-not-allowed" value="Vico Gelso I n 22" disabled />
+                        <Input className="mt-2 bg-muted/50 cursor-not-allowed" value="Via della Pettinara 48, 01100 Viterbo (VT)" disabled />
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Telefono</Label>

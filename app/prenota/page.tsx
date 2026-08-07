@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { CalendarIcon, Users, MapPin, Clock, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
+import { CalendarIcon, Users, MapPin, Clock, AlertCircle, CheckCircle2, Loader2, Tag, X } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { createBooking, type BookingPayload, getAllRooms } from "@/lib/firebase"
 import { checkRoomAvailability } from "@/lib/booking-utils"
@@ -102,6 +102,10 @@ export default function PrenotaPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false)
   const [availabilityStatus, setAvailabilityStatus] = useState<{ available: boolean; message: string } | null>(null)
+  const [couponCode, setCouponCode] = useState("")
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponMessage, setCouponMessage] = useState("")
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; finalTotal: number } | null>(null)
 
   // Utils
   const toInputDate = (d: Date) => {
@@ -188,12 +192,17 @@ export default function PrenotaPage() {
   }, [formData.checkIn, formData.checkOut, formData.roomType, t])
 
   // ---- Calculate dynamic price based on selected dates and room ----
-  const { pricePerNight: dynamicPrice, loading: priceLoading } = useDynamicPrice(
+  const { pricePerNight: dynamicPrice, totalPrice: dynamicTotalPrice, loading: priceLoading } = useDynamicPrice(
     ROOM_IDS[formData.roomType] || "",
     formData.checkIn,
     formData.checkOut,
     Number(formData.guests || "2"),
   )
+
+  useEffect(() => {
+    setAppliedCoupon(null)
+    setCouponMessage("")
+  }, [formData.checkIn, formData.checkOut, formData.roomType])
 
   // ---- Notti e totale ----
   const nights = useMemo(() => {
@@ -209,7 +218,43 @@ export default function PrenotaPage() {
   const children = 0
   const totalGuests = adults
 
-  const total = nights * basePrice
+  const subtotal = dynamicTotalPrice > 0 ? dynamicTotalPrice : nights * basePrice
+  const couponDiscount = appliedCoupon?.discount || 0
+  const total = Math.max(0, Math.round((subtotal - couponDiscount) * 100) / 100)
+
+  const applyCoupon = async () => {
+    const normalizedCode = couponCode.trim().toUpperCase()
+    if (!normalizedCode) {
+      setAppliedCoupon(null)
+      setCouponMessage("Inserisci un codice coupon")
+      return
+    }
+    if (!formData.checkIn || !formData.checkOut || subtotal <= 0) {
+      setCouponMessage("Seleziona prima le date del soggiorno")
+      return
+    }
+
+    setCouponLoading(true)
+    setCouponMessage("")
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ code: normalizedCode, subtotal, checkIn: formData.checkIn }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Coupon non valido")
+      setCouponCode(data.code)
+      setAppliedCoupon({ code: data.code, discount: Number(data.discount || 0), finalTotal: Number(data.finalTotal || 0) })
+      setCouponMessage(`Coupon ${data.code} applicato: risparmi €${Number(data.discount || 0).toFixed(2)}`)
+    } catch (error) {
+      setAppliedCoupon(null)
+      setCouponMessage(error instanceof Error ? error.message : "Coupon non valido")
+    } finally {
+      setCouponLoading(false)
+    }
+  }
 
   // ---- Submit ----
   const handleSubmit = async (e: React.FormEvent) => {
@@ -253,6 +298,9 @@ export default function PrenotaPage() {
         phone: formData.phone,
         notes: formData.specialRequests,
         pricePerNight: basePrice,
+        subtotalAmount: Math.round(subtotal * 100),
+        couponCode: appliedCoupon?.code,
+        discountAmount: Math.round(couponDiscount * 100),
         totalAmount: Math.round(total * 100),
         currency: "EUR",
         status: "pending",
@@ -288,7 +336,9 @@ export default function PrenotaPage() {
           specialRequests: formData.specialRequests,
           nights,
           pricePerNight: basePrice,
-          subtotal: Math.round(total * 100),
+          subtotal: Math.round(subtotal * 100),
+          couponCode: appliedCoupon?.code || "",
+          discountAmount: Math.round(couponDiscount * 100),
           taxes: 0,
           serviceFee: 0,
           totalAmount: Math.round(total * 100),
@@ -473,17 +523,48 @@ export default function PrenotaPage() {
                     />
                   </div>
 
-                  {/* Riepilogo totale */}
-                  <div className="flex items-center justify-between bg-muted/40 rounded-lg px-4 py-3">
-                    <div className="text-sm text-muted-foreground">
-                      {nights > 0
-                        ? `${nights} ${
-                            nights > 1 ? t("bookingNightsPlural") || "notti" : t("bookingNights") || "notte"
-                          } • ${adults} ${adults > 1 ? t("adultPlural") : t("adultSingular")}${children > 0 ? ` + ${children} ${children > 1 ? t("childPlural") : t("childSingular")}` : ""}`
-                        : t("bookingSummaryCompleteDates") || "Completa date e camera"}
+                  <div className="rounded-lg border border-[#c9a84c]/30 bg-[#c9a84c]/5 p-4">
+                    <Label htmlFor="booking-coupon" className="flex items-center gap-2 font-medium">
+                      <Tag className="h-4 w-4 text-[#b28b2e]" /> Coupon sconto
+                    </Label>
+                    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        id="booking-coupon"
+                        value={couponCode}
+                        onChange={(event) => {
+                          setCouponCode(event.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))
+                          setAppliedCoupon(null)
+                          setCouponMessage("")
+                        }}
+                        placeholder="Inserisci il codice"
+                        disabled={couponLoading || priceLoading}
+                      />
+                      <Button type="button" variant="outline" onClick={applyCoupon} disabled={couponLoading || priceLoading || subtotal <= 0}>
+                        {couponLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Tag className="mr-2 h-4 w-4" />}
+                        Applica
+                      </Button>
+                      {appliedCoupon && (
+                        <Button type="button" variant="ghost" size="icon" onClick={() => { setAppliedCoupon(null); setCouponCode(""); setCouponMessage("") }} aria-label="Rimuovi coupon">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                    <div className="text-xl font-semibold">
-                      {t("bookingSummaryTotal") || "Totale"}: €{isFinite(total) ? total.toFixed(2) : "0.00"}
+                    {couponMessage && <p className={`mt-2 text-sm ${appliedCoupon ? "text-green-700" : "text-red-600"}`}>{couponMessage}</p>}
+                  </div>
+
+                  {/* Riepilogo totale */}
+                  <div className="rounded-lg bg-muted/40 px-4 py-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        {nights > 0
+                          ? `${nights} ${nights > 1 ? t("bookingNightsPlural") || "notti" : t("bookingNights") || "notte"} • ${adults} ${adults > 1 ? t("adultPlural") : t("adultSingular")}`
+                          : t("bookingSummaryCompleteDates") || "Completa date e camera"}
+                      </div>
+                      <div className="min-w-56 space-y-1 text-sm">
+                        <div className="flex justify-between gap-5"><span>Subtotale</span><span>€{isFinite(subtotal) ? subtotal.toFixed(2) : "0.00"}</span></div>
+                        {appliedCoupon && <div className="flex justify-between gap-5 text-green-700"><span>Coupon {appliedCoupon.code}</span><span>-€{couponDiscount.toFixed(2)}</span></div>}
+                        <div className="flex justify-between gap-5 border-t pt-1 text-xl font-semibold"><span>{t("bookingSummaryTotal") || "Totale"}</span><span>€{isFinite(total) ? total.toFixed(2) : "0.00"}</span></div>
+                      </div>
                     </div>
                   </div>
 
