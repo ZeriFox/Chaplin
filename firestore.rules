@@ -36,9 +36,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Public reads are needed to show and calculate current rates. Direct
-    // browser writes remain restricted to verified administrators; production
-    // API writes additionally verify the Firebase ID token server-side.
     match /pricing_seasons/{id} {
       allow read: if true;
       allow write: if isAdmin();
@@ -53,5 +50,14 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Queste collezioni contengono codici, destinazioni OTP, sessioni e limiti
+    // promozionali. Sono accessibili esclusivamente tramite Firebase Admin SDK.
+    match /admin_security/{id} { allow read, write: if false; }
+    match /admin_2fa_challenges/{id} { allow read, write: if false; }
+    match /admin_otp_rate/{id} { allow read, write: if false; }
+    match /admin_sessions/{id} { allow read, write: if false; }
+    match /coupons/{id} { allow read, write: if false; }
+    match /coupon_usages/{id} { allow read, write: if false; }
   }
 }
