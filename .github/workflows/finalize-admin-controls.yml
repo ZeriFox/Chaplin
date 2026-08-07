@@ -2,11 +2,11 @@ name: Finalize admin advanced controls
 
 on:
   push:
-    branches: [feature/admin-advanced-controls]
-    paths: [.github/workflows/finalize-admin-controls.yml]
-  pull_request:
-    branches: [feature/admin-advanced-controls]
-    paths: [.github/finalize-admin-controls.trigger]
+    branches:
+      - feature/admin-advanced-controls
+    paths:
+      - .github/workflows/finalize-admin-controls.yml
+      - scripts/finalize_admin_controls.py
   workflow_dispatch:
 
 permissions:
@@ -15,234 +15,35 @@ permissions:
 jobs:
   patch-build-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
         with:
           ref: feature/admin-advanced-controls
           fetch-depth: 0
 
-      - name: Apply requested fixes
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
+      - name: Apply requested changes
+        run: python3 scripts/finalize_admin_controls.py
 
-          def load(path):
-              return Path(path).read_text(encoding="utf-8")
-
-          def save(path, text):
-              Path(path).write_text(text, encoding="utf-8")
-
-          def once(text, old, new, path):
-              if text.count(old) != 1:
-                  raise RuntimeError(f"{path}: expected one match, found {text.count(old)}")
-              return text.replace(old, new, 1)
-
-          # 1) Three selectable price presets in all pricing modes.
-          p = "components/dynamic-pricing-management.tsx"
-          s = load(p)
-          if "const PRICE_PRESETS =" not in s:
-              s = once(s, '''const WEEKDAYS = [
-            { day: 1, label: "Lunedì", short: "Lun" },
-            { day: 2, label: "Martedì", short: "Mar" },
-            { day: 3, label: "Mercoledì", short: "Mer" },
-            { day: 4, label: "Giovedì", short: "Gio" },
-            { day: 5, label: "Venerdì", short: "Ven" },
-            { day: 6, label: "Sabato", short: "Sab" },
-            { day: 0, label: "Domenica", short: "Dom" },
-          ]
-
-          function initialWeekdaySettings(): Record<number, WeekdaySetting> {
-          ''', '''const WEEKDAYS = [
-            { day: 1, label: "Lunedì", short: "Lun" },
-            { day: 2, label: "Martedì", short: "Mar" },
-            { day: 3, label: "Mercoledì", short: "Mer" },
-            { day: 4, label: "Giovedì", short: "Gio" },
-            { day: 5, label: "Venerdì", short: "Ven" },
-            { day: 6, label: "Sabato", short: "Sab" },
-            { day: 0, label: "Domenica", short: "Dom" },
-          ]
-
-          const PRICE_PRESETS = [
-            { label: "Tariffa 1", price: 169 },
-            { label: "Tariffa 2", price: 199 },
-            { label: "Tariffa 3", price: 219 },
-          ] as const
-
-          function PricePresetButtons({ onSelect }: { onSelect: (price: number) => void }) {
-            return (
-              <div className="space-y-2">
-                <Label>Tariffe preimpostate</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PRICE_PRESETS.map(({ label, price }) => (
-                    <Button key={label} type="button" variant="outline" onClick={() => onSelect(price)}>
-                      {label} · €{price}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )
-          }
-
-          function initialWeekdaySettings(): Record<number, WeekdaySetting> {
-          ''', p)
-
-          if "function applyPresetToWeekdays" not in s:
-              s = once(s, '''  function selectedWeekdays() {
-            return WEEKDAYS.filter(({ day }) => weekdaySettings[day]?.enabled)
-          }
-
-          ''', '''  function selectedWeekdays() {
-            return WEEKDAYS.filter(({ day }) => weekdaySettings[day]?.enabled)
-          }
-
-            function applyPresetToWeekdays(price: number) {
-              setWeekdaySettings((current) => {
-                const active = WEEKDAYS.filter(({ day }) => current[day]?.enabled)
-                const targets = new Set((active.length ? active : WEEKDAYS).map(({ day }) => day))
-                return Object.fromEntries(WEEKDAYS.map(({ day }) => [
-                  day,
-                  {
-                    enabled: active.length ? Boolean(current[day]?.enabled) : true,
-                    price: targets.has(day) ? String(price) : current[day]?.price || "",
-                  },
-                ])) as Record<number, WeekdaySetting>
-              })
-            }
-
-          ''', p)
-
-          if 'data-price-presets="manual"' not in s:
-              s = once(s, '''            <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2"><div><Label htmlFor="manual-price">Prezzo per notte (€)</Label>''',
-              '''            <CardContent className="space-y-4">
-                <div data-price-presets="manual"><PricePresetButtons onSelect={(price) => setRangePrice(String(price))} /></div>
-                <div className="grid gap-4 md:grid-cols-2"><div><Label htmlFor="manual-price">Prezzo per notte (€)</Label>''', p)
-
-          if 'data-price-presets="weekdays"' not in s:
-              s = once(s, '''              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">''',
-              '''              <div data-price-presets="weekdays"><PricePresetButtons onSelect={applyPresetToWeekdays} /></div>
-                <p className="text-xs text-muted-foreground">La tariffa viene applicata ai giorni selezionati; se nessun giorno è selezionato, vengono compilati tutti.</p>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">''', p)
-
-          if 'data-price-presets="base"' not in s:
-              s = once(s, '''<CardContent className="space-y-4"><p className="text-2xl font-bold">€{room.basePrice} / notte</p><div className="flex max-w-md flex-col gap-2 sm:flex-row">''',
-              '''<CardContent className="space-y-4"><p className="text-2xl font-bold">€{room.basePrice} / notte</p><div data-price-presets="base"><PricePresetButtons onSelect={(price) => setRangePrice(String(price))} /></div><div className="flex max-w-md flex-col gap-2 sm:flex-row">''', p)
-          save(p, s)
-
-          # 2) Real logo in every booking/update email generated by lib/email.tsx.
-          p = "lib/email.tsx"
-          s = load(p)
-          if "logoUrl:" not in s:
-              s = once(s, '''const BRAND = {
-            name: "CHAPLIN Luxury Holiday House",
-            city: "Viterbo, Italia",
-            siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://chaplin-house.vercel.app",
-            fromFallback: "CHAPLIN <noreply@chaplin-house.com>",
-          }''', '''const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://chaplinluxuryholidayhouse.it").replace(/\\/+$/, "")
-
-          const BRAND = {
-            name: "CHAPLIN Luxury Holiday House",
-            city: "Viterbo, Italia",
-            address: "Via della Pettinara 48, 01100 Viterbo (VT)",
-            siteUrl: PUBLIC_SITE_URL,
-            logoUrl: `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`,
-            fromFallback: "CHAPLIN Luxury Holiday House <onboarding@resend.dev>",
-          }''', p)
-
-          logo = '<img src="${BRAND.logoUrl}" width="260" alt="${BRAND.name}" style="display:block;width:100%;max-width:260px;height:auto;margin:14px auto 0;border:0" />'
-          pairs = [
-              ('<h1>✨ Prenotazione Confermata!</h1>\\n      <p>${BRAND.name}</p>', f'<h1>✨ Prenotazione Confermata!</h1>\\n      {logo}'),
-              ('<h1>${isManagementEmail ? "🔔 NOTIFICA CANCELLAZIONE" : "❌ Prenotazione Cancellata"}</h1>\\n      <p>${BRAND.name}</p>', f'<h1>${{isManagementEmail ? "🔔 NOTIFICA CANCELLAZIONE" : "❌ Prenotazione Cancellata"}}</h1>\\n      {logo}'),
-              ('<h1>✏️ Prenotazione Modificata</h1>\\n      <p>${BRAND.name}</p>', f'<h1>✏️ Prenotazione Modificata</h1>\\n      {logo}'),
-              ('<h1>✅ ${data.title || "Aggiornamento Prenotazione"}</h1>\\n      <p>${BRAND.name}</p>', f'<h1>✅ ${{data.title || "Aggiornamento Prenotazione"}}</h1>\\n      {logo}'),
-          ]
-          for old, new in pairs:
-              s = s.replace(old, new)
-          if "<p>${BRAND.address}</p>" not in s:
-              s = s.replace("<p>${BRAND.city}</p>", "<p>${BRAND.address}</p>\\n      <p>${BRAND.city}</p>")
-          if s.count('class="header"') != s.count('src="${BRAND.logoUrl}"'):
-              raise RuntimeError("lib/email.tsx: not every header uses the logo")
-          save(p, s)
-
-          # 3) Logo and current Chaplin branding in both extra-service email routes.
-          for p in ["app/api/request-extra-services/route.ts", "app/api/extra-services/request/route.ts"]:
-              s = load(p)
-              if "const EMAIL_LOGO_URL" not in s:
-                  marker = 'export async function POST(request: NextRequest) {'
-                  brand = '''const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://chaplinluxuryholidayhouse.it").replace(/\\/+$/, "")
-          const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
-          const BRAND_NAME = "CHAPLIN Luxury Holiday House"
-          const BRAND_ADDRESS = "Via della Pettinara 48, 01100 Viterbo (VT)"
-
-          '''
-                  s = once(s, marker, brand + marker, p)
-
-              s = s.replace("Al 22 Suite & Spa Luxury Experience", "CHAPLIN Luxury Holiday House")
-              s = s.replace("Al 22 Suite & Spa", "CHAPLIN Luxury Holiday House")
-              s = s.replace("Polignano a Mare, Italia", "${BRAND_ADDRESS}")
-              s = s.replace("border: 2px solid: #3b82f6", "border: 2px solid #3b82f6")
-              s = s.replace('noreply@al22suite.com', 'onboarding@resend.dev')
-              s = s.replace('process.env.SERVICE_EXTRA_EMAIL || process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"', 'process.env.SERVICE_EXTRA_EMAIL || "chaplinviterbo@gmail.com"')
-
-              for title in ["🔔 Nuova Richiesta Servizi Extra", "✨ Richiesta Ricevuta!"]:
-                  old = f'<h1>{title}</h1>\\n      <p>CHAPLIN Luxury Holiday House</p>'
-                  new = f'<h1>{title}</h1>\\n      <img src="${{EMAIL_LOGO_URL}}" width="250" alt="${{BRAND_NAME}}" style="display:block;width:100%;max-width:250px;height:auto;margin:14px auto 0;border:0;" />'
-                  s = s.replace(old, new)
-
-              if p.endswith("request-extra-services/route.ts") and 'src="${EMAIL_LOGO_URL}"' not in s:
-                  s = s.replace('<h2 style="color: #8B4513;">Nuova Richiesta Servizi Extra</h2>',
-                  '<div style="background:#1b1a17;padding:26px;text-align:center"><img src="${EMAIL_LOGO_URL}" width="250" alt="${BRAND_NAME}" style="display:block;max-width:250px;width:100%;height:auto;margin:0 auto;border:0" /></div>\\n          <h2 style="color: #8B4513;">Nuova Richiesta Servizi Extra</h2>', 1)
-
-              if 'src="${EMAIL_LOGO_URL}"' not in s:
-                  raise RuntimeError(f"{p}: email logo missing")
-              save(p, s)
-
-          # 4) Correct the typo everywhere while keeping server-side tolerance for old requests.
-          for root in ["app", "components", "lib"]:
-              for p in Path(root).rglob("*"):
-                  if p.suffix not in {".ts", ".tsx", ".js", ".jsx"}:
-                      continue
-                  s = load(p)
-                  n = s
-                  for old in ["I formazioni", "I Formazioni", "Iformazioni", "IFormazioni"]:
-                      n = n.replace(old, "Informazioni")
-                  if n != s:
-                      save(p, n)
-
-          checks = {
-              "app/api/contact-structure/route.ts": ["chaplin-logo-white.png", 'compact === "iformazioni"'],
-              "app/api/bookings/request/route.ts": ["chaplin-logo-readable.png", "claimCouponForBooking"],
-              "components/admin-coupon-management.tsx": ["AdminCouponManagement"],
-              "components/admin-security-settings.tsx": ["Autenticazione a due fattori", "Invia OTP e cambia password"],
-              "app/admin-login/page.tsx": ["Conferma codice e accedi"],
-              "components/dynamic-pricing-management.tsx": ["Tariffa 1", "Tariffa 2", "Tariffa 3", "Prezzi per colonne della settimana"],
-              "app/admin/page.tsx": ["Via della Pettinara 48, 01100 Viterbo (VT)", "AdminCouponManagement"],
-          }
-          for p, words in checks.items():
-              s = load(p)
-              for word in words:
-                  if word not in s:
-                      raise RuntimeError(f"{p}: missing {word}")
-          PY
-
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Install and build
+      - name: Install dependencies and build
         run: |
           corepack enable
           corepack prepare pnpm@10.28.0 --activate
           pnpm install --frozen-lockfile
-          pnmp build
+          pnpm build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
-      - name: Commit verified changes
+      - name: Commit and push verified changes
         run: |
           rm -f .github/workflows/finalize-admin-controls.yml
+          rm -f scripts/finalize_admin_controls.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
