@@ -1,4 +1,6 @@
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin"
+import { getAdminSecurityProfile, verifyAdminSessionCookie } from "@/lib/admin-two-factor"
+import { readRequestCookie } from "@/lib/admin-session"
 
 export class AdminApiError extends Error {
   status: number
@@ -10,27 +12,48 @@ export class AdminApiError extends Error {
   }
 }
 
+function configuredAdminEmails() {
+  return new Set(
+    (process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "chaplinviterbo2@gmail.com")
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  )
+}
+
 /**
- * Verifies the Firebase ID token sent by the admin panel and checks the
- * corresponding Firestore user document. Never trust the client-side role
- * cookie for API authorization.
+ * Verifica il Firebase ID token, il ruolo amministratore e, quando la 2FA è
+ * attiva, anche la sessione OTP HttpOnly rilasciata dopo il secondo fattore.
  */
 export async function requireAdminApi(request: Request) {
   const authorization = request.headers.get("authorization") || ""
   const match = authorization.match(/^Bearer\s+(.+)$/i)
 
-  if (!match) {
-    throw new AdminApiError("Autenticazione richiesta", 401)
+  if (!match) throw new AdminApiError("Autenticazione richiesta", 401)
+
+  let decoded
+  try {
+    decoded = await getAdminAuth().verifyIdToken(match[1], true)
+  } catch {
+    throw new AdminApiError("Sessione Firebase non valida o scaduta", 401)
   }
 
-  const decoded = await getAdminAuth().verifyIdToken(match[1], true)
   const userSnapshot = await getAdminDb().doc(`users/${decoded.uid}`).get()
+  const email = String(decoded.email || "").trim().toLowerCase()
+  const isAdmin = userSnapshot.data()?.role === "admin" || configuredAdminEmails().has(email)
 
-  if (!userSnapshot.exists || userSnapshot.data()?.role !== "admin") {
-    throw new AdminApiError("Permessi amministratore richiesti", 403)
+  if (!isAdmin) throw new AdminApiError("Permessi amministratore richiesti", 403)
+
+  const security = await getAdminSecurityProfile(decoded.uid)
+  if (security.twoFactorEnabled) {
+    const sessionCookie = readRequestCookie(request, "admin_session")
+    const validSession = await verifyAdminSessionCookie(sessionCookie, decoded.uid)
+    if (!validSession) {
+      throw new AdminApiError("Conferma OTP richiesta. Accedi nuovamente al pannello", 401)
+    }
   }
 
-  return { uid: decoded.uid, email: decoded.email || "" }
+  return { uid: decoded.uid, email, token: match[1], security }
 }
 
 export function adminApiErrorResponse(error: unknown) {
@@ -39,5 +62,5 @@ export function adminApiErrorResponse(error: unknown) {
   }
 
   console.error("[admin-api] Unexpected error:", error)
-  return Response.json({ error: "Errore interno del server" }, { status: 500 })
+  return Response.json({ error: error instanceof Error ? error.message : "Errore interno del server" }, { status: 500 })
 }
