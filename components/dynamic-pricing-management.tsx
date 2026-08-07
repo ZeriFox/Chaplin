@@ -67,6 +67,27 @@ const WEEKDAYS = [
   { day: 0, label: "Domenica", short: "Dom" },
 ]
 
+const PRICE_PRESETS = [
+  { label: "Tariffa 1", price: 169 },
+  { label: "Tariffa 2", price: 199 },
+  { label: "Tariffa 3", price: 219 },
+] as const
+
+function PricePresetButtons({ onSelect }: { onSelect: (price: number) => void }) {
+  return (
+    <div className="space-y-2">
+      <Label>Tariffe preimpostate</Label>
+      <div className="flex flex-wrap gap-2">
+        {PRICE_PRESETS.map(({ label, price }) => (
+          <Button key={label} type="button" variant="outline" onClick={() => onSelect(price)}>
+            {label} · €{price}
+          </Button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function initialWeekdaySettings(): Record<number, WeekdaySetting> {
   return Object.fromEntries(WEEKDAYS.map(({ day }) => [day, { enabled: false, price: "" }]))
 }
@@ -322,6 +343,23 @@ export function DynamicPricingManagement() {
     return WEEKDAYS.filter(({ day }) => weekdaySettings[day]?.enabled)
   }
 
+  function applyPresetToWeekdays(price: number) {
+    setWeekdaySettings((current) => {
+      const activeDays = WEEKDAYS.filter(({ day }) => current[day]?.enabled)
+      const targetDays = new Set((activeDays.length ? activeDays : WEEKDAYS).map(({ day }) => day))
+
+      return Object.fromEntries(
+        WEEKDAYS.map(({ day }) => [
+          day,
+          {
+            enabled: activeDays.length ? Boolean(current[day]?.enabled) : true,
+            price: targetDays.has(day) ? String(price) : current[day]?.price || "",
+          },
+        ]),
+      ) as Record<number, WeekdaySetting>
+    })
+  }
+
   async function applyWeekdayPrices() {
     setSaving(true)
     try {
@@ -452,6 +490,9 @@ export function DynamicPricingManagement() {
           <Card>
             <CardHeader><CardTitle>Modifica giorni selezionati</CardTitle><CardDescription>{rangeStart ? `${rangeStart} → ${rangeEnd || rangeStart}` : "Seleziona prima uno o più giorni dal calendario."}</CardDescription></CardHeader>
             <CardContent className="space-y-4">
+              <div data-price-presets="manual">
+                <PricePresetButtons onSelect={(price) => setRangePrice(String(price))} />
+              </div>
               <div className="grid gap-4 md:grid-cols-2"><div><Label htmlFor="manual-price">Prezzo per notte (€)</Label><Input id="manual-price" type="number" min="1" step="0.01" value={rangePrice} onChange={(event) => setRangePrice(event.target.value)} placeholder="es. 180" /></div><div><Label htmlFor="manual-reason">Nota facoltativa</Label><Input id="manual-reason" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Ponte, evento, promozione" /></div></div>
               <div className="flex flex-col gap-2 sm:flex-row"><Button onClick={applyManualPrice} disabled={!rangeStart || !rangePrice || saving}><Save className="mr-2 h-4 w-4" />Applica prezzo all’intervallo</Button><Button variant="outline" onClick={resetManualPrices} disabled={!rangeStart || saving}><RotateCcw className="mr-2 h-4 w-4" />Ripristina automatico</Button><Button variant="ghost" onClick={clearSelection} disabled={!rangeStart}>Annulla selezione</Button></div>
             </CardContent>
@@ -469,6 +510,12 @@ export function DynamicPricingManagement() {
                 <div><Label htmlFor="weekday-start">Dal giorno</Label><Input id="weekday-start" type="date" value={weekdayStart} onChange={(event) => setWeekdayStart(event.target.value)} /></div>
                 <div><Label htmlFor="weekday-end">Al giorno</Label><Input id="weekday-end" type="date" min={weekdayStart || undefined} value={weekdayEnd} onChange={(event) => setWeekdayEnd(event.target.value)} /></div>
               </div>
+              <div data-price-presets="weekdays">
+                <PricePresetButtons onSelect={applyPresetToWeekdays} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                La tariffa viene applicata ai giorni selezionati; se non ne selezioni nessuno, vengono compilati tutti.
+              </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
                 {WEEKDAYS.map(({ day, label, short }) => {
                   const setting = weekdaySettings[day]
@@ -490,7 +537,7 @@ export function DynamicPricingManagement() {
         </TabsContent>
 
         <TabsContent value="base">
-          <Card><CardHeader><CardTitle>Prezzo base della Suite</CardTitle><CardDescription>Usato quando non esistono prezzi manuali, periodi speciali o stagioni.</CardDescription></CardHeader><CardContent className="space-y-4"><p className="text-2xl font-bold">€{room.basePrice} / notte</p><div className="flex max-w-md flex-col gap-2 sm:flex-row"><Input type="number" min="1" step="0.01" value={rangePrice} onChange={(event) => setRangePrice(event.target.value)} placeholder="Nuovo prezzo base" /><Button onClick={updateBasePrice} disabled={!rangePrice || saving}>Aggiorna</Button></div></CardContent></Card>
+          <Card><CardHeader><CardTitle>Prezzo base della Suite</CardTitle><CardDescription>Usato quando non esistono prezzi manuali, periodi speciali o stagioni.</CardDescription></CardHeader><CardContent className="space-y-4"><p className="text-2xl font-bold">€{room.basePrice} / notte</p><div data-price-presets="base"><PricePresetButtons onSelect={(price) => setRangePrice(String(price))} /></div><div className="flex max-w-md flex-col gap-2 sm:flex-row"><Input type="number" min="1" step="0.01" value={rangePrice} onChange={(event) => setRangePrice(event.target.value)} placeholder="Nuovo prezzo base" /><Button onClick={updateBasePrice} disabled={!rangePrice || saving}>Aggiorna</Button></div></CardContent></Card>
         </TabsContent>
       </Tabs>
     </div>

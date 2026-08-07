@@ -3,6 +3,15 @@ import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
 
+const PUBLIC_SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "https://chaplinluxuryholidayhouse.it"
+).replace(/\/+$/, "")
+const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
+const BRAND_NAME = "CHAPLIN Luxury Holiday House"
+const BRAND_ADDRESS = "Via della Pettinara 48, 01100 Viterbo (VT)"
+
 export async function POST(request: NextRequest) {
   try {
     const emailConfig = getEmailConfigStatus()
@@ -19,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Dati mancanti" }, { status: 400 })
     }
 
-    const propertyEmail = process.env.SERVICE_EXTRA_EMAIL || process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"
+    const propertyEmail = process.env.SERVICE_EXTRA_EMAIL || "chaplinviterbo@gmail.com"
     const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"
 
     const servicesText = services.map((s: any) => `- ${s.name}: €${s.price}`).join("\n")
@@ -72,7 +81,7 @@ export async function POST(request: NextRequest) {
     .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
     .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
     .detail-label { font-weight: bold; color: #1e40af; }
-    .services-list { background: #dbeafe; border: 2px solid: #3b82f6; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .services-list { background: #dbeafe; border: 2px solid #3b82f6; padding: 15px; border-radius: 8px; margin: 15px 0; }
     .action-box { background: #fef3c7; border: 2px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0; }
     .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
   </style>
@@ -81,7 +90,7 @@ export async function POST(request: NextRequest) {
   <div class="container">
     <div class="header">
       <h1>🔔 Nuova Richiesta Servizi Extra</h1>
-      <p>Al 22 Suite & Spa Luxury Experience</p>
+      <img src="${EMAIL_LOGO_URL}" width="250" alt="${BRAND_NAME}" style="display:block;width:100%;max-width:250px;height:auto;margin:14px auto 0;border:0;" />
     </div>
     
     <div class="content">
@@ -131,8 +140,8 @@ export async function POST(request: NextRequest) {
     </div>
     
     <div class="footer">
-      <p>Al 22 Suite & Spa Luxury Experience</p>
-      <p>Polignano a Mare, Italia</p>
+      <p>${BRAND_NAME}</p>
+      <p>${BRAND_ADDRESS}</p>
       <p>Questa è una email automatica dal sistema di gestione prenotazioni.</p>
     </div>
   </div>
@@ -144,7 +153,7 @@ export async function POST(request: NextRequest) {
     await sendEmail({
       from: fromEmail,
       to: userEmail,
-      subject: "✨ Richiesta servizi extra ricevuta - Al 22 Suite & Spa",
+      subject: "✨ Richiesta servizi extra ricevuta - CHAPLIN Luxury Holiday House",
       html: `
 <!DOCTYPE html>
 <html>
@@ -164,7 +173,7 @@ export async function POST(request: NextRequest) {
   <div class="container">
     <div class="header">
       <h1>✨ Richiesta Ricevuta!</h1>
-      <p>Al 22 Suite & Spa Luxury Experience</p>
+      <img src="${EMAIL_LOGO_URL}" width="250" alt="${BRAND_NAME}" style="display:block;width:100%;max-width:250px;height:auto;margin:14px auto 0;border:0;" />
     </div>
     
     <div class="content">
@@ -195,12 +204,12 @@ export async function POST(request: NextRequest) {
 
       <p style="margin-top: 30px;">Non vediamo l'ora di rendere il tuo soggiorno indimenticabile!</p>
       
-      <p>A presto,<br><strong>Il Team di Al 22 Suite & Spa</strong></p>
+      <p>A presto,<br><strong>Il Team di CHAPLIN Luxury Holiday House</strong></p>
     </div>
     
     <div class="footer">
-      <p>Al 22 Suite & Spa Luxury Experience</p>
-      <p>Polignano a Mare, Italia</p>
+      <p>${BRAND_NAME}</p>
+      <p>${BRAND_ADDRESS}</p>
       <p>Hai domande? Rispondi a questa email, saremo felici di aiutarti!</p>
     </div>
   </div>
