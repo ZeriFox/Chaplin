@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/finalize-admin-controls.yml
       - scripts/finalize_admin_controls.py
+      - scripts/patch_remaining_email_templates.py
   workflow_dispatch:
 
 permissions:
@@ -23,7 +24,10 @@ jobs:
           ref: feature/admin-advanced-controls
           fetch-depth: 0
 
-      - name: Apply requested changes
+      - name: Apply email branding fixes
+        run: python3 scripts/patch_remaining_email_templates.py
+
+      - name: Apply and verify requested changes
         run: python3 scripts/finalize_admin_controls.py
 
       - name: Set up Node.js
@@ -44,6 +48,7 @@ jobs:
         run: |
           rm -f .github/workflows/finalize-admin-controls.yml
           rm -f scripts/finalize_admin_controls.py
+          rm -f scripts/patch_remaining_email_templates.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
