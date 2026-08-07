@@ -4,6 +4,10 @@ on:
   push:
     branches: [feature/admin-advanced-controls]
     paths: [.github/workflows/finalize-admin-controls.yml]
+  pull_request:
+    branches: [feature/admin-advanced-controls]
+    paths: [.github/finalize-admin-controls.trigger]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -170,8 +174,7 @@ jobs:
                   brand = '''const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://chaplinluxuryholidayhouse.it").replace(/\\/+$/, "")
           const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
           const BRAND_NAME = "CHAPLIN Luxury Holiday House"
-          const BRAND_ADDRESS = "Via della Pettinara 48, 0110 Viterbo (VT)"
-
+          const BRAND_ADDRESS = "Via della Pettinara 48, 01100 Viterbo (VT)"
 
           '''
                   s = once(s, marker, brand + marker, p)
