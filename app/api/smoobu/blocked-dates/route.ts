@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server"
-import { db } from "@/lib/firebase"
-import { collection, getDocs, query, orderBy } from "firebase/firestore"
+import { getAdminDb } from "@/lib/firebase-admin"
+import { adminApiErrorResponse, requireAdminApi } from "@/lib/require-admin-api"
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 /**
  * Get all blocked dates from Firestore
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const blockedDatesRef = collection(db, "blocked_dates")
-    const q = query(blockedDatesRef, orderBy("from", "asc"))
-    const snapshot = await getDocs(q)
+    await requireAdminApi(request)
+    const snapshot = await getAdminDb().collection("blocked_dates").orderBy("from", "asc").get()
 
-    const blockedDates = snapshot.docs.map(doc => ({
+    const blockedDates = snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     }))
 
     return NextResponse.json({
@@ -24,9 +24,6 @@ export async function GET() {
     })
   } catch (error) {
     console.error("[Smoobu] Error fetching blocked dates:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch blocked dates" },
-      { status: 500 }
-    )
+    return adminApiErrorResponse(error)
   }
 }

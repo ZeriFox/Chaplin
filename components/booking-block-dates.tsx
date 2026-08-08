@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Ban, CheckCircle2, AlertCircle, Unlock } from 'lucide-react'
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { auth } from "@/lib/firebase"
 
 interface BlockedDate {
   id: string
@@ -17,6 +18,22 @@ interface BlockedDate {
   to: string
   reason: string
   createdAt: any
+}
+
+async function adminRequest(url: string, options: RequestInit = {}) {
+  const currentUser = auth.currentUser
+  if (!currentUser) throw new Error("Sessione amministratore non disponibile")
+
+  const token = await currentUser.getIdToken()
+  return fetch(url, {
+    ...options,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {}),
+    },
+  })
 }
 
 export function BookingBlockDates() {
@@ -39,14 +56,17 @@ export function BookingBlockDates() {
   const loadBlockedDates = async () => {
     try {
       setLoadingBlocked(true)
-      const response = await fetch("/api/smoobu/blocked-dates")
+      const response = await adminRequest("/api/smoobu/blocked-dates")
       const data = await response.json()
       
       if (response.ok) {
         setBlockedDates(data.blockedDates || [])
+      } else {
+        throw new Error(data.error || "Errore nel caricamento delle date bloccate")
       }
     } catch (err) {
       console.error("[Smoobu] Error loading blocked dates:", err)
+      setError(err instanceof Error ? err.message : "Errore nel caricamento delle date bloccate")
     } finally {
       setLoadingBlocked(false)
     }
@@ -63,7 +83,7 @@ export function BookingBlockDates() {
     setSuccess(false)
 
     try {
-      const response = await fetch("/api/smoobu/block-dates", {
+      const response = await adminRequest("/api/smoobu/block-dates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roomId, from, to, reason }),
@@ -96,7 +116,7 @@ export function BookingBlockDates() {
     setError(null)
 
     try {
-      const response = await fetch("/api/smoobu/unblock-dates", {
+      const response = await adminRequest("/api/smoobu/unblock-dates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ blockId }),
