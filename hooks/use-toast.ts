@@ -17,6 +17,8 @@ const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = Toast & {
   id: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const actionTypes = {
@@ -153,7 +155,7 @@ function toast({ ...props }: Omit<ToasterToast, "id">) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss()
       },
     },

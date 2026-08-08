@@ -1,156 +1,131 @@
 import { NextResponse } from "next/server"
 
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin"
+import {
+  createAdminSession,
+  createOtpChallenge,
+  getAdminSecurityProfile,
+  revokeAdminSessionCookie,
+  TwoFactorError,
+  verifyAdminSessionCookie,
+} from "@/lib/admin-two-factor"
+import {
+  clearAuthenticatedSessionCookies,
+  readRequestCookie,
+  setAuthenticatedSessionCookies,
+  type SessionRole,
+} from "@/lib/admin-session"
+
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-type AppRole = "user" | "admin"
-
-// These are public Firebase Web configuration values. They are intentionally
-// fixed to the production project so stale Vercel environment variables cannot
-// validate a browser token against a different Firebase project.
-const FIREBASE_API_KEY = "AIzaSyBKK8q78f-DuOtzIqV7EDAnUVsVp05-IHs"
-const FIREBASE_PROJECT_ID = "chaplin-viterbo"
-const DEFAULT_ADMIN_EMAIL = "chaplinviterbo2@gmail.com"
-
-function getAuthorizedAdminEmails() {
-  const configured = process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL
-
+function authorizedAdminEmails() {
   return new Set(
-    configured
+    (process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "chaplinviterbo2@gmail.com")
       .split(",")
       .map((email) => email.trim().toLowerCase())
       .filter(Boolean),
   )
 }
 
-function getCookieDomain(req: Request) {
-  const forwardedHost = req.headers.get("x-forwarded-host")
-  const host = (forwardedHost || req.headers.get("host") || "").split(",")[0].trim().split(":")[0].toLowerCase()
+async function resolveUser(token: string) {
+  const decoded = await getAdminAuth().verifyIdToken(token, true)
+  const email = String(decoded.email || "").trim().toLowerCase()
+  const userDocument = await getAdminDb().doc(`users/${decoded.uid}`).get()
+  const userData = userDocument.data()
+  const role: SessionRole =
+    userData?.role === "admin" || authorizedAdminEmails().has(email) ? "admin" : "user"
 
-  if (host === "chaplinluxuryholidayhouse.it" || host.endsWith(".chaplinluxuryholidayhouse.it")) {
-    return "chaplinluxuryholidayhouse.it"
-  }
-
-  return undefined
+  return { uid: decoded.uid, email, role, mustChangePassword: role === "admin" && userData?.mustChangePassword !== false }
 }
 
-function cookieOptions(req: Request, maxAge: number) {
-  const domain = getCookieDomain(req)
-
-  return {
-    httpOnly: true,
-    sameSite: "lax" as const,
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    maxAge,
-    ...(domain ? { domain } : {}),
-  }
-}
-
-function clearSessionCookies(req: Request, response: NextResponse) {
-  response.cookies.set("id_token", "", cookieOptions(req, 0))
-  response.cookies.set("app_role", "", cookieOptions(req, 0))
-}
-
-async function resolveFirebaseUser(token: string) {
-  const response = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_API_KEY)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken: token }),
-      cache: "no-store",
-    },
-  )
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => null)
-    throw new Error(body?.error?.message || `firebase_auth_${response.status}`)
-  }
-
-  const body = (await response.json()) as {
-    users?: Array<{ localId?: string; email?: string; disabled?: boolean }>
-  }
-  const firebaseUser = body.users?.[0]
-
-  if (!firebaseUser?.localId || firebaseUser.disabled) {
-    throw new Error("firebase_user_missing_or_disabled")
-  }
-
-  return {
-    uid: firebaseUser.localId,
-    email: (firebaseUser.email || "").trim().toLowerCase(),
-  }
-}
-
-async function resolveFirestoreRole(token: string, uid: string): Promise<AppRole> {
-  const documentUrl =
-    `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(FIREBASE_PROJECT_ID)}` +
-    `/databases/(default)/documents/users/${encodeURIComponent(uid)}`
-
-  const response = await fetch(documentUrl, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  })
-
-  if (response.status === 404) {
-    return "user"
-  }
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => null)
-    throw new Error(body?.error?.message || `firestore_role_${response.status}`)
-  }
-
-  const body = (await response.json()) as {
-    fields?: { role?: { stringValue?: string } }
-  }
-
-  return body.fields?.role?.stringValue === "admin" ? "admin" : "user"
-}
-
-async function resolveUserRole(token: string, uid: string, email: string): Promise<AppRole> {
-  if (email && getAuthorizedAdminEmails().has(email)) {
-    return "admin"
-  }
-
+export async function POST(request: Request) {
   try {
-    return await resolveFirestoreRole(token, uid)
-  } catch (error) {
-    console.warn("[session] Unable to read Firestore role; using standard user role", error)
-    return "user"
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const body = (await req.json()) as { token?: string }
+    const body = (await request.json()) as { token?: string }
     const token = body.token?.trim()
+    if (!token) return NextResponse.json({ ok: false, error: "Token mancante" }, { status: 400 })
 
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Token mancante" }, { status: 400 })
+    const firebaseUser = await resolveUser(token)
+
+    if (firebaseUser.role !== "admin") {
+      const response = NextResponse.json({ ok: true, role: "user", requiresOtp: false })
+      response.headers.set("Cache-Control", "no-store")
+      setAuthenticatedSessionCookies({ request, response, idToken: token, role: "user" })
+      return response
     }
 
-    const firebaseUser = await resolveFirebaseUser(token)
-    const role = await resolveUserRole(token, firebaseUser.uid, firebaseUser.email)
+    const security = await getAdminSecurityProfile(firebaseUser.uid)
 
-    const response = NextResponse.json({ ok: true, role })
+    if (security.twoFactorEnabled) {
+      if (!security.method || !security.destination) {
+        return NextResponse.json(
+          { ok: false, error: "Configurazione 2FA incompleta. Contatta l’assistenza" },
+          { status: 500 },
+        )
+      }
+
+      const existingSessionCookie = readRequestCookie(request, "admin_session")
+      if (await verifyAdminSessionCookie(existingSessionCookie, firebaseUser.uid)) {
+        const response = NextResponse.json({ ok: true, role: "admin", requiresOtp: false, mustChangePassword: firebaseUser.mustChangePassword })
+        response.headers.set("Cache-Control", "no-store")
+        setAuthenticatedSessionCookies({
+          request,
+          response,
+          idToken: token,
+          role: "admin",
+          adminSessionToken: existingSessionCookie,
+        })
+        return response
+      }
+
+      const challenge = await createOtpChallenge({
+        uid: firebaseUser.uid,
+        purpose: "login",
+        method: security.method,
+        destination: security.destination,
+      })
+
+      const response = NextResponse.json({
+        ok: true,
+        role: "admin",
+        requiresOtp: true,
+        mustChangePassword: firebaseUser.mustChangePassword,
+        ...challenge,
+      })
+      response.headers.set("Cache-Control", "no-store")
+      clearAuthenticatedSessionCookies(request, response)
+      return response
+    }
+
+    const adminSession = await createAdminSession(firebaseUser.uid)
+    const response = NextResponse.json({ ok: true, role: "admin", requiresOtp: false, mustChangePassword: firebaseUser.mustChangePassword })
     response.headers.set("Cache-Control", "no-store")
-    response.cookies.set("id_token", token, cookieOptions(req, 60 * 60))
-    response.cookies.set("app_role", role, cookieOptions(req, 60 * 60))
+    setAuthenticatedSessionCookies({
+      request,
+      response,
+      idToken: token,
+      role: "admin",
+      adminSessionToken: adminSession.token,
+      adminSessionMaxAge: adminSession.maxAgeSeconds,
+    })
     return response
   } catch (error) {
     console.error("[session] Invalid Firebase session", error)
-    const response = NextResponse.json({ ok: false, error: "Sessione non valida" }, { status: 401 })
+    const status = error instanceof TwoFactorError ? error.status : 401
+    const message = error instanceof Error ? error.message : "Sessione non valida"
+    const response = NextResponse.json({ ok: false, error: message }, { status })
     response.headers.set("Cache-Control", "no-store")
-    clearSessionCookies(req, response)
+    clearAuthenticatedSessionCookies(request, response)
     return response
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(request: Request) {
+  const existingSessionCookie = readRequestCookie(request, "admin_session")
+  await revokeAdminSessionCookie(existingSessionCookie)
+
   const response = NextResponse.json({ ok: true })
   response.headers.set("Cache-Control", "no-store")
-  clearSessionCookies(req, response)
+  clearAuthenticatedSessionCookies(request, response)
   return response
 }

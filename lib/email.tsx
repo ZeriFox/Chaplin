@@ -1,12 +1,17 @@
 // lib/email.ts
 // NOTE: file riscritto per CHAPLIN Luxury Holiday House + aggiunta sendBookingUpdateEmail
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
+import { getEmailLogoUrl, getPublicSiteUrl, SITE_CONFIG } from "@/lib/site-config"
+
+const PUBLIC_SITE_URL = getPublicSiteUrl()
 
 const BRAND = {
-  name: "CHAPLIN Luxury Holiday House",
-  city: "Viterbo, Italia",
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://chaplin-house.vercel.app",
-  fromFallback: "CHAPLIN <noreply@chaplin-house.com>",
+  name: SITE_CONFIG.name,
+  city: SITE_CONFIG.city,
+  address: SITE_CONFIG.address,
+  siteUrl: PUBLIC_SITE_URL,
+  logoUrl: getEmailLogoUrl(),
+  fromFallback: "CHAPLIN Luxury Holiday House <onboarding@resend.dev>",
 }
 
 interface BookingEmailData {
@@ -18,6 +23,7 @@ interface BookingEmailData {
   checkOut: string
   roomName: string
   guests: number
+  numberOfChildren?: number
   totalAmount: number // cents
   nights: number
   newUserPassword?: string
@@ -60,9 +66,14 @@ interface ModificationEmailData {
   penalty?: number // cents
   guestAdditionCost?: number // cents
   dateChangeCost?: number // cents
-  modificationType: "dates" | "guests" | "both"
+  modificationType: "dates" | "guests" | "both" | "change_dates" | "add_guests"
   refundAmount?: number // cents
   manualRefund?: boolean
+  children?: number
+  oldCheckIn?: string
+  oldCheckOut?: string
+  newCheckIn?: string
+  newCheckOut?: string
 }
 
 type BookingUpdateEmailData = {
@@ -78,6 +89,11 @@ type BookingUpdateEmailData = {
   guests?: number
   nights?: number
   totalAmount?: number // cents
+  originalAmount?: number
+  newAmount?: number
+  priceDifference?: number
+  modificationType?: "change_dates" | "add_guests"
+  penalty?: number
 }
 
 function requireEmailConfig() {
@@ -122,7 +138,7 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
   <div class="container">
     <div class="header">
       <h1>✨ Prenotazione Confermata!</h1>
-      <p>${BRAND.name}</p>
+      <img src="${BRAND.logoUrl}" width="260" alt="${BRAND.name}" style="display:block;width:100%;max-width:260px;height:auto;margin:14px auto 0;border:0" />
     </div>
 
     <div class="content">
@@ -177,6 +193,7 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
 
     <div class="footer">
       <p>${BRAND.name}</p>
+      <p>${BRAND.address}</p>
       <p>${BRAND.city}</p>
       <p>Questa è una email automatica, si prega di non rispondere.</p>
     </div>
@@ -235,7 +252,7 @@ export async function sendCancellationEmail(data: CancellationEmailData) {
   <div class="container">
     <div class="header">
       <h1>${isManagementEmail ? "🔔 NOTIFICA CANCELLAZIONE" : "❌ Prenotazione Cancellata"}</h1>
-      <p>${BRAND.name}</p>
+      <img src="${BRAND.logoUrl}" width="260" alt="${BRAND.name}" style="display:block;width:100%;max-width:260px;height:auto;margin:14px auto 0;border:0" />
     </div>
 
     <div class="content">
@@ -296,6 +313,7 @@ export async function sendCancellationEmail(data: CancellationEmailData) {
 
     <div class="footer">
       <p>${BRAND.name}</p>
+      <p>${BRAND.address}</p>
       <p>${BRAND.city}</p>
       <p>Email automatica, si prega di non rispondere.</p>
     </div>
@@ -317,8 +335,23 @@ export async function sendCancellationEmail(data: CancellationEmailData) {
   }
 }
 
-export async function sendModificationEmail(data: ModificationEmailData) {
+export async function sendModificationEmail(
+  input: Pick<ModificationEmailData, "to" | "bookingId"> & Partial<ModificationEmailData> & Record<string, any>,
+) {
   try {
+    const data: ModificationEmailData = {
+      firstName: "",
+      lastName: "",
+      checkIn: input.newCheckIn || input.checkIn || "",
+      checkOut: input.newCheckOut || input.checkOut || "",
+      roomName: "La Suite",
+      guests: 1,
+      nights: 1,
+      originalAmount: 0,
+      newAmount: 0,
+      modificationType: "dates",
+      ...input,
+    }
     const cfg = requireEmailConfig()
     if (!cfg.ok) return { success: false, error: cfg.error }
 
@@ -347,7 +380,7 @@ export async function sendModificationEmail(data: ModificationEmailData) {
   <div class="container">
     <div class="header">
       <h1>✏️ Prenotazione Modificata</h1>
-      <p>${BRAND.name}</p>
+      <img src="${BRAND.logoUrl}" width="260" alt="${BRAND.name}" style="display:block;width:100%;max-width:260px;height:auto;margin:14px auto 0;border:0" />
     </div>
 
     <div class="content">
@@ -456,6 +489,7 @@ export async function sendModificationEmail(data: ModificationEmailData) {
 
     <div class="footer">
       <p>${BRAND.name}</p>
+      <p>${BRAND.address}</p>
       <p>${BRAND.city}</p>
       <p>Email automatica, si prega di non rispondere.</p>
     </div>
@@ -508,7 +542,7 @@ export async function sendBookingUpdateEmail(data: BookingUpdateEmailData) {
   <div class="container">
     <div class="header">
       <h1>✅ ${data.title || "Aggiornamento Prenotazione"}</h1>
-      <p>${BRAND.name}</p>
+      <img src="${BRAND.logoUrl}" width="260" alt="${BRAND.name}" style="display:block;width:100%;max-width:260px;height:auto;margin:14px auto 0;border:0" />
     </div>
 
     <div class="content">
@@ -544,6 +578,7 @@ export async function sendBookingUpdateEmail(data: BookingUpdateEmailData) {
 
     <div class="footer">
       <p>${BRAND.name}</p>
+      <p>${BRAND.address}</p>
       <p>${BRAND.city}</p>
       <p>Email automatica, si prega di non rispondere.</p>
     </div>

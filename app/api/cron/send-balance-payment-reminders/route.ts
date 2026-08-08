@@ -1,6 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
+import { SITE_CONFIG } from "@/lib/site-config"
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
+const PUBLIC_SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "https://chaplinluxuryholidayhouse.it"
+).replace(/\/+$/, "")
+const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
+const BRAND_NAME = "CHAPLIN Luxury Holiday House"
+const BRAND_ADDRESS = SITE_CONFIG.address
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,10 +60,11 @@ export async function GET(request: NextRequest) {
       // Send balance payment reminder email
       try {
         await sendEmail({
-          from: process.env.RESEND_FROM_EMAIL || "noreply@al22suite.com",
+          from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
           to: booking.email,
-          subject: `Promemoria: Pagamento saldo per il tuo soggiorno ad AL 22 Suite`,
+          subject: `Promemoria: Pagamento saldo per il tuo soggiorno ad CHAPLIN Luxury Holiday House`,
           html: `
+            <div style="background:#1b1a17;padding:24px;text-align:center;"><img src="${EMAIL_LOGO_URL}" width="250" alt="${BRAND_NAME}" title="${BRAND_ADDRESS}" style="display:block;width:100%;max-width:250px;height:auto;margin:0 auto;border:0;" /></div>
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
                 <h1 style="margin: 0; font-size: 28px;">💳 Pagamento Saldo Richiesto</h1>
@@ -60,7 +74,7 @@ export async function GET(request: NextRequest) {
                 <h2 style="color: #1e40af;">Ciao ${booking.firstName}!</h2>
                 
                 <p style="font-size: 16px; line-height: 1.6;">
-                  Il tuo soggiorno ad <strong>AL 22 Suite & Spa</strong> inizia tra <strong>7 giorni</strong>! 🎉
+                  Il tuo soggiorno ad <strong>CHAPLIN Luxury Holiday House</strong> inizia tra <strong>7 giorni</strong>! 🎉
                 </p>
 
                 <p style="font-size: 16px; line-height: 1.6;">
@@ -101,7 +115,7 @@ export async function GET(request: NextRequest) {
                 </div>
 
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="${booking.balancePaymentUrl || `https://al22suite.com/user/booking/${doc.id}/balance`}" 
+                  <a href="${booking.balancePaymentUrl || `${PUBLIC_SITE_URL}/user/booking/${doc.id}/balance`}" 
                      style="display: inline-block; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
                     Paga il Saldo Ora
                   </a>
@@ -114,7 +128,7 @@ export async function GET(request: NextRequest) {
                 </div>
 
                 <p style="color: #6b7280; font-size: 12px; margin-top: 30px; text-align: center; line-height: 1.5;">
-                  Questa email è stata inviata automaticamente. Non vediamo l'ora di darti il benvenuto ad AL 22 Suite & Spa! ✨
+                  Questa email è stata inviata automaticamente. Non vediamo l'ora di darti il benvenuto ad CHAPLIN Luxury Holiday House! ✨
                 </p>
               </div>
             </div>

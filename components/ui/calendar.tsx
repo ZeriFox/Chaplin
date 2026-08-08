@@ -3,6 +3,7 @@
 import * as React from "react"
 import { DayPicker } from "react-day-picker"
 import { it as itLocale } from "date-fns/locale"
+import type { Locale } from "date-fns"
 import { cn } from "@/lib/utils"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {

@@ -2,6 +2,7 @@
 import type React from "react"
 import { useState, useCallback } from "react"
 import Link from "next/link"
+import { SITE_CONFIG } from "@/lib/site-config"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useLanguage } from "@/components/language-provider"
@@ -15,8 +16,8 @@ import { AlertCircle, Award, CheckCircle2, Clock, Heart, Loader2, MapPin, Messag
 
 const CONTACT_INFO = {
   name: "CHAPLIN Luxury Holiday House",
-  address: "Via della Pettinara, 48",
-  city: "01100 Viterbo (VT)",
+  address: SITE_CONFIG.addressLine1,
+  city: SITE_CONFIG.addressLine2,
   phone: process.env.NEXT_PUBLIC_PRIVACY_PHONE || "+39 351 719 6320",
 }
 
@@ -28,7 +29,7 @@ const getEmail = () => {
 
 export default function ContactsPage() {
   const { t } = useLanguage()
-  const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" })
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", subject: "", message: "" })
   const [newsletterPhone, setNewsletterPhone] = useState("")
   const [newsletterConsent, setNewsletterConsent] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
@@ -68,7 +69,7 @@ export default function ContactsPage() {
         throw new Error(t("contactSendFailure"))
       }
 
-      setFormData({ name: "", email: "", subject: "", message: "" })
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
       setNotRobot(false)
       setSubmitStatus("success")
       setSubmitMessage(t("contactSendSuccess"))
@@ -314,6 +315,21 @@ export default function ContactsPage() {
                           rows={4}
                           maxLength={5000}
                           required
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <Label htmlFor="phone" className="text-sm">Telefono</Label>
+                        <Input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          maxLength={40}
+                          autoComplete="tel"
+                          required
+                          className="mt-1 focus-visible:ring-[#c9a84c]"
                         />
                       </div>
 

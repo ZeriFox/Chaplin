@@ -1,6 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
+import { SITE_CONFIG } from "@/lib/site-config"
+
+const PUBLIC_SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "https://chaplinluxuryholidayhouse.it"
+).replace(/\/+$/, "")
+const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
+const BRAND_NAME = "CHAPLIN Luxury Holiday House"
+const BRAND_ADDRESS = SITE_CONFIG.address
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,10 +59,11 @@ export async function GET(request: NextRequest) {
       // Send check-in reminder email
       try {
         await sendEmail({
-          from: process.env.RESEND_FROM_EMAIL || "noreply@al22suite.com",
+          from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
           to: booking.email,
-          subject: `Domani è il tuo check-in ad AL 22 Suite! 🎉`,
+          subject: `Domani è il tuo check-in ad CHAPLIN Luxury Holiday House! 🎉`,
           html: `
+            <div style="background:#1b1a17;padding:24px;text-align:center;"><img src="${EMAIL_LOGO_URL}" width="250" alt="${BRAND_NAME}" title="${BRAND_ADDRESS}" style="display:block;width:100%;max-width:250px;height:auto;margin:0 auto;border:0;" /></div>
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #8B4513;">Ciao ${booking.firstName}! 👋</h2>
               
@@ -76,13 +87,13 @@ export async function GET(request: NextRequest) {
 
               <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0;"><strong>📍 Indirizzo:</strong></p>
-                <p style="margin: 5px 0 0 0;">AL 22 Suite & Spa<br>Polignano a Mare, Italia</p>
+                <p style="margin: 5px 0 0 0;">CHAPLIN Luxury Holiday House<br>${BRAND_ADDRESS}</p>
               </div>
 
               <p>Se hai bisogno di assistenza o hai domande, non esitare a contattarci!</p>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://al22suite.com/user/booking/${doc.id}" style="display: inline-block; background: #8B4513; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                <a href="${PUBLIC_SITE_URL}/user/booking/${doc.id}" style="display: inline-block; background: #8B4513; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                   Visualizza Prenotazione
                 </a>
               </div>
@@ -92,7 +103,7 @@ export async function GET(request: NextRequest) {
               </p>
 
               <p style="color: #666; font-size: 12px; margin-top: 30px; text-align: center;">
-                Puoi gestire le tue preferenze di notifica nelle <a href="https://al22suite.com/user">impostazioni del tuo account</a>.
+                Puoi gestire le tue preferenze di notifica nelle <a href="${PUBLIC_SITE_URL}/user">impostazioni del tuo account</a>.
               </p>
             </div>
           `,

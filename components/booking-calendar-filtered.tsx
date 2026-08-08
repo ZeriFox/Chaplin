@@ -60,6 +60,7 @@ export function BookingCalendarFiltered({ bookings, roomId, roomName }: BookingC
   const roomIdsToMatch = normalizeRoomIds(roomId, roomName)
 
 const filteredBookings = bookings.filter((booking) => {
+  if (booking.status === "cancelled") return false
   const bookingRoomId = String(booking.roomId ?? "").trim()
   const bookingRoomName = (booking.roomName ?? "").toLowerCase()
   const targetName = roomName.toLowerCase()

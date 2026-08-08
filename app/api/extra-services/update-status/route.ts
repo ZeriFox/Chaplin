@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
+import { adminApiErrorResponse, requireAdminApi } from "@/lib/require-admin-api"
 
 export async function POST(request: NextRequest) {
   try {
+    await requireAdminApi(request)
     const body = await request.json()
     const { requestId, status } = body
 
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error updating service request status:", error)
-    return NextResponse.json({ error: "Errore durante l'aggiornamento" }, { status: 500 })
+    return adminApiErrorResponse(error)
   }
 }
 

@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "mkdir -p .next/standalone/public .next/standalone/.next && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/",
+    "postbuild": "node scripts/postbuild.mjs",
     "start": "node .next/standalone/server.js",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:api": "node --experimental-strip-types --test tests/api-rules.test.ts",
     "print-fb-key": "node -e \"console.log((process.env.NEXT_PUBLIC_FIREBASE_API_KEY||'MISSING').slice(0,12))\""
   },
   "dependencies": {

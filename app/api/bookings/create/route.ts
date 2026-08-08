@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
+import { BookingConflictError } from "@/lib/booking-rules"
+import { saveBookingWithInventory } from "@/lib/booking-inventory"
+import { SUITE_ROOM_ID } from "@/lib/suite-room"
 
 export async function POST(req: Request) {
   try {
@@ -27,7 +30,7 @@ export async function POST(req: Request) {
     } = body
 
     // Validate required fields
-    if (!email || !firstName || !lastName || !checkIn || !checkOut || !guests || !roomType) {
+    if (!email || !phone || !firstName || !lastName || !checkIn || !checkOut || !guests || !roomType) {
       return NextResponse.json({ error: "Missing required booking fields" }, { status: 400 })
     }
 
@@ -43,13 +46,13 @@ export async function POST(req: Request) {
       email,
       firstName,
       lastName,
-      phone: phone || "",
+      phone,
       checkIn,
       checkOut,
       guests: Number(guests),
       roomType,
       roomName: roomName || roomType,
-      roomId: roomId || null,
+      roomId: SUITE_ROOM_ID,
       nights: Number(nights),
       pricePerNight: Number(pricePerNight),
       subtotal: Number(subtotal),
@@ -65,7 +68,7 @@ export async function POST(req: Request) {
       updatedAt: FieldValue.serverTimestamp(),
     }
 
-    await bookingRef.set(bookingData)
+    await saveBookingWithInventory({ bookingRef, bookingData, merge: false })
 
     console.log("[Create Booking] Booking created:", bookingId)
 
@@ -75,6 +78,9 @@ export async function POST(req: Request) {
       booking: bookingData,
     })
   } catch (error: any) {
+    if (error instanceof BookingConflictError) {
+      return NextResponse.json({ error: error.message, available: false }, { status: error.status })
+    }
     console.error("[Create Booking Error]:", error)
     return NextResponse.json({ error: error.message || "Failed to create booking" }, { status: 500 })
   }

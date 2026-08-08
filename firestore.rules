@@ -22,8 +22,9 @@ service cloud.firestore {
 
     match /bookings/{id} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Tutte le scritture passano dalle API server, che applicano inventario
+      // atomico, coupon e controlli anti-overbooking.
+      allow create, update, delete: if isAdmin();
     }
 
     match /rooms/{id} {
@@ -36,9 +37,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Public reads are needed to show and calculate current rates. Direct
-    // browser writes remain restricted to verified administrators; production
-    // API writes additionally verify the Firebase ID token server-side.
     match /pricing_seasons/{id} {
       allow read: if true;
       allow write: if isAdmin();
@@ -53,5 +51,16 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Queste collezioni contengono codici, destinazioni OTP, sessioni e limiti
+    // promozionali. Sono accessibili esclusivamente tramite Firebase Admin SDK.
+    match /admin_security/{id} { allow read, write: if false; }
+    match /admin_2fa_challenges/{id} { allow read, write: if false; }
+    match /admin_otp_rate/{id} { allow read, write: if false; }
+    match /admin_sessions/{id} { allow read, write: if false; }
+    match /coupons/{id} { allow read, write: if false; }
+    match /coupon_usages/{id} { allow read, write: if false; }
+    match /coupon_customer_usage/{id} { allow read, write: if false; }
+    match /booking_inventory/{id} { allow read, write: if false; }
   }
 }

@@ -12,7 +12,7 @@ const getStripe = (() => {
   let instance: Stripe | null = null
   return (): Stripe | null => {
     if (!instance && process.env.STRIPE_SECRET_KEY) {
-      instance = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-11-20.acacia" })
+      instance = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
     }
     return instance
   }
@@ -125,19 +125,19 @@ export async function PUT(request: NextRequest) {
 
       // Get pricing rules
       const seasonsSnapshot = await db.collection("pricing_seasons").get()
-      const seasons = seasonsSnapshot.docs.map((doc) => ({
+      const seasons: any[] = seasonsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
 
       const periodsSnapshot = await db.collection("pricing_special_periods").get()
-      const specialPeriods = periodsSnapshot.docs.map((doc) => ({
+      const specialPeriods: any[] = periodsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
 
       const overridesSnapshot = await db.collection("pricing_overrides").where("roomId", "==", roomId).get()
-      const overrides = overridesSnapshot.docs.map((doc) => ({
+      const overrides: any[] = overridesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))

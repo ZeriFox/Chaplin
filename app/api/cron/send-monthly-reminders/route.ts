@@ -1,6 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
+import { SITE_CONFIG } from "@/lib/site-config"
+
+const PUBLIC_SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "https://chaplinluxuryholidayhouse.it"
+).replace(/\/+$/, "")
+const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
+const BRAND_NAME = "CHAPLIN Luxury Holiday House"
+const BRAND_ADDRESS = SITE_CONFIG.address
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,14 +74,15 @@ export async function GET(request: NextRequest) {
       // Send monthly reminder email
       try {
         await sendEmail({
-          from: process.env.RESEND_FROM_EMAIL || "noreply@al22suite.com",
+          from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
           to: booking.email,
-          subject: `Promemoria: La tua prenotazione ad AL 22 Suite tra ${daysUntilCheckIn} giorni`,
+          subject: `Promemoria: La tua prenotazione ad CHAPLIN Luxury Holiday House tra ${daysUntilCheckIn} giorni`,
           html: `
+            <div style="background:#1b1a17;padding:24px;text-align:center;"><img src="${EMAIL_LOGO_URL}" width="250" alt="${BRAND_NAME}" title="${BRAND_ADDRESS}" style="display:block;width:100%;max-width:250px;height:auto;margin:0 auto;border:0;" /></div>
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #8B4513;">Ciao ${booking.firstName}!</h2>
               
-              <p>Ti ricordiamo che hai una prenotazione confermata presso <strong>AL 22 Suite & Spa</strong>.</p>
+              <p>Ti ricordiamo che hai una prenotazione confermata presso <strong>CHAPLIN Luxury Holiday House</strong>.</p>
 
               <div style="background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); color: white; padding: 30px; border-radius: 12px; margin: 20px 0; text-align: center;">
                 <h3 style="margin: 0 0 10px 0;">Il tuo soggiorno inizia tra</h3>
@@ -93,13 +104,13 @@ export async function GET(request: NextRequest) {
               <p>Non vediamo l'ora di darti il benvenuto!</p>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://al22suite.com/user/booking/${doc.id}" style="display: inline-block; background: #8B4513; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                <a href="${PUBLIC_SITE_URL}/user/booking/${doc.id}" style="display: inline-block; background: #8B4513; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                   Visualizza Prenotazione
                 </a>
               </div>
 
               <p style="color: #666; font-size: 12px; margin-top: 30px; text-align: center;">
-                Se non desideri più ricevere questi promemoria, puoi disattivarli nelle <a href="https://al22suite.com/user">impostazioni del tuo account</a>.
+                Se non desideri più ricevere questi promemoria, puoi disattivarli nelle <a href="${PUBLIC_SITE_URL}/user">impostazioni del tuo account</a>.
               </p>
             </div>
           `,

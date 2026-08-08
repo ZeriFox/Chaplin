@@ -31,13 +31,13 @@ export async function getTop4Reviews(): Promise<Review[]> {
   const q = query(col, where("rating", ">=", 4), orderBy("rating", "desc"), limit(4))
 
   const snap = await getDocs(q)
-  let items = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Review) }))
+  let items = snap.docs.map((d) => ({ ...(d.data() as Omit<Review, "id">), id: d.id }))
 
   if (items.length < 4) {
     // fallback: ricarica senza filtro, sempre desc per rating
     const q2 = query(col, orderBy("rating", "desc"), limit(4))
     const s2 = await getDocs(q2)
-    items = s2.docs.map((d) => ({ id: d.id, ...(d.data() as Review) }))
+    items = s2.docs.map((d) => ({ ...(d.data() as Omit<Review, "id">), id: d.id }))
   }
   return items.slice(0, 4)
 }
@@ -62,7 +62,7 @@ export async function getAllReviewsPage(opts?: {
 
   const snap = await getDocs(qf)
   const docs = snap.docs
-  const items = docs.map((d) => ({ id: d.id, ...(d.data() as Review) }))
+  const items = docs.map((d) => ({ ...(d.data() as Omit<Review, "id">), id: d.id }))
   const last = docs.length ? docs[docs.length - 1] : null
 
   return { items, lastDoc: last }

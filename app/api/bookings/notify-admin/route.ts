@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendEmail } from '@/lib/email-transport'
+import { SITE_CONFIG } from '@/lib/site-config'
+
+const PUBLIC_SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "https://chaplinluxuryholidayhouse.it"
+).replace(/\/+$/, "")
+const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
+const BRAND_NAME = "CHAPLIN Luxury Holiday House"
+const BRAND_ADDRESS = SITE_CONFIG.address
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +22,8 @@ export async function POST(request: NextRequest) {
       to: process.env.RESEND_FROM_EMAIL!,
       subject: `⚠️ Nuova Prenotazione Sito - Bloccare su Beds24`,
       html: `
-        <h2>Nuova Prenotazione dal Sito Web</h2>
+        <div style="background:#1b1a17;padding:24px;text-align:center;"><img src="${EMAIL_LOGO_URL}" width="250" alt="${BRAND_NAME}" title="${BRAND_ADDRESS}" style="display:block;width:100%;max-width:250px;height:auto;margin:0 auto;border:0;" /></div>
+            <h2>Nuova Prenotazione dal Sito Web</h2>
         <p><strong>AZIONE RICHIESTA:</strong> Bloccare le date su Beds24 per evitare doppie prenotazioni.</p>
         
         <h3>Dettagli Prenotazione:</h3>

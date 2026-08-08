@@ -242,6 +242,9 @@ export type BookingPayload = {
   pricePerNight: number
   currency?: "EUR"
   totalAmount?: number
+  subtotalAmount?: number
+  couponCode?: string
+  discountAmount?: number
   nights?: number
   status?: "pending" | "paid" | "confirmed" | "cancelled"
   origin?: "site" | "booking" | "airbnb" | "manual"
@@ -295,9 +298,9 @@ export async function updateBooking(
   })
 }
 
-export async function getBookingById(id: string) {
+export async function getBookingById(id: string): Promise<(Record<string, any> & { id: string }) | null> {
   const snap = await getDoc(doc(db, BOOKINGS_COL, id))
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as Record<string, any> & { id: string }) : null
 }
 
 export async function listMyBookings(limitN = 50) {

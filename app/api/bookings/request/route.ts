@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server"
-import { FieldValue, type DocumentReference } from "firebase-admin/firestore"
+import { FieldValue } from "firebase-admin/firestore"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 import { getAdminDb } from "@/lib/firebase-admin"
+import { calculateBookingPrice } from "@/lib/pricing-engine"
+import { CouponError } from "@/lib/coupons"
+import { BookingConflictError } from "@/lib/booking-rules"
+import { saveBookingWithInventory } from "@/lib/booking-inventory"
+import { SUITE_ROOM_ID } from "@/lib/suite-room"
 
 export const dynamic = "force-dynamic"
 
 const STRUCTURE_EMAIL = "chaplinviterbo@gmail.com"
 const MAX_TEXT_LENGTH = 2_000
-const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://chaplin-two.vercel.app")
+const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "https://chaplinluxuryholidayhouse.it")
   .replace(/\/+$/, "")
 const BOOKING_EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-readable.png`
 
@@ -31,6 +36,8 @@ type BookingRequestBody = {
   taxes?: number
   serviceFee?: number
   totalAmount?: number
+  couponCode?: string
+  discountAmount?: number
   specialRequests?: string
 }
 
@@ -230,7 +237,6 @@ function emailHeader(subtitle: string) {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as BookingRequestBody
-    const bookingId = cleanText(body.bookingId, 100)
     const bookingLanguage = getBookingLanguage(body.language)
     const firstName = cleanText(body.firstName)
     const lastName = cleanText(body.lastName)
@@ -238,24 +244,28 @@ export async function POST(request: Request) {
     const phone = cleanText(body.phone, 50)
     const checkIn = cleanText(body.checkIn, 10)
     const checkOut = cleanText(body.checkOut, 10)
-    const roomId = cleanText(body.roomId, 100)
+    const roomId = SUITE_ROOM_ID
     const roomType = cleanText(body.roomType, 100)
     const roomName = cleanText(body.roomName, 200) || "Suite con SPA"
     const specialRequests = cleanText(body.specialRequests, MAX_TEXT_LENGTH)
     const guests = Math.max(1, Math.min(2, Number(body.guests) || 1))
     const children = Math.max(0, Number(body.children) || 0)
-    const pricePerNight = Math.max(0, Math.round(Number(body.pricePerNight) || 0))
-    const subtotal = Math.max(0, Math.round(Number(body.subtotal) || 0))
-    const taxes = Math.max(0, Math.round(Number(body.taxes) || 0))
-    const serviceFee = Math.max(0, Math.round(Number(body.serviceFee) || 0))
-    const totalAmount = Math.max(0, Math.round(Number(body.totalAmount) || 0))
+    let pricePerNight = Math.max(0, Number(body.pricePerNight) || 0)
+    let subtotal = Math.max(0, Math.round(Number(body.subtotal) || 0))
+    let taxes = Math.max(0, Math.round(Number(body.taxes) || 0))
+    let serviceFee = Math.max(0, Math.round(Number(body.serviceFee) || 0))
+    let totalAmount = Math.max(0, Math.round(Number(body.totalAmount) || 0))
+    const requestedCouponCode = cleanText(body.couponCode, 40).toUpperCase()
 
-    if (!bookingId || !firstName || !lastName || !email || !checkIn || !checkOut || !roomId || !roomType) {
+    if (!firstName || !lastName || !email || !phone || !checkIn || !checkOut || !roomType) {
       return NextResponse.json({ error: "Compila tutti i campi obbligatori" }, { status: 400 })
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Indirizzo email non valido" }, { status: 400 })
+    }
+    if (phone.replace(/\D/g, "").length < 7) {
+      return NextResponse.json({ error: "Numero di telefono non valido" }, { status: 400 })
     }
 
     const checkInDate = new Date(`${checkIn}T00:00:00`)
@@ -271,13 +281,20 @@ export async function POST(request: Request) {
     }
 
     const nights = calculatedNights
-    const bookingDocumentId = bookingId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 100)
+    // L'ID viene sempre generato lato server: il client non può sovrascrivere
+    // una prenotazione esistente scegliendo arbitrariamente un identificativo.
+    const bookingRef = getAdminDb().collection("bookings").doc()
+    const bookingId = bookingRef.id
 
-    if (!bookingDocumentId) {
-      return NextResponse.json({ error: "Codice richiesta non valido" }, { status: 400 })
-    }
+    const authoritativePrice = await calculateBookingPrice({ roomId, checkIn, checkOut })
+    pricePerNight = authoritativePrice.pricePerNight
+    subtotal = Math.round(authoritativePrice.totalPrice * 100)
+    taxes = 0
+    serviceFee = 0
+    totalAmount = subtotal
 
-    let bookingRef: DocumentReference | null = null
+    let couponCode = ""
+    let discountAmount = 0
     let bookingPersisted = false
     const bookingData: Record<string, unknown> = {
       bookingId,
@@ -298,6 +315,9 @@ export async function POST(request: Request) {
       nights,
       pricePerNight,
       subtotal,
+      subtotalBeforeDiscount: subtotal,
+      couponCode: couponCode || null,
+      discountAmount,
       taxes,
       serviceFee,
       total: totalAmount,
@@ -311,27 +331,28 @@ export async function POST(request: Request) {
       updatedAt: FieldValue.serverTimestamp(),
     }
 
-    try {
-      bookingRef = getAdminDb().collection("bookings").doc(bookingDocumentId)
-      const existingBooking = await bookingRef.get()
-      bookingData.origin = existingBooking.get("origin") || "site"
-      bookingData.status = existingBooking.get("status") || "pending"
+    bookingData.services = []
+    bookingData.paymentProvider = null
+    bookingData.paymentId = null
+    bookingData.paidAt = null
 
-      if (!existingBooking.exists) {
-        bookingData.createdAt = FieldValue.serverTimestamp()
-        bookingData.services = []
-        bookingData.paymentProvider = null
-        bookingData.paymentId = null
-        bookingData.paidAt = null
-      }
-
-      await bookingRef.set(bookingData, { merge: true })
-      bookingPersisted = true
-    } catch (storageError) {
-      console.error("[Booking Request] Persistence failed; continuing with email delivery", {
-        bookingId,
-        error: getErrorMessage(storageError),
-      })
+    const reservation = await saveBookingWithInventory({
+      bookingRef,
+      bookingData,
+      coupon: requestedCouponCode
+        ? {
+            code: requestedCouponCode,
+            subtotal: subtotal / 100,
+            checkIn,
+            customerEmail: email,
+          }
+        : null,
+    })
+    bookingPersisted = true
+    if (reservation.coupon) {
+      couponCode = reservation.coupon.code
+      discountAmount = Math.round(reservation.coupon.discount * 100)
+      totalAmount = Math.round(reservation.coupon.finalTotal * 100)
     }
 
     const emailConfig = getEmailConfigStatus()
@@ -360,8 +381,8 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { error: "Richiesta registrata, ma il servizio email non è configurato", bookingId },
-        { status: 503 },
+        { success: true, warning: "Richiesta registrata, ma il servizio email non è configurato", bookingId, persisted: true, emailDelivered: false },
+        { status: 202 },
       )
     }
 
@@ -375,10 +396,15 @@ export async function POST(request: Request) {
     const safeStructureRequests = escapeHtml(specialRequests || "Nessuna")
     const customerCheckIn = formatDate(checkIn, customerCopy.locale)
     const customerCheckOut = formatDate(checkOut, customerCopy.locale)
+    const customerSubtotal = formatMoney(subtotal, customerCopy.locale)
+    const customerDiscount = formatMoney(discountAmount, customerCopy.locale)
     const customerTotal = formatMoney(totalAmount, customerCopy.locale)
     const structureCheckIn = formatDate(checkIn)
     const structureCheckOut = formatDate(checkOut)
+    const structureSubtotal = formatMoney(subtotal)
+    const structureDiscount = formatMoney(discountAmount)
     const structureTotal = formatMoney(totalAmount)
+    const safeCouponCode = escapeHtml(couponCode)
 
     const customerSummaryRows = `
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.bookingCode}</td><td style="padding:8px 0;text-align:right">${safeBookingId}</td></tr>
@@ -387,6 +413,7 @@ export async function POST(request: Request) {
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.checkOut}</td><td style="padding:8px 0;text-align:right">${customerCheckOut}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.nights}</td><td style="padding:8px 0;text-align:right">${nights}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.guests}</td><td style="padding:8px 0;text-align:right">${guests}</td></tr>
+      ${couponCode ? `<tr><td style="padding:8px 0;font-weight:600">Subtotale</td><td style="padding:8px 0;text-align:right">${customerSubtotal}</td></tr><tr><td style="padding:8px 0;font-weight:600">Coupon ${safeCouponCode}</td><td style="padding:8px 0;text-align:right;color:#238636">-${customerDiscount}</td></tr>` : ""}
       <tr><td style="padding:8px 0;font-weight:600">${customerCopy.labels.total}</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#b28b2e">${customerTotal}</td></tr>
     `
 
@@ -397,6 +424,7 @@ export async function POST(request: Request) {
       <tr><td style="padding:8px 0;font-weight:600">Check-out</td><td style="padding:8px 0;text-align:right">${structureCheckOut}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">Notti</td><td style="padding:8px 0;text-align:right">${nights}</td></tr>
       <tr><td style="padding:8px 0;font-weight:600">Ospiti</td><td style="padding:8px 0;text-align:right">${guests}</td></tr>
+      ${couponCode ? `<tr><td style="padding:8px 0;font-weight:600">Subtotale</td><td style="padding:8px 0;text-align:right">${structureSubtotal}</td></tr><tr><td style="padding:8px 0;font-weight:600">Coupon ${safeCouponCode}</td><td style="padding:8px 0;text-align:right;color:#238636">-${structureDiscount}</td></tr>` : ""}
       <tr><td style="padding:8px 0;font-weight:600">Totale indicativo</td><td style="padding:8px 0;text-align:right;font-weight:700;color:#b28b2e">${structureTotal}</td></tr>
     `
 
@@ -492,16 +520,25 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: "Richiesta registrata, ma non è stato possibile inviare tutti i riepiloghi",
+          success: true,
+          warning: "Richiesta registrata, ma non è stato possibile inviare tutti i riepiloghi",
           bookingId,
+          persisted: true,
+          emailDelivered: false,
         },
-        { status: 502 },
+        { status: 202 },
       )
     }
 
     return NextResponse.json({ success: true, bookingId, persisted: bookingPersisted })
   } catch (error) {
+    if (error instanceof BookingConflictError) {
+      return NextResponse.json({ error: error.message, available: false }, { status: error.status })
+    }
+    if (error instanceof CouponError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error("[Booking Request] Unexpected error:", error)
-    return NextResponse.json({ error: "Impossibile registrare la richiesta di prenotazione" }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Impossibile registrare la richiesta di prenotazione" }, { status: 500 })
   }
 }

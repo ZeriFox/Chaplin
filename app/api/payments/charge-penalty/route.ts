@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2024-12-18.acacia",
+      apiVersion: "2025-10-29.clover",
     })
 
     const { bookingId, amount, description } = await request.json()
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const booking = bookingDoc.data()
+    if (!booking) return NextResponse.json({ error: "Booking data missing" }, { status: 500 })
 
     if (!booking.stripeCustomerId) {
       return NextResponse.json({ error: "No Stripe customer found for this booking" }, { status: 400 })
