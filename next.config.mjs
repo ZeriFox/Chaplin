@@ -1,19 +1,37 @@
 /** @type {import('next').NextConfig} */
+const expectedFirebaseProjectId = "chaplin-house"
+const expectedFirebaseAuthDomain = `${expectedFirebaseProjectId}.firebaseapp.com`
+const requiredPublicFirebaseVariables = [
+  "NEXT_PUBLIC_FIREBASE_API_KEY",
+  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+  "NEXT_PUBLIC_FIREBASE_APP_ID",
+]
+
+if (process.env.VERCEL) {
+  const missingFirebaseVariables = requiredPublicFirebaseVariables.filter((name) => !process.env[name])
+  if (missingFirebaseVariables.length > 0) {
+    throw new Error(`Configurazione Firebase browser incompleta: mancano ${missingFirebaseVariables.join(", ")}.`)
+  }
+
+  if (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID !== expectedFirebaseProjectId) {
+    throw new Error(
+      `Configurazione Firebase browser non valida: NEXT_PUBLIC_FIREBASE_PROJECT_ID deve essere "${expectedFirebaseProjectId}".`,
+    )
+  }
+
+  if (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN !== expectedFirebaseAuthDomain) {
+    throw new Error(
+      `Configurazione Firebase browser non valida: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN deve essere "${expectedFirebaseAuthDomain}".`,
+    )
+  }
+}
+
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
-
-  // Firebase web configuration is public client metadata. Force the known
-  // production project here so stale variables copied into a migrated Vercel
-  // project cannot silently point authentication at a different Firebase app.
-  env: {
-    NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyBKK8q78f-DuOtzIqV7EDAnUVsVp05-IHs",
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "chaplin-viterbo.firebaseapp.com",
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: "chaplin-viterbo",
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "chaplin-viterbo.firebasestorage.app",
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "669780646187",
-    NEXT_PUBLIC_FIREBASE_APP_ID: "1:669780646187:web:700f8af3dea37ebb058d6e",
-  },
 
   images: {
     // Re-enabled optimization: serves resized/compressed images instead of
