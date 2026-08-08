@@ -38,6 +38,24 @@ function getFromAddress() {
   return env("RESEND_FROM_EMAIL", "EMAIL_FROM", "SMTP_FROM_EMAIL", "MAIL_FROM")
 }
 
+function htmlToPlainText(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/p>|<\/div>|<\/li>|<\/tr>|<\/h[1-6]>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n\s*\n+/g, "\n\n")
+    .trim()
+}
+
 function getResendClient() {
   const apiKey = env("RESEND_API_KEY")
   if (!apiKey) return null
@@ -98,7 +116,9 @@ export function getEmailConfigStatus() {
 }
 
 export async function sendEmail(message: EmailMessage): Promise<EmailSendResult> {
-  const from = message.from || getFromAddress()
+  // Il mittente verificato configurato è sempre prioritario: evita che i
+  // fallback onboarding@resend.dev cambino dominio e reputazione tra template.
+  const from = getFromAddress() || message.from
   if (!from) {
     return { data: null, error: { message: "Email sender is not configured", code: "EMAIL_FROM_MISSING" } }
   }
@@ -107,6 +127,9 @@ export async function sendEmail(message: EmailMessage): Promise<EmailSendResult>
   const brandedMessage: EmailMessage = {
     ...message,
     html: ensureSharedEmailLayout(message.html, message.subject),
+  }
+  if (brandedMessage.html && !brandedMessage.text) {
+    brandedMessage.text = htmlToPlainText(brandedMessage.html)
   }
   const resend = getResendClient()
 
@@ -119,7 +142,7 @@ export async function sendEmail(message: EmailMessage): Promise<EmailSendResult>
         ...(brandedMessage.replyTo ? { replyTo: brandedMessage.replyTo } : {}),
       }
       const result = brandedMessage.html
-        ? await resend.emails.send({ ...baseMessage, html: brandedMessage.html })
+        ? await resend.emails.send({ ...baseMessage, html: brandedMessage.html, text: brandedMessage.text || " " })
         : await resend.emails.send({ ...baseMessage, text: brandedMessage.text || " " })
       if (!result.error && result.data?.id) {
         return { data: { id: result.data.id, provider: "resend" }, error: null, provider: "resend" }

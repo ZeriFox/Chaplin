@@ -261,21 +261,6 @@ function UserInner() {
     try {
       await secureChangePassword(user.email, passwordData.currentPassword, passwordData.newPassword)
 
-      const response = await fetch("/api/users/change-password", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user.uid,
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-        }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Failed to change password")
-      }
-
       toast.success(t("passwordChangedSuccess"))
       setPasswordData({ currentPassword: "", newPassword: "" })
     } catch (error: any) {
