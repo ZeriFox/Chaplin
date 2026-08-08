@@ -61,6 +61,7 @@ export function BookingCalendar({ roomId }: BookingCalendarProps) {
           ...doc.data(),
         }))
         .filter((booking: any) => {
+          if (booking.status === "cancelled") return false
           const checkIn = new Date(booking.checkIn)
           const checkOut = new Date(booking.checkOut)
           return checkIn <= endOfMonth && checkOut > startOfMonth

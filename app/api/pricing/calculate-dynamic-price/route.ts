@@ -21,15 +21,15 @@ export async function POST(request: Request) {
 
     const seasonsRef = collection(db, "pricing_seasons")
     const seasonsSnap = await getDocs(seasonsRef)
-    const seasons = seasonsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    const seasons: any[] = seasonsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
 
     const periodsRef = collection(db, "pricing_special_periods")
     const periodsSnap = await getDocs(periodsRef)
-    const specialPeriods = periodsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    const specialPeriods: any[] = periodsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
 
     const overridesRef = collection(db, "pricing_overrides")
     const overridesSnap = await getDocs(overridesRef)
-    const overrides = overridesSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    const overrides: any[] = overridesSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
 
     console.log("[v0] Loaded pricing data:", {
       seasons: seasons.length,

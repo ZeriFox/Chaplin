@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminApi(request)
+    const admin = await requireAdminApi(request, { allowPasswordChangeRequired: true })
     const body = (await request.json()) as { challengeId?: string; otp?: string }
     const challengeId = body.challengeId?.trim()
     const otp = body.otp?.trim()

@@ -42,7 +42,7 @@ export function RoomsGrid() {
   const { t } = useLanguage()
   const today = new Date().toISOString().split("T")[0]
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0]
-  const { calculatePrice, loading } = useDynamicPrice()
+  const { pricePerNight, loading } = useDynamicPrice("1", today, tomorrow)
 
   const [favorites, setFavorites] = useState<number[]>(() => {
     if (typeof window === "undefined") return []
@@ -67,7 +67,7 @@ export function RoomsGrid() {
   const getRoomUrl = (roomId: number) => `${SITE_URL}/camere/${roomId}`
 
   const getWhatsAppHref = (room: (typeof rooms)[number]) => {
-    const price = calculatePrice(room.id.toString(), today, tomorrow)
+    const price = pricePerNight || room.originalPrice
     const text = `${t("checkAvailability")}: ${room.name}
 ${getRoomUrl(room.id)}
 
@@ -80,7 +80,7 @@ ${t("pricePerNightLabel")} €${price}${t("perNight")}`
       {rooms.map((room) => {
         const isFav = favorites.includes(room.id)
         const waHref = getWhatsAppHref(room)
-        const price = calculatePrice(room.id.toString(), today, tomorrow)
+        const price = pricePerNight || room.originalPrice
 
         return (
           <div

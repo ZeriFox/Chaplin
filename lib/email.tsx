@@ -1,19 +1,16 @@
 // lib/email.ts
 // NOTE: file riscritto per CHAPLIN Luxury Holiday House + aggiunta sendBookingUpdateEmail
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
+import { getEmailLogoUrl, getPublicSiteUrl, SITE_CONFIG } from "@/lib/site-config"
 
-const PUBLIC_SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  process.env.SITE_URL ||
-  "https://chaplinluxuryholidayhouse.it"
-).replace(/\/+$/, "")
+const PUBLIC_SITE_URL = getPublicSiteUrl()
 
 const BRAND = {
-  name: "CHAPLIN Luxury Holiday House",
-  city: "Viterbo, Italia",
-  address: "Via della Pettinara 48, 01100 Viterbo (VT)",
+  name: SITE_CONFIG.name,
+  city: SITE_CONFIG.city,
+  address: SITE_CONFIG.address,
   siteUrl: PUBLIC_SITE_URL,
-  logoUrl: `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`,
+  logoUrl: getEmailLogoUrl(),
   fromFallback: "CHAPLIN Luxury Holiday House <onboarding@resend.dev>",
 }
 
@@ -26,6 +23,7 @@ interface BookingEmailData {
   checkOut: string
   roomName: string
   guests: number
+  numberOfChildren?: number
   totalAmount: number // cents
   nights: number
   newUserPassword?: string
@@ -68,9 +66,14 @@ interface ModificationEmailData {
   penalty?: number // cents
   guestAdditionCost?: number // cents
   dateChangeCost?: number // cents
-  modificationType: "dates" | "guests" | "both"
+  modificationType: "dates" | "guests" | "both" | "change_dates" | "add_guests"
   refundAmount?: number // cents
   manualRefund?: boolean
+  children?: number
+  oldCheckIn?: string
+  oldCheckOut?: string
+  newCheckIn?: string
+  newCheckOut?: string
 }
 
 type BookingUpdateEmailData = {
@@ -86,6 +89,11 @@ type BookingUpdateEmailData = {
   guests?: number
   nights?: number
   totalAmount?: number // cents
+  originalAmount?: number
+  newAmount?: number
+  priceDifference?: number
+  modificationType?: "change_dates" | "add_guests"
+  penalty?: number
 }
 
 function requireEmailConfig() {
@@ -327,8 +335,23 @@ export async function sendCancellationEmail(data: CancellationEmailData) {
   }
 }
 
-export async function sendModificationEmail(data: ModificationEmailData) {
+export async function sendModificationEmail(
+  input: Pick<ModificationEmailData, "to" | "bookingId"> & Partial<ModificationEmailData> & Record<string, any>,
+) {
   try {
+    const data: ModificationEmailData = {
+      firstName: "",
+      lastName: "",
+      checkIn: input.newCheckIn || input.checkIn || "",
+      checkOut: input.newCheckOut || input.checkOut || "",
+      roomName: "La Suite",
+      guests: 1,
+      nights: 1,
+      originalAmount: 0,
+      newAmount: 0,
+      modificationType: "dates",
+      ...input,
+    }
     const cfg = requireEmailConfig()
     if (!cfg.ok) return { success: false, error: cfg.error }
 

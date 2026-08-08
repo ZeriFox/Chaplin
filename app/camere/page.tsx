@@ -291,7 +291,6 @@ export default function CamerePage() {
                   sizes="(max-width: 768px) 100vw, 58vw"
                   quality={70}
                   onError={(e) => {
-                    // @ts-expect-error next/image fallback
                     e.currentTarget.src = "/placeholder.svg"
                   }}
                   priority
@@ -319,7 +318,6 @@ export default function CamerePage() {
                       sizes="(max-width: 768px) 50vw, 21vw"
                       quality={65}
                       onError={(e) => {
-                        // @ts-expect-error next/image fallback
                         e.currentTarget.src = "/placeholder.svg"
                       }}
                     />

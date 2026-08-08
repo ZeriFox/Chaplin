@@ -32,10 +32,11 @@ async function resolveUser(token: string) {
   const decoded = await getAdminAuth().verifyIdToken(token, true)
   const email = String(decoded.email || "").trim().toLowerCase()
   const userDocument = await getAdminDb().doc(`users/${decoded.uid}`).get()
+  const userData = userDocument.data()
   const role: SessionRole =
-    userDocument.data()?.role === "admin" || authorizedAdminEmails().has(email) ? "admin" : "user"
+    userData?.role === "admin" || authorizedAdminEmails().has(email) ? "admin" : "user"
 
-  return { uid: decoded.uid, email, role }
+  return { uid: decoded.uid, email, role, mustChangePassword: role === "admin" && userData?.mustChangePassword !== false }
 }
 
 export async function POST(request: Request) {
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
 
       const existingSessionCookie = readRequestCookie(request, "admin_session")
       if (await verifyAdminSessionCookie(existingSessionCookie, firebaseUser.uid)) {
-        const response = NextResponse.json({ ok: true, role: "admin", requiresOtp: false })
+        const response = NextResponse.json({ ok: true, role: "admin", requiresOtp: false, mustChangePassword: firebaseUser.mustChangePassword })
         response.headers.set("Cache-Control", "no-store")
         setAuthenticatedSessionCookies({
           request,
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
         ok: true,
         role: "admin",
         requiresOtp: true,
+        mustChangePassword: firebaseUser.mustChangePassword,
         ...challenge,
       })
       response.headers.set("Cache-Control", "no-store")
@@ -96,7 +98,7 @@ export async function POST(request: Request) {
     }
 
     const adminSession = await createAdminSession(firebaseUser.uid)
-    const response = NextResponse.json({ ok: true, role: "admin", requiresOtp: false })
+    const response = NextResponse.json({ ok: true, role: "admin", requiresOtp: false, mustChangePassword: firebaseUser.mustChangePassword })
     response.headers.set("Cache-Control", "no-store")
     setAuthenticatedSessionCookies({
       request,

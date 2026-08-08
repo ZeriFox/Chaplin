@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { MapPin, Phone, Mail, Facebook, Instagram, Clock, MessageCircle } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
+import { SITE_CONFIG } from "@/lib/site-config"
 
 const BankTransferIcon = ({ label, ...props }: { label: string; className?: string }) => (
   <svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -82,8 +83,8 @@ export function Footer() {
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 mt-1 text-primary flex-shrink-0" />
                 <div>
-                  <p>Via della Pettinara 48</p>
-                  <p>01100 Viterbo (VT)</p>
+                  <p>{SITE_CONFIG.addressLine1}</p>
+                  <p>{SITE_CONFIG.addressLine2}</p>
                   <p>{t("italy")}</p>
                 </div>
               </div>

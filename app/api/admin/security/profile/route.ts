@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
   try {
-    const admin = await requireAdminApi(request)
+    const admin = await requireAdminApi(request, { allowPasswordChangeRequired: true })
     const [profile, firebaseUser] = await Promise.all([
       getAdminSecurityProfile(admin.uid),
       getAdminAuth().getUser(admin.uid),
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
       accountEmail: firebaseUser.email || admin.email,
       emailConfigured: isEmailOtpConfigured(),
       smsConfigured: isSmsConfigured(),
+      mustChangePassword: admin.mustChangePassword,
     })
   } catch (error) {
     return adminApiErrorResponse(error)

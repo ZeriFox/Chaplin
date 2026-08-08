@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminApi(request)
+    const admin = await requireAdminApi(request, { allowPasswordChangeRequired: true })
     const body = (await request.json()) as { method?: OtpMethod; destination?: string }
     const method: OtpMethod = body.method === "sms" ? "sms" : "email"
 

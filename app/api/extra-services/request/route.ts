@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
+import { SITE_CONFIG } from "@/lib/site-config"
 
 const PUBLIC_SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -10,7 +11,7 @@ const PUBLIC_SITE_URL = (
 ).replace(/\/+$/, "")
 const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
 const BRAND_NAME = "CHAPLIN Luxury Holiday House"
-const BRAND_ADDRESS = "Via della Pettinara 48, 01100 Viterbo (VT)"
+const BRAND_ADDRESS = SITE_CONFIG.address
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,10 +23,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Extra services are not configured yet" }, { status: 503 })
     }
     const body = await request.json()
-    const { bookingId, roomId, checkIn, checkOut, guests, userEmail, userName, services, notes } = body
+    const { bookingId, roomId, checkIn, checkOut, guests, userEmail, userName, phone, services, notes } = body
 
-    if (!userEmail || !services || services.length === 0) {
-      return NextResponse.json({ error: "Dati mancanti" }, { status: 400 })
+    const normalizedEmail = String(userEmail || "").trim().toLowerCase()
+    const normalizedName = String(userName || "").trim()
+    const normalizedPhone = String(phone || "").trim()
+    const normalizedRoomId = String(roomId || "").trim()
+    const guestCount = Number(guests)
+    const hasValidServices =
+      Array.isArray(services) &&
+      services.length > 0 &&
+      services.every((service: unknown) => {
+        if (!service || typeof service !== "object") return false
+        const candidate = service as { name?: unknown; price?: unknown }
+        return String(candidate.name || "").trim().length > 0 && Number(candidate.price) >= 0
+      })
+
+    if (
+      !normalizedName ||
+      !/^\S+@\S+\.\S+$/.test(normalizedEmail) ||
+      !/^[+\d][\d\s()./-]{6,}$/.test(normalizedPhone) ||
+      !normalizedRoomId ||
+      !String(checkIn || "").trim() ||
+      !String(checkOut || "").trim() ||
+      !Number.isInteger(guestCount) ||
+      guestCount < 1 ||
+      !hasValidServices
+    ) {
+      return NextResponse.json({ error: "Tutti i dati del cliente e del soggiorno sono obbligatori" }, { status: 400 })
     }
 
     const propertyEmail = process.env.SERVICE_EXTRA_EMAIL || "chaplinviterbo@gmail.com"
@@ -41,12 +66,13 @@ export async function POST(request: NextRequest) {
     await requestRef.set({
       requestId,
       bookingId: bookingId || null,
-      userEmail,
-      userName,
-      roomId: roomId || null,
-      checkIn: checkIn || null,
-      checkOut: checkOut || null,
-      guests: guests || null,
+      userEmail: normalizedEmail,
+      userName: normalizedName,
+      phone: normalizedPhone,
+      roomId: normalizedRoomId,
+      checkIn,
+      checkOut,
+      guests: guestCount,
       services,
       notes: notes || "",
       totalPrice,
@@ -66,8 +92,8 @@ export async function POST(request: NextRequest) {
     await sendEmail({
       from: fromEmail,
       to: propertyEmail,
-      replyTo: userEmail,
-      subject: `🔔 Nuova richiesta servizi extra - ${userName}`,
+      replyTo: normalizedEmail,
+      subject: `🔔 Nuova richiesta servizi extra - ${normalizedName}`,
       html: `
 <!DOCTYPE html>
 <html>
@@ -98,11 +124,15 @@ export async function POST(request: NextRequest) {
       <div class="details">
         <div class="detail-row">
           <span class="detail-label">Nome Cliente:</span>
-          <span>${userName}</span>
+          <span>${normalizedName}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Email:</span>
-          <span>${userEmail}</span>
+          <span>${normalizedEmail}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Telefono:</span>
+          <span>${normalizedPhone}</span>
         </div>
         ${bookingId ? `<div class="detail-row"><span class="detail-label">ID Prenotazione:</span><span>${bookingId}</span></div>` : ""}
         ${roomId ? `<div class="detail-row"><span class="detail-label">Camera:</span><span>Camera ${roomId}</span></div>` : ""}
@@ -125,7 +155,7 @@ export async function POST(request: NextRequest) {
         <h3 style="margin-top: 0; color: #92400e;">⚠️ Azione Richiesta</h3>
         <p><strong>Per rispondere al cliente:</strong></p>
         <ol style="margin: 10px 0; padding-left: 20px;">
-          <li>Rispondi direttamente a questa email (ReplyTo: ${userEmail})</li>
+          <li>Rispondi direttamente a questa email (ReplyTo: ${normalizedEmail})</li>
           <li>Conferma la disponibilità dei servizi richiesti</li>
           <li>Specifica quando e come il cliente deve effettuare il pagamento</li>
           <li>Fornisci eventuali dettagli aggiuntivi (orari, modalità, ecc.)</li>
@@ -152,7 +182,7 @@ export async function POST(request: NextRequest) {
 
     await sendEmail({
       from: fromEmail,
-      to: userEmail,
+      to: normalizedEmail,
       subject: "✨ Richiesta servizi extra ricevuta - CHAPLIN Luxury Holiday House",
       html: `
 <!DOCTYPE html>
@@ -177,7 +207,7 @@ export async function POST(request: NextRequest) {
     </div>
     
     <div class="content">
-      <p>Ciao <strong>${userName}</strong>,</p>
+      <p>Ciao <strong>${normalizedName}</strong>,</p>
       
       <p>Abbiamo ricevuto con successo la tua richiesta per i seguenti servizi extra:</p>
       

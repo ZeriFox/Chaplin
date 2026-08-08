@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sparkles, Clock, CheckCircle, XCircle } from "lucide-react"
+import { auth } from "@/lib/firebase"
 
 type ServiceRequest = {
   id: string
@@ -26,7 +27,11 @@ export function ExtraServicesRequestsAdmin() {
 
   const loadRequests = async () => {
     try {
-      const response = await fetch("/api/extra-services/list")
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) throw new Error("Sessione amministratore non disponibile")
+      const response = await fetch("/api/extra-services/list", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       const data = await response.json()
       setRequests(data.requests || [])
     } catch (error) {
@@ -42,9 +47,11 @@ export function ExtraServicesRequestsAdmin() {
 
   const updateStatus = async (requestId: string, status: string) => {
     try {
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) throw new Error("Sessione amministratore non disponibile")
       const response = await fetch("/api/extra-services/update-status", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ requestId, status }),
       })
 

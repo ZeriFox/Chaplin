@@ -22,7 +22,7 @@ function asText(value: unknown, maxLength: number) {
 
 function normalizeSubject(value: string) {
   const compact = value.toLocaleLowerCase("it-IT").replace(/[^a-zà-ÿ0-9]/g, "")
-  if (compact === "iformazioni" || compact === "informazioni") return "Informazioni"
+  if (compact === "informazioni") return "Informazioni"
   return value
 }
 
@@ -31,17 +31,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const name = asText(body.name, 120)
     const email = asText(body.email, 254).toLowerCase()
+    const phone = asText(body.phone, 40)
     const subject = normalizeSubject(asText(body.subject, 160).replace(/[\r\n]+/g, " "))
     const message = asText(body.message, 5000)
     const website = asText(body.website, 200)
 
     if (website) return NextResponse.json({ success: true })
 
-    if (!name || !email || !subject || !message) {
+    if (!name || !email || !phone || !subject || !message) {
       return NextResponse.json({ error: "Compila tutti i campi richiesti." }, { status: 400 })
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Inserisci un indirizzo email valido." }, { status: 400 })
+    }
+    if (phone.replace(/\D/g, "").length < 7) {
+      return NextResponse.json({ error: "Inserisci un numero di telefono valido." }, { status: 400 })
     }
 
     const emailConfig = getEmailConfigStatus()
@@ -51,6 +55,7 @@ export async function POST(request: NextRequest) {
 
     const safeName = escapeHtml(name)
     const safeEmail = escapeHtml(email)
+    const safePhone = escapeHtml(phone)
     const safeSubject = escapeHtml(subject)
     const safeMessage = escapeHtml(message).replace(/\n/g, "<br />")
     const receivedAt = new Intl.DateTimeFormat("it-IT", {
@@ -69,6 +74,7 @@ export async function POST(request: NextRequest) {
         "",
         `Nome: ${name}`,
         `Email: ${email}`,
+        `Telefono: ${phone}`,
         `Oggetto: ${subject}`,
         `Ricevuto: ${receivedAt}`,
         "",
@@ -117,6 +123,7 @@ export async function POST(request: NextRequest) {
                       <td style="padding:24px 34px 8px;">
                         <div style="font-size:11px;color:#9a803e;text-transform:uppercase;letter-spacing:1px;">Messaggio</div>
                         <div style="margin-top:10px;padding:20px;background:#ffffff;border-left:3px solid #c9a84c;font-size:16px;line-height:1.7;color:#3d3932;">${safeMessage}</div>
+                        <p style="margin:16px 0 0;color:#3d3932;"><strong>Telefono:</strong> <a href="tel:${safePhone}" style="color:#24231f;">${safePhone}</a></p>
                       </td>
                     </tr>
                     <tr>

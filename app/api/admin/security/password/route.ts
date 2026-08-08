@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminApi(request)
+    const admin = await requireAdminApi(request, { allowPasswordChangeRequired: true })
     const profile = await getAdminSecurityProfile(admin.uid)
 
     if (!profile.twoFactorEnabled || !profile.method || !profile.destination) {

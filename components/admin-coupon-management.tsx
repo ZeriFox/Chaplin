@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label"
   endsAt?: string | null
   minSubtotal?: number
   maxUses?: number | null
+  maxUsesPerCustomer?: number | null
   usageCount?: number
 }
 
@@ -34,6 +35,7 @@ type CouponForm = {
   endsAt: string
   minSubtotal: string
   maxUses: string
+  maxUsesPerCustomer: string
 }
 
 const EMPTY_FORM: CouponForm = {
@@ -46,6 +48,7 @@ const EMPTY_FORM: CouponForm = {
   endsAt: "",
   minSubtotal: "",
   maxUses: "",
+  maxUsesPerCustomer: "",
 }
 
 async function adminRequest(input: RequestInfo | URL, init: RequestInit = {}) {
@@ -75,6 +78,7 @@ function couponToForm(coupon: Coupon): CouponForm {
     endsAt: coupon.endsAt || "",
     minSubtotal: coupon.minSubtotal ? String(coupon.minSubtotal) : "",
     maxUses: coupon.maxUses ? String(coupon.maxUses) : "",
+    maxUsesPerCustomer: coupon.maxUsesPerCustomer ? String(coupon.maxUsesPerCustomer) : "",
   }
 }
 
@@ -118,6 +122,7 @@ export function AdminCouponManagement() {
     endsAt: source.endsAt || null,
     minSubtotal: Number(source.minSubtotal || 0),
     maxUses: Number(source.maxUses || 0),
+    maxUsesPerCustomer: Number(source.maxUsesPerCustomer || 0),
   })
 
   const submit = async (event: FormEvent) => {
@@ -181,7 +186,7 @@ export function AdminCouponManagement() {
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-5">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <div className="space-y-2">
                 <Label htmlFor="coupon-code">Codice *</Label>
                 <Input
@@ -246,6 +251,10 @@ export function AdminCouponManagement() {
                 <Input id="coupon-limit" type="number" min="0" step="1" value={form.maxUses} onChange={(event) => setForm((current) => ({ ...current, maxUses: event.target.value }))} placeholder="Illimitati" />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="coupon-customer-limit">Limite per cliente</Label>
+                <Input id="coupon-customer-limit" type="number" min="0" step="1" value={form.maxUsesPerCustomer} onChange={(event) => setForm((current) => ({ ...current, maxUsesPerCustomer: event.target.value }))} placeholder="Illimitato" />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="coupon-description">Descrizione interna</Label>
                 <Input id="coupon-description" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} placeholder="Promozione estate" />
               </div>
@@ -293,7 +302,7 @@ export function AdminCouponManagement() {
                     </div>
                     {coupon.description && <p className="text-sm text-muted-foreground">{coupon.description}</p>}
                     <p className="text-xs text-muted-foreground">
-                      Validità: {coupon.startsAt || "subito"} → {coupon.endsAt || "senza scadenza"} · minimo €{Number(coupon.minSubtotal || 0).toFixed(2)} · utilizzi {coupon.usageCount || 0}/{coupon.maxUses || "∞"}
+                      Validità: {coupon.startsAt || "subito"} → {coupon.endsAt || "senza scadenza"} · minimo €{Number(coupon.minSubtotal || 0).toFixed(2)} · utilizzi {coupon.usageCount || 0}/{coupon.maxUses || "∞"} · per cliente {coupon.maxUsesPerCustomer || "∞"}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">

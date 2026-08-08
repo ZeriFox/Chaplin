@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useLanguage } from "@/components/language-provider"
-import { createBooking, type BookingPayload } from "@/lib/firebase"
 
 interface BookingModalProps {
   isOpen: boolean
@@ -49,7 +48,7 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
     setEmail(bookingData.email)
     setPhone(bookingData.phone)
     setNotes(bookingData.notes)
-    if (bookingData.firstName && bookingData.lastName && bookingData.email) {
+    if (bookingData.firstName && bookingData.lastName && bookingData.email && bookingData.phone) {
       setStep(2)
     }
   }, [
@@ -63,8 +62,8 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
 
   const handleNext = () => {
     if (step === 1) {
-      if (!firstName || !lastName || !email) {
-        toast.error(t("pleaseEnterGuestInfo") || "Inserisci nome, cognome ed email")
+      if (!firstName || !lastName || !email || !phone) {
+        toast.error(t("pleaseEnterGuestInfo") || "Inserisci nome, cognome, email e telefono")
         return
       }
       if (!email.includes("@")) {
@@ -87,31 +86,10 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
     try {
       const roomType = "suite"
       const roomName = "La Suite"
-      const bookingPayload: BookingPayload = {
-        checkIn: bookingData.checkIn,
-        checkOut: bookingData.checkOut,
-        guests: bookingData.guests,
-        numberOfChildren: 0,
-        firstName,
-        lastName,
-        email,
-        phone,
-        notes,
-        roomId: bookingData.roomId,
-        roomName,
-        pricePerNight: Math.round(bookingData.subtotal / bookingData.nights),
-        totalAmount: Math.round(bookingData.total * 100),
-        currency: "EUR",
-        status: "pending",
-        origin: "site",
-      }
-      const bookingId = await createBooking(bookingPayload)
-
       const response = await fetch("/api/bookings/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          bookingId,
           language,
           checkIn: bookingData.checkIn,
           checkOut: bookingData.checkOut,
@@ -136,8 +114,7 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
       const result = await response.json()
 
       if (!response.ok) {
-        const requestCode = result.bookingId || bookingId
-        throw new Error(`${t("bookingRequestSendFailure")} ${t("bookingRequestCode")}: ${requestCode}.`)
+        throw new Error(result.error || t("bookingRequestSendFailure"))
       }
 
       toast.success(t("bookingRequestEmailSent"))
@@ -199,6 +176,18 @@ export function BookingModal({ isOpen, onClose, bookingData }: BookingModalProps
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t("enterEmail") || "Inserisci email"}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="modal-phone">{t("bookingFormPhone") || "Telefono"}</Label>
+                <Input
+                  id="modal-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+39 333 123 4567"
+                  required
                 />
               </div>
             </div>

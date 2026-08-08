@@ -22,8 +22,9 @@ service cloud.firestore {
 
     match /bookings/{id} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Tutte le scritture passano dalle API server, che applicano inventario
+      // atomico, coupon e controlli anti-overbooking.
+      allow create, update, delete: if isAdmin();
     }
 
     match /rooms/{id} {
@@ -59,5 +60,7 @@ service cloud.firestore {
     match /admin_sessions/{id} { allow read, write: if false; }
     match /coupons/{id} { allow read, write: if false; }
     match /coupon_usages/{id} { allow read, write: if false; }
+    match /coupon_customer_usage/{id} { allow read, write: if false; }
+    match /booking_inventory/{id} { allow read, write: if false; }
   }
 }

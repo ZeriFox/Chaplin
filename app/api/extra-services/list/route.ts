@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getAdminDb } from "@/lib/firebase-admin"
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin"
+import { AdminApiError, adminApiErrorResponse, requireAdminApi } from "@/lib/require-admin-api"
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,6 +12,30 @@ export async function GET(request: NextRequest) {
     const userEmail = searchParams.get("userEmail")
 
     const db = getAdminDb()
+    const authorization = request.headers.get("authorization") || ""
+    const token = authorization.match(/^Bearer\s+(.+)$/i)?.[1]
+    if (!token) throw new AdminApiError("Autenticazione richiesta", 401)
+
+    let decoded
+    try {
+      decoded = await getAdminAuth().verifyIdToken(token, true)
+    } catch {
+      throw new AdminApiError("Sessione non valida o scaduta", 401)
+    }
+
+    if (!bookingId && !userEmail) {
+      await requireAdminApi(request)
+    } else if (userEmail && String(decoded.email || "").toLowerCase() !== userEmail.trim().toLowerCase()) {
+      await requireAdminApi(request)
+    } else if (bookingId) {
+      const booking = await db.collection("bookings").doc(bookingId).get()
+      const bookingData = booking.data()
+      const ownsBooking =
+        booking.exists &&
+        (bookingData?.userId === decoded.uid ||
+          String(bookingData?.email || "").toLowerCase() === String(decoded.email || "").toLowerCase())
+      if (!ownsBooking) await requireAdminApi(request)
+    }
 
     const convertTimestamp = (timestamp: any): string => {
       if (!timestamp) return new Date().toISOString()
@@ -40,7 +68,7 @@ export async function GET(request: NextRequest) {
       query = query.orderBy("createdAt", "desc")
 
       const snapshot = await query.limit(50).get()
-      const requests = snapshot.docs.map((doc) => {
+      const requests = snapshot.docs.map((doc: any) => {
         const data = doc.data()
         return {
           id: doc.id,
@@ -64,7 +92,7 @@ export async function GET(request: NextRequest) {
 
         const snapshot = await query.limit(50).get()
         const requests = snapshot.docs
-          .map((doc) => {
+          .map((doc: any) => {
             const data = doc.data()
             return {
               id: doc.id,
@@ -84,6 +112,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error("Error fetching service requests:", error)
-    return NextResponse.json({ error: "Errore durante il caricamento" }, { status: 500 })
+    return adminApiErrorResponse(error)
   }
 }

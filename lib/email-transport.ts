@@ -2,6 +2,7 @@ import "server-only"
 
 import nodemailer, { type Transporter } from "nodemailer"
 import { Resend } from "resend"
+import { ensureSharedEmailLayout } from "@/lib/email-template"
 
 type EmailAddress = string | string[]
 
@@ -103,11 +104,23 @@ export async function sendEmail(message: EmailMessage): Promise<EmailSendResult>
   }
 
   const providerErrors: Partial<Record<EmailProvider, ReturnType<typeof errorDetails>>> = {}
+  const brandedMessage: EmailMessage = {
+    ...message,
+    html: ensureSharedEmailLayout(message.html, message.subject),
+  }
   const resend = getResendClient()
 
   if (resend) {
     try {
-      const result = await resend.emails.send({ ...message, from })
+      const baseMessage = {
+        from,
+        to: brandedMessage.to,
+        subject: brandedMessage.subject,
+        ...(brandedMessage.replyTo ? { replyTo: brandedMessage.replyTo } : {}),
+      }
+      const result = brandedMessage.html
+        ? await resend.emails.send({ ...baseMessage, html: brandedMessage.html })
+        : await resend.emails.send({ ...baseMessage, text: brandedMessage.text || " " })
       if (!result.error && result.data?.id) {
         return { data: { id: result.data.id, provider: "resend" }, error: null, provider: "resend" }
       }
@@ -121,9 +134,9 @@ export async function sendEmail(message: EmailMessage): Promise<EmailSendResult>
   if (smtp) {
     try {
       const result = await smtp.sendMail({
-        ...message,
+        ...brandedMessage,
         from,
-        replyTo: message.replyTo,
+        replyTo: brandedMessage.replyTo,
       })
       return {
         data: { id: result.messageId, provider: "smtp" },

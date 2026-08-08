@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
+import { SITE_CONFIG } from "@/lib/site-config"
 
 const PUBLIC_SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -9,7 +10,7 @@ const PUBLIC_SITE_URL = (
 ).replace(/\/+$/, "")
 const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
 const BRAND_NAME = "CHAPLIN Luxury Holiday House"
-const BRAND_ADDRESS = "Via della Pettinara 48, 01100 Viterbo (VT)"
+const BRAND_ADDRESS = SITE_CONFIG.address
 
 export async function GET(request: NextRequest) {
   try {

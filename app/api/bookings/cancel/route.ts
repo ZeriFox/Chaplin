@@ -4,13 +4,14 @@ import { FieldValue } from "firebase-admin/firestore"
 import Stripe from "stripe"
 import { sendCancellationEmail } from "@/lib/email"
 import { calculateCancellationPolicy } from "@/lib/payment-logic"
+import { cancelBookingWithInventory } from "@/lib/booking-inventory"
 
 // Lazy Stripe init - wrapped in closure to avoid build-time evaluation
 const getStripe = (() => {
   let instance: Stripe | null = null
   return (): Stripe | null => {
     if (!instance && process.env.STRIPE_SECRET_KEY) {
-      instance = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-11-20.acacia" })
+      instance = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
     }
     return instance
   }
@@ -61,26 +62,27 @@ export async function DELETE(request: NextRequest) {
     const paymentProvider = booking?.paymentProvider || "stripe"
     console.log(`[API] Booking cancelled via ${paymentProvider} - refund: €${refundAmount} (${cancellationPolicy.refundPercentage}%)`)
 
-    await bookingRef.update({
-      status: "cancelled",
-      cancelledAt: FieldValue.serverTimestamp(),
-      refundAmount,
-      penalty,
-      refundPercentage: cancellationPolicy.refundPercentage,
-      penaltyPercentage: cancellationPolicy.penaltyPercentage,
-      cancellationReason: isFullRefund ? "full_refund" : "late_cancellation",
-      ...(refundAmount > 0
-        ? {
-            pendingRefund: {
-              amount: refundAmount,
-              reason: "booking_cancelled",
-              requestedAt: FieldValue.serverTimestamp(),
-              status: "pending_manual_processing",
-              provider: paymentProvider,
-            },
-          }
-        : {}),
-      updatedAt: FieldValue.serverTimestamp(),
+    await cancelBookingWithInventory({
+      bookingRef,
+      cancellationData: {
+        cancelledAt: FieldValue.serverTimestamp(),
+        refundAmount,
+        penalty,
+        refundPercentage: cancellationPolicy.refundPercentage,
+        penaltyPercentage: cancellationPolicy.penaltyPercentage,
+        cancellationReason: isFullRefund ? "full_refund" : "late_cancellation",
+        ...(refundAmount > 0
+          ? {
+              pendingRefund: {
+                amount: refundAmount,
+                reason: "booking_cancelled",
+                requestedAt: FieldValue.serverTimestamp(),
+                status: "pending_manual_processing",
+                provider: paymentProvider,
+              },
+            }
+          : {}),
+      },
     })
 
     /* SMOOBU DISABLED - Unblocking dates now handled via Firebase only

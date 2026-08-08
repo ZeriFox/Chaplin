@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
 import { getBookingById } from "@/lib/firebase"
+import { SITE_CONFIG } from "@/lib/site-config"
 
 const PUBLIC_SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -9,7 +10,7 @@ const PUBLIC_SITE_URL = (
 ).replace(/\/+$/, "")
 const EMAIL_LOGO_URL = `${PUBLIC_SITE_URL}/images/chaplin-logo-white.png`
 const BRAND_NAME = "CHAPLIN Luxury Holiday House"
-const BRAND_ADDRESS = "Via della Pettinara 48, 01100 Viterbo (VT)"
+const BRAND_ADDRESS = SITE_CONFIG.address
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,6 +30,22 @@ export async function POST(request: NextRequest) {
     const booking = await getBookingById(bookingId)
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+    }
+
+    const requiredBookingFields = [
+      booking.firstName,
+      booking.lastName,
+      booking.email,
+      booking.phone,
+      booking.roomId,
+      booking.checkIn,
+      booking.checkOut,
+    ]
+    if (requiredBookingFields.some((value) => !String(value || "").trim())) {
+      return NextResponse.json(
+        { error: "La prenotazione deve contenere tutti i recapiti e i dati del soggiorno" },
+        { status: 400 },
+      )
     }
 
     const serviceEmail = process.env.SERVICE_EXTRA_EMAIL || "chaplinviterbo@gmail.com"

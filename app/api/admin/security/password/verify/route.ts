@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
-import { getAdminAuth } from "@/lib/firebase-admin"
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin"
+import { FieldValue } from "firebase-admin/firestore"
 import {
   revokeAllAdminSessions,
   TwoFactorError,
@@ -22,7 +23,7 @@ function validatePassword(password: string) {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminApi(request)
+    const admin = await requireAdminApi(request, { allowPasswordChangeRequired: true })
     const body = (await request.json()) as { challengeId?: string; otp?: string; newPassword?: string }
     const challengeId = body.challengeId?.trim()
     const otp = body.otp?.trim()
@@ -42,6 +43,14 @@ export async function POST(request: Request) {
     })
 
     await getAdminAuth().updateUser(admin.uid, { password: newPassword })
+    await getAdminDb().doc(`users/${admin.uid}`).set(
+      {
+        mustChangePassword: false,
+        passwordChangedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    )
     await getAdminAuth().revokeRefreshTokens(admin.uid)
     await revokeAllAdminSessions(admin.uid)
 

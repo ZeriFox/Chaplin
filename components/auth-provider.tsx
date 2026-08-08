@@ -17,8 +17,10 @@ export interface AppUser {
   email: string
   displayName?: string | null
   photoURL?: string | null
+  avatarUrl?: string
   role: AppRole
   idToken?: string
+  mustChangePassword?: boolean
 }
 
 export type PendingAdminOtp = {
@@ -55,7 +57,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-function firebaseToAppUser(fbUser: FirebaseUser, idToken: string, role: AppRole): AppUser {
+function firebaseToAppUser(fbUser: FirebaseUser, idToken: string, role: AppRole, mustChangePassword = false): AppUser {
   return {
     uid: fbUser.uid,
     email: fbUser.email ?? "",
@@ -63,6 +65,7 @@ function firebaseToAppUser(fbUser: FirebaseUser, idToken: string, role: AppRole)
     photoURL: fbUser.photoURL,
     role,
     idToken,
+    mustChangePassword,
   }
 }
 
@@ -94,7 +97,7 @@ async function requestServerSession(fbUser: FirebaseUser, forceRefresh = false):
   }
 
   const role: AppRole = data.role === "admin" ? "admin" : "user"
-  return { requiresOtp: false, user: firebaseToAppUser(fbUser, idToken, role) }
+  return { requiresOtp: false, user: firebaseToAppUser(fbUser, idToken, role, data.mustChangePassword === true) }
 }
 
 async function clearServerSession() {
@@ -241,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) throw new Error(data.error || "Codice OTP non valido")
 
       const refreshedToken = await fbUser.getIdToken(true)
-      setUser(firebaseToAppUser(fbUser, refreshedToken, "admin"))
+      setUser(firebaseToAppUser(fbUser, refreshedToken, "admin", data.mustChangePassword === true))
       setPendingAdminOtp(null)
       return { success: true, requiresOtp: false }
     } catch (error) {

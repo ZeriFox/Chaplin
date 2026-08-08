@@ -37,6 +37,7 @@ type Props = {
     guests: number
     userEmail: string
     userName: string
+    phone: string
   }
 }
 

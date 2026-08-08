@@ -1,10 +1,21 @@
 import "server-only"
 
-import { createHash, randomBytes, randomInt, randomUUID, timingSafeEqual } from "node:crypto"
+import { createHash, randomBytes, randomInt, randomUUID } from "node:crypto"
 import { FieldValue } from "firebase-admin/firestore"
 
 import { getAdminDb } from "@/lib/firebase-admin"
 import { getEmailConfigStatus, sendEmail } from "@/lib/email-transport"
+import {
+  hashOtpValue,
+  hasOtpAttemptsRemaining,
+  isOtpCode,
+  isOtpExpired,
+  OTP_MAX_ATTEMPTS,
+  OTP_RATE_MAX,
+  OTP_RATE_WINDOW_MS,
+  OTP_TTL_MS,
+  safeCompareOtpHash,
+} from "@/lib/otp-rules"
 
 export type OtpMethod = "email" | "sms"
 export type OtpPurpose = "login" | "enroll" | "password_change"
@@ -26,10 +37,6 @@ export class TwoFactorError extends Error {
   }
 }
 
-const OTP_TTL_MS = 10 * 60 * 1000
-const OTP_MAX_ATTEMPTS = 5
-const OTP_RATE_WINDOW_MS = 10 * 60 * 1000
-const OTP_RATE_MAX = 6
 const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000
 
 function secretValue() {
@@ -45,17 +52,7 @@ function sha256(value: string) {
 }
 
 function hashOtp(code: string, challengeId: string, uid: string) {
-  return sha256(`${secretValue()}|${challengeId}|${uid}|${code}`)
-}
-
-function safeCompareHex(left: string, right: string) {
-  try {
-    const a = Buffer.from(left, "hex")
-    const b = Buffer.from(right, "hex")
-    return a.length === b.length && timingSafeEqual(a, b)
-  } catch {
-    return false
-  }
+  return hashOtpValue(secretValue(), code, challengeId, uid)
 }
 
 export function normalizeEmail(value: unknown) {
@@ -264,8 +261,8 @@ export async function verifyOtpChallenge({
   purpose: OtpPurpose
   challengeId: string
   code: string
-}) {
-  if (!/^\d{6}$/.test(code)) throw new TwoFactorError("Inserisci il codice OTP di 6 cifre")
+}): Promise<Record<string, any>> {
+  if (!isOtpCode(code)) throw new TwoFactorError("Inserisci il codice OTP di 6 cifre")
 
   const db = getAdminDb()
   const ref = db.collection("admin_2fa_challenges").doc(challengeId)
@@ -285,7 +282,7 @@ export async function verifyOtpChallenge({
       failure = new TwoFactorError("Questo codice OTP è già stato utilizzato", 400)
       return
     }
-    if (Number(data.expiresAt || 0) < now) {
+    if (isOtpExpired(Number(data.expiresAt || 0), now)) {
       transaction.update(ref, { consumed: true, consumedReason: "expired", consumedAt: FieldValue.serverTimestamp() })
       failure = new TwoFactorError("Il codice OTP è scaduto", 400)
       return
@@ -293,12 +290,12 @@ export async function verifyOtpChallenge({
 
     const attempts = Number(data.attempts || 0)
     const maxAttempts = Number(data.maxAttempts || OTP_MAX_ATTEMPTS)
-    if (attempts >= maxAttempts) {
+    if (!hasOtpAttemptsRemaining(attempts, maxAttempts)) {
       failure = new TwoFactorError("Troppi tentativi. Richiedi un nuovo codice", 429)
       return
     }
 
-    const valid = safeCompareHex(hashOtp(code, challengeId, uid), String(data.codeHash || ""))
+    const valid = safeCompareOtpHash(hashOtp(code, challengeId, uid), String(data.codeHash || ""))
     if (!valid) {
       transaction.update(ref, { attempts: attempts + 1, lastAttemptAt: FieldValue.serverTimestamp() })
       failure = new TwoFactorError("Codice OTP non valido", 400)
@@ -315,7 +312,7 @@ export async function verifyOtpChallenge({
 
   if (failure) throw failure
   if (!result) throw new TwoFactorError("Codice OTP non valido", 400)
-  return result
+  return result as Record<string, any>
 }
 
 export async function getAdminSecurityProfile(uid: string): Promise<AdminSecurityProfile> {
@@ -404,7 +401,7 @@ export async function verifyAdminSessionCookie(value: string | null | undefined,
     return false
   }
 
-  return safeCompareHex(sha256(secret), String(data.secretHash || ""))
+  return safeCompareOtpHash(sha256(secret), String(data.secretHash || ""))
 }
 
 export async function revokeAdminSessionCookie(value: string | null | undefined) {

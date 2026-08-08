@@ -6,11 +6,12 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { code?: string; subtotal?: number; checkIn?: string }
+    const body = (await request.json()) as { code?: string; subtotal?: number; checkIn?: string; email?: string }
     const result = await validateCouponCode({
       code: String(body.code || ""),
       subtotal: Number(body.subtotal || 0),
       checkIn: body.checkIn,
+      customerEmail: body.email,
     })
     return NextResponse.json(result)
   } catch (error) {

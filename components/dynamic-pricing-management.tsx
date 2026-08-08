@@ -195,6 +195,7 @@ export function DynamicPricingManagement() {
   const [specialPeriods, setSpecialPeriods] = useState<SpecialPeriod[]>([])
   const [overrides, setOverrides] = useState<PriceOverride[]>([])
   const [selectedRoom, setSelectedRoom] = useState("")
+  const [applyScope, setApplyScope] = useState<"selected" | "all">("all")
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [rangeStart, setRangeStart] = useState<string | null>(null)
   const [rangeEnd, setRangeEnd] = useState<string | null>(null)
@@ -292,12 +293,17 @@ export function DynamicPricingManagement() {
 
   async function writeOverrides(updates: Record<string, unknown>) {
     const user = await waitForSignedInUser()
-    const suite = await ensureSuiteRoom(user)
-    await updateDoc(suite.roomRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-      updatedBy: user.uid,
-    })
+    const targetRoomIds = applyScope === "all" ? rooms.map((item) => item.roomId) : [selectedRoom]
+    if (targetRoomIds.length === 0) throw new Error("Seleziona almeno una suite/camera")
+    await Promise.all(
+      targetRoomIds.map((roomId) =>
+        updateDoc(doc(db, "rooms", roomId), {
+          ...updates,
+          updatedAt: serverTimestamp(),
+          updatedBy: user.uid,
+        }),
+      ),
+    )
   }
 
   async function applyManualPrice() {
@@ -490,6 +496,16 @@ export function DynamicPricingManagement() {
           <Card>
             <CardHeader><CardTitle>Modifica giorni selezionati</CardTitle><CardDescription>{rangeStart ? `${rangeStart} → ${rangeEnd || rangeStart}` : "Seleziona prima uno o più giorni dal calendario."}</CardDescription></CardHeader>
             <CardContent className="space-y-4">
+              <div className="max-w-md">
+                <Label>Applica a</Label>
+                <Select value={applyScope} onValueChange={(value) => setApplyScope(value as "selected" | "all")}>
+                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="selected">Solo {room.roomName}</SelectItem>
+                    <SelectItem value="all">Tutte le suite/camere ({rooms.length})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div data-price-presets="manual">
                 <PricePresetButtons onSelect={(price) => setRangePrice(String(price))} />
               </div>
@@ -506,6 +522,16 @@ export function DynamicPricingManagement() {
               <CardDescription>Imposta un intervallo, poi assegna prezzi differenti a tutti i lunedì, martedì e agli altri giorni selezionati.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="max-w-md">
+                <Label>Applica a</Label>
+                <Select value={applyScope} onValueChange={(value) => setApplyScope(value as "selected" | "all")}>
+                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="selected">Solo {room.roomName}</SelectItem>
+                    <SelectItem value="all">Tutte le suite/camere ({rooms.length})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div><Label htmlFor="weekday-start">Dal giorno</Label><Input id="weekday-start" type="date" value={weekdayStart} onChange={(event) => setWeekdayStart(event.target.value)} /></div>
                 <div><Label htmlFor="weekday-end">Al giorno</Label><Input id="weekday-end" type="date" min={weekdayStart || undefined} value={weekdayEnd} onChange={(event) => setWeekdayEnd(event.target.value)} /></div>

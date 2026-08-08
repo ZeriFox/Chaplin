@@ -9,7 +9,7 @@ const getStripe = (() => {
   let instance: Stripe | null = null
   return (): Stripe | null => {
     if (!instance && process.env.STRIPE_SECRET_KEY) {
-      instance = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2024-11-20.acacia" })
+      instance = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
     }
     return instance
   }
@@ -56,6 +56,9 @@ export async function GET(request: NextRequest) {
     }
 
     const booking = bookingDoc.data()
+    if (!booking) {
+      return NextResponse.redirect(new URL(`/user/booking/${bookingId}?error=booking_data_missing`, request.url))
+    }
     const depositAmount = Number(session.amount_total) / 100
 
     if (metadata.type === "change_dates") {

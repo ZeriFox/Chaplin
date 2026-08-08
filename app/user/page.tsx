@@ -28,6 +28,7 @@ interface Booking {
   status: "paid" | "confirmed" | "completed" | "upcoming" | "cancelled" | "pending"
   totalAmount: number
   nights: number
+  phone?: string
   cancelledAt?: string
   refundAmount?: number
   penalty?: number

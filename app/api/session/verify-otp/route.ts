@@ -37,13 +37,14 @@ export async function POST(request: Request) {
     const decoded = await getAdminAuth().verifyIdToken(token, true)
     const email = String(decoded.email || "").trim().toLowerCase()
     const userDocument = await getAdminDb().doc(`users/${decoded.uid}`).get()
-    const isAdmin = userDocument.data()?.role === "admin" || authorizedAdminEmails().has(email)
+    const userData = userDocument.data()
+    const isAdmin = userData?.role === "admin" || authorizedAdminEmails().has(email)
     if (!isAdmin) return NextResponse.json({ ok: false, error: "Permessi amministratore richiesti" }, { status: 403 })
 
     await verifyOtpChallenge({ uid: decoded.uid, purpose: "login", challengeId, code: otp })
     const adminSession = await createAdminSession(decoded.uid)
 
-    const response = NextResponse.json({ ok: true, role: "admin" })
+    const response = NextResponse.json({ ok: true, role: "admin", mustChangePassword: userData?.mustChangePassword !== false })
     response.headers.set("Cache-Control", "no-store")
     setAuthenticatedSessionCookies({
       request,

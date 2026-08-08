@@ -25,7 +25,10 @@ function configuredAdminEmails() {
  * Verifica il Firebase ID token, il ruolo amministratore e, quando la 2FA è
  * attiva, anche la sessione OTP HttpOnly rilasciata dopo il secondo fattore.
  */
-export async function requireAdminApi(request: Request) {
+export async function requireAdminApi(
+  request: Request,
+  options: { allowPasswordChangeRequired?: boolean } = {},
+) {
   const authorization = request.headers.get("authorization") || ""
   const match = authorization.match(/^Bearer\s+(.+)$/i)
 
@@ -40,9 +43,14 @@ export async function requireAdminApi(request: Request) {
 
   const userSnapshot = await getAdminDb().doc(`users/${decoded.uid}`).get()
   const email = String(decoded.email || "").trim().toLowerCase()
-  const isAdmin = userSnapshot.data()?.role === "admin" || configuredAdminEmails().has(email)
+  const userData = userSnapshot.data()
+  const isAdmin = userData?.role === "admin" || configuredAdminEmails().has(email)
 
   if (!isAdmin) throw new AdminApiError("Permessi amministratore richiesti", 403)
+  const mustChangePassword = userData?.mustChangePassword !== false
+  if (mustChangePassword && !options.allowPasswordChangeRequired) {
+    throw new AdminApiError("Cambio password obbligatorio prima di usare il pannello", 428)
+  }
 
   const security = await getAdminSecurityProfile(decoded.uid)
   if (security.twoFactorEnabled) {
@@ -53,7 +61,7 @@ export async function requireAdminApi(request: Request) {
     }
   }
 
-  return { uid: decoded.uid, email, token: match[1], security }
+  return { uid: decoded.uid, email, token: match[1], security, mustChangePassword }
 }
 
 export function adminApiErrorResponse(error: unknown) {

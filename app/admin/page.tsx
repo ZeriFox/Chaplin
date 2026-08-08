@@ -29,6 +29,8 @@ import { AdminBookingActions, AdminBookingCreateButton } from "@/components/admi
 import { AdminCouponManagement } from "@/components/admin-coupon-management"
 import { useLanguage } from "@/components/language-provider"
 import type { Booking, Room } from "@/lib/booking-utils"
+import { SITE_CONFIG } from "@/lib/site-config"
+import { useAuth } from "@/components/auth-provider"
 
 interface BnBSettings {
   checkInTime: string
@@ -51,6 +53,32 @@ export default function AdminPage() {
 }
 
 function AdminInner() {
+  const { user } = useAuth()
+
+  if (user?.mustChangePassword) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <div className="mx-auto max-w-3xl px-4 pb-16 pt-24">
+          <Card className="mb-6 border-amber-300 bg-amber-50">
+            <CardHeader>
+              <CardTitle>Cambio password obbligatorio</CardTitle>
+              <CardDescription className="text-amber-900">
+                La password iniziale non è più considerata sicura. Registra e verifica prima un recapito OTP, poi imposta una nuova password. Il resto del pannello rimarrà bloccato fino al completamento.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <AdminSecuritySettings />
+        </div>
+        <Footer />
+      </main>
+    )
+  }
+
+  return <AdminDashboard />
+}
+
+function AdminDashboard() {
   const { t } = useLanguage()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [rooms, setRooms] = useState<Room[]>([])
@@ -634,19 +662,6 @@ function AdminInner() {
                                 <Badge variant="destructive" className="text-xs">
                                   CANCELLATA
                                 </Badge>
-                                <Badge
-                                  className={`text-xs text-white ${
-                                    b.origin === "booking"
-                                      ? "bg-blue-600"
-                                      : b.origin === "airbnb"
-                                        ? "bg-pink-600"
-                                        : b.origin === "expedia"
-                                          ? "bg-yellow-600"
-                                          : "bg-[#c9a84c]"
-                                  }`}
-                                >
-                                  {b.origin === "direct" ? "Diretta" : b.origin}
-                                </Badge>
                                 <Badge className="text-xs line-through">€{(b as any).totalAmount || b.total || "0"}</Badge>
                               </div>
                             </div>
@@ -769,14 +784,14 @@ function AdminInner() {
                       <Label className="text-muted-foreground">Nome (fisso)</Label>
                       <Input
                         className="mt-2 bg-muted/50 cursor-not-allowed"
-                        value="Chaplin Luxury Holiday House"
+                        value={SITE_CONFIG.name}
                         disabled
                       />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-muted-foreground">Indirizzo</Label>
-                        <Input className="mt-2 bg-muted/50 cursor-not-allowed" value="Via della Pettinara 48, 01100 Viterbo (VT)" disabled />
+                        <Input className="mt-2 bg-muted/50 cursor-not-allowed" value={SITE_CONFIG.address} disabled />
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Telefono</Label>

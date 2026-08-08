@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { CalendarIcon, Users, MapPin, Clock, AlertCircle, CheckCircle2, Loader2, Tag, X } from "lucide-react"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
-import { createBooking, type BookingPayload, getAllRooms } from "@/lib/firebase"
+import { getAllRooms } from "@/lib/firebase"
 import { checkRoomAvailability } from "@/lib/booking-utils"
 import {
   AlertDialog,
@@ -45,13 +45,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
       },
     )
   })
-}
-
-// Local fallback request code used when the Firestore write fails, so the
-// confirmation email can still be sent and the guest still gets a reference.
-function generateFallbackBookingId() {
-  const random = Math.random().toString(36).slice(2, 8).toUpperCase()
-  return `REQ-${Date.now().toString(36).toUpperCase()}-${random}`
 }
 
 const ROOM_IDS: Record<string, string> = { deluxe: "2", suite: "2" }
@@ -241,7 +234,7 @@ export default function PrenotaPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
-        body: JSON.stringify({ code: normalizedCode, subtotal, checkIn: formData.checkIn }),
+        body: JSON.stringify({ code: normalizedCode, subtotal, checkIn: formData.checkIn, email: formData.email }),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Coupon non valido")
@@ -262,6 +255,11 @@ export default function PrenotaPage() {
 
     if (!formData.checkIn || !formData.checkOut) {
       setErrorMessage(t("pleaseSelectDates") || "Seleziona le date di check-in e check-out.")
+      setShowErrorModal(true)
+      return
+    }
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.phone.trim()) {
+      setErrorMessage("Nome, cognome, email e telefono sono obbligatori.")
       setShowErrorModal(true)
       return
     }
@@ -287,43 +285,10 @@ export default function PrenotaPage() {
   const submitBookingRequest = async () => {
     setIsSubmitting(true)
     try {
-      const bookingPayload: BookingPayload = {
-        checkIn: formData.checkIn,
-        checkOut: formData.checkOut,
-        guests: adults,
-        numberOfChildren: children,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        notes: formData.specialRequests,
-        pricePerNight: basePrice,
-        subtotalAmount: Math.round(subtotal * 100),
-        couponCode: appliedCoupon?.code,
-        discountAmount: Math.round(couponDiscount * 100),
-        totalAmount: Math.round(total * 100),
-        currency: "EUR",
-        status: "pending",
-        origin: "site",
-        roomId: ROOM_IDS[formData.roomType],
-        roomName: ROOM_NAMES[formData.roomType],
-      }
-      // The confirmation email is the essential deliverable. Try to persist the
-      // booking to Firestore first, but never let a slow/failed write block the
-      // email: on timeout or error we fall back to a locally generated code.
-      let bookingId = ""
-      try {
-        bookingId = await withTimeout(createBooking(bookingPayload), 8000)
-      } catch (bookingError) {
-        console.error("[booking] Firestore save failed, sending email only:", bookingError)
-        bookingId = generateFallbackBookingId()
-      }
-
       const response = await fetch("/api/bookings/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          bookingId,
           language,
           checkIn: formData.checkIn,
           checkOut: formData.checkOut,
@@ -350,11 +315,10 @@ export default function PrenotaPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        const requestCode = result.bookingId ? result.bookingId : bookingId
-        throw new Error(`${t("bookingRequestSendFailure")} ${t("bookingRequestCode")}: ${requestCode}.`)
+        throw new Error(result.error || t("bookingRequestSendFailure"))
       }
 
-      setSubmittedBookingId(bookingId)
+      setSubmittedBookingId(result.bookingId)
       setShowSuccessModal(true)
     } catch (error) {
       console.error("[booking] Request error:", error)
@@ -484,7 +448,7 @@ export default function PrenotaPage() {
                     </div>
                     <div>
                       <Label htmlFor="phone">{t("bookingFormPhone") || "Telefono"}</Label>
-                      <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleInputChange} />
+                      <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleInputChange} required />
                     </div>
                   </div>
 
@@ -579,6 +543,7 @@ export default function PrenotaPage() {
                       !formData.firstName.trim() ||
                       !formData.lastName.trim() ||
                       !formData.email.trim() ||
+                      !formData.phone.trim() ||
                       availabilityStatus?.available === false
                     }
                     onClick={handleSubmit}

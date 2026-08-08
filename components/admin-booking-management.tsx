@@ -157,21 +157,23 @@ function BookingFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${booking?.id || "new"}-email`}>Email</Label>
+              <Label htmlFor={`${booking?.id || "new"}-email`}>Email *</Label>
               <Input
                 id={`${booking?.id || "new"}-email`}
                 type="email"
                 value={form.email}
                 onChange={(event) => updateField("email", event.target.value)}
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${booking?.id || "new"}-phone`}>Telefono</Label>
+              <Label htmlFor={`${booking?.id || "new"}-phone`}>Telefono *</Label>
               <Input
                 id={`${booking?.id || "new"}-phone`}
                 type="tel"
                 value={form.phone}
                 onChange={(event) => updateField("phone", event.target.value)}
+                required
               />
             </div>
           </div>

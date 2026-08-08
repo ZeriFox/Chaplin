@@ -97,8 +97,15 @@ export async function checkBookingConflicts(
 }
 
 export async function checkRoomAvailability(roomId: string, checkIn: string, checkOut: string): Promise<boolean> {
-  const result = await checkBookingConflicts(roomId, checkIn, checkOut, "site")
-  return !result.hasConflict
+  const response = await fetch("/check-availability", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({ roomId, checkIn, checkOut }),
+  })
+  const result = await response.json()
+  if (!response.ok) throw new Error(result.error || "Verifica disponibilità non riuscita")
+  return result.available === true
 }
 
 export function getBookingPriority(origin: Booking["origin"]): number {
@@ -141,7 +148,7 @@ export function getRoomStatus(
     checkIn.setHours(0, 0, 0, 0)
     checkOut.setHours(0, 0, 0, 0)
 
-    return today >= checkIn && today <= checkOut
+    return today >= checkIn && today < checkOut
   })
 
   return hasActiveBooking ? "booked" : "available"

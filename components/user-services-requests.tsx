@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Sparkles, Clock, CheckCircle2, XCircle } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useLanguage } from "@/components/language-provider"
+import { auth } from "@/lib/firebase"
 
 interface ServiceRequest {
   id: string
@@ -50,7 +51,11 @@ export function UserServicesRequests() {
 
     const loadRequests = async () => {
       try {
-        const response = await fetch(`/api/extra-services/list?userEmail=${encodeURIComponent(user.email)}`)
+        const token = await auth.currentUser?.getIdToken()
+        if (!token) throw new Error("Sessione non disponibile")
+        const response = await fetch(`/api/extra-services/list?userEmail=${encodeURIComponent(user.email)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         if (response.ok) {
           const data = await response.json()
           console.log("[v0] Service requests received:", data.requests)
