@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
@@ -55,8 +54,6 @@ export function BookingWidget({ roomId }: BookingWidgetProps) {
   )
 
   const basePrice = dynamicPrice || prices[selectedRoomType] || 180
-  const originalPrice = selectedRoomType === "1" ? 220 : 180
-  const discount = originalPrice - basePrice
 
   const checkIn = dateRange?.from ? toInputDate(dateRange.from) : ""
   const checkOut = dateRange?.to ? toInputDate(dateRange.to) : ""
@@ -119,23 +116,12 @@ export function BookingWidget({ roomId }: BookingWidgetProps) {
             <CardTitle className="flex items-center justify-between">
               <span>{t("bookNow")}</span>
               <div className="text-right">
-                {originalPrice > basePrice && (
-                  <div className="text-sm line-through text-muted-foreground">
-                    {formatMoney(originalPrice)}/{t("night")}
-                  </div>
-                )}
                 <div className="text-2xl font-bold text-primary">
                   {formatMoney(basePrice)}
                   <span className="text-sm font-normal text-muted-foreground">/{t("night")}</span>
                 </div>
               </div>
             </CardTitle>
-
-            {originalPrice > basePrice && (
-              <Badge className="w-fit bg-[#c9a84c] text-[#1a1a1a]">
-                {t("save")} {formatMoney(discount)}
-              </Badge>
-            )}
           </CardHeader>
 
           <CardContent className="space-y-4">
