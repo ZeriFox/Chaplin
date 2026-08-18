@@ -1,8 +1,8 @@
 import "server-only"
 
 import { getAdminDb } from "@/lib/firebase-admin"
+import { normalizePublicRoomId, SUITE_ROOM_ID } from "@/lib/room-identifiers"
 
-const SUITE_ROOM_ID = "2"
 const SUITE_DEFAULT_PRICE = 150
 
 type StoredOverride = { price?: number; reason?: string }
@@ -64,7 +64,7 @@ export async function calculateBookingPrice({
   if (nights > 366) throw new Error("L’intervallo selezionato è troppo lungo")
 
   const db = getAdminDb()
-  const finalRoomId = String(roomId || SUITE_ROOM_ID)
+  const finalRoomId = normalizePublicRoomId(roomId)
   const roomSnapshot = await db.doc(`rooms/${finalRoomId}`).get()
   const roomData = roomSnapshot.data() || {}
   const storedBase = Number(roomData.price)
