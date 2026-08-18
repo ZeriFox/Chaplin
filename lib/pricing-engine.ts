@@ -2,6 +2,7 @@ import "server-only"
 
 import { getAdminDb } from "@/lib/firebase-admin"
 import { normalizePublicRoomId, SUITE_ROOM_ID } from "@/lib/room-identifiers"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 const SUITE_DEFAULT_PRICE = 150
 
@@ -58,8 +59,7 @@ export async function calculateBookingPrice({
   }
 
   const start = parseUtcDate(checkIn)
-  const end = parseUtcDate(checkOut)
-  const nights = Math.round((end.getTime() - start.getTime()) / 86_400_000)
+  const nights = calculateStayNights(checkIn, checkOut)
   if (nights < 1) throw new Error("La data di check-out deve essere successiva al check-in")
   if (nights > 366) throw new Error("L’intervallo selezionato è troppo lungo")
 

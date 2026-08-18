@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/firebase"
 import { collection, getDocs, doc, getDoc } from "firebase/firestore"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 export async function POST(request: Request) {
   try {
@@ -39,8 +40,10 @@ export async function POST(request: Request) {
     })
 
     const checkInDate = new Date(checkIn)
-    const checkOutDate = new Date(checkOut)
-    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24))
+    const nights = calculateStayNights(checkIn, checkOut)
+    if (nights <= 0) {
+      return NextResponse.json({ error: "Invalid stay dates" }, { status: 400 })
+    }
 
     let totalPrice = 0
     const priceBreakdown = []

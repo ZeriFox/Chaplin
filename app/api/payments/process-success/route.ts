@@ -3,6 +3,7 @@ import { getAdminDb } from "@/lib/firebase-admin"
 import Stripe from "stripe"
 import { sendModificationEmail } from "@/lib/email"
 import { FieldValue } from "firebase-admin/firestore"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 // Lazy Stripe init - wrapped in closure to avoid build-time evaluation
 const getStripe = (() => {
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
       await bookingRef.update({
         checkIn: new Date(metadata.checkIn),
         checkOut: new Date(metadata.checkOut),
-        nights: Number(metadata.nights || 1),
+        nights: calculateStayNights(metadata.checkIn, metadata.checkOut),
         totalAmount: newTotalAmount,
         depositPaid: FieldValue.increment(depositAmount * 100),
         balanceDue: FieldValue.increment(balanceAmount * 100),

@@ -6,6 +6,7 @@ import { adminApiErrorResponse, requireAdminApi } from "@/lib/require-admin-api"
 import { BookingConflictError } from "@/lib/booking-rules"
 import { cancelBookingWithInventory, saveBookingWithInventory } from "@/lib/booking-inventory"
 import { SUITE_ROOM_ID } from "@/lib/suite-room"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -53,10 +54,8 @@ function normalizeBooking(body: AdminBookingInput) {
     return { error: "Numero di telefono non valido" } as const
   }
 
-  const checkInDate = new Date(`${checkIn}T00:00:00`)
-  const checkOutDate = new Date(`${checkOut}T00:00:00`)
-  const nights = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / 86_400_000)
-  if (Number.isNaN(checkInDate.getTime()) || Number.isNaN(checkOutDate.getTime()) || nights <= 0) {
+  const nights = calculateStayNights(checkIn, checkOut)
+  if (nights <= 0) {
     return { error: "Intervallo di date non valido" } as const
   }
 

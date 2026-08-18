@@ -3,7 +3,7 @@ import Stripe from "stripe"
 import { getAdminDb } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
 import { sendModificationEmail } from "@/lib/email"
-import { calculateNights } from "@/lib/pricing"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 // Lazy Stripe init - wrapped in closure to avoid build-time evaluation
 const getStripe = (() => {
@@ -90,14 +90,14 @@ export async function POST(request: NextRequest) {
       console.log("[v0 DEBUG] New dates:", {
         checkIn: metadata.checkIn,
         checkOut: metadata.checkOut,
-        nights: calculateNights(metadata.checkIn, metadata.checkOut),
+        nights: calculateStayNights(metadata.checkIn, metadata.checkOut),
       })
 
       console.log("[v0 DEBUG] Updating booking in database...")
       await bookingRef.update({
         checkIn: metadata.checkIn,
         checkOut: metadata.checkOut,
-        nights: calculateNights(metadata.checkIn, metadata.checkOut),
+        nights: calculateStayNights(metadata.checkIn, metadata.checkOut),
         totalAmount: newTotalAmount,
         depositPaid: FieldValue.increment(depositAmount),
         balanceDue: FieldValue.increment(balanceAmount),
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
         checkOut: metadata.checkOut,
         roomName: booking?.roomName,
         guests: booking?.guests || 2,
-        nights: calculateNights(metadata.checkIn, metadata.checkOut),
+        nights: calculateStayNights(metadata.checkIn, metadata.checkOut),
         originalAmount: Number.parseInt(metadata.originalAmount),
         newAmount: newTotalAmount,
         penalty,
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
       })
       console.log("[v0 DEBUG] ✅ Database updated successfully")
 
-      const nights = calculateNights(booking?.checkIn, booking?.checkOut)
+      const nights = calculateStayNights(booking?.checkIn, booking?.checkOut)
       console.log("[v0 DEBUG] Sending modification email...")
       await sendModificationEmail({
         to: booking?.email,

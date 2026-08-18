@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,7 @@ import type { DateRange } from "@/components/booking-calendar-picker"
 import { useDynamicPrice } from "@/hooks/use-dynamic-price"
 import { BookingCalendarPicker } from "@/components/booking-calendar-picker"
 import { toast } from "sonner"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 interface BookingWidgetProps {
   roomId: string
@@ -46,7 +47,7 @@ export function BookingWidget({ roomId }: BookingWidgetProps) {
     return `${y}-${m}-${day}`
   }
 
-  const { pricePerNight: dynamicPrice, loading: priceLoading } = useDynamicPrice(
+  const { pricePerNight: dynamicPrice, totalPrice: dynamicTotalPrice, loading: priceLoading } = useDynamicPrice(
     selectedRoomType,
     dateRange?.from ? toInputDate(dateRange.from) : "",
     dateRange?.to ? toInputDate(dateRange.to) : "",
@@ -58,14 +59,9 @@ export function BookingWidget({ roomId }: BookingWidgetProps) {
   const checkIn = dateRange?.from ? toInputDate(dateRange.from) : ""
   const checkOut = dateRange?.to ? toInputDate(dateRange.to) : ""
 
-  const nights = useMemo(() => {
-    if (!dateRange?.from || !dateRange?.to) return 0
-    const ms = dateRange.to.getTime() - dateRange.from.getTime()
-    const diff = Math.ceil(ms / (1000 * 60 * 60 * 24))
-    return isFinite(diff) && diff > 0 ? diff : 0
-  }, [dateRange])
+  const nights = calculateStayNights(checkIn, checkOut)
 
-  const subtotal = basePrice * (nights || 0)
+  const subtotal = dynamicTotalPrice > 0 ? dynamicTotalPrice : basePrice * nights
   const touristTax = nights * guests * 2.8
   const total = subtotal + touristTax
 

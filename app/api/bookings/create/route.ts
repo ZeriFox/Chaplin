@@ -4,6 +4,7 @@ import { FieldValue } from "firebase-admin/firestore"
 import { BookingConflictError } from "@/lib/booking-rules"
 import { saveBookingWithInventory } from "@/lib/booking-inventory"
 import { SUITE_ROOM_ID } from "@/lib/suite-room"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 export async function POST(req: Request) {
   try {
@@ -19,7 +20,6 @@ export async function POST(req: Request) {
       roomType,
       roomName,
       roomId,
-      nights,
       pricePerNight,
       subtotal,
       taxes,
@@ -35,6 +35,10 @@ export async function POST(req: Request) {
     }
 
     const db = getAdminDb()
+    const nights = calculateStayNights(checkIn, checkOut)
+    if (nights <= 0) {
+      return NextResponse.json({ error: "Invalid stay dates" }, { status: 400 })
+    }
 
     // Create booking document
     const bookingRef = db.collection("bookings").doc()
@@ -53,7 +57,7 @@ export async function POST(req: Request) {
       roomType,
       roomName: roomName || roomType,
       roomId: SUITE_ROOM_ID,
-      nights: Number(nights),
+      nights,
       pricePerNight: Number(pricePerNight),
       subtotal: Number(subtotal),
       taxes: Number(taxes),
