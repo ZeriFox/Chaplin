@@ -8,6 +8,8 @@
  * 4 guests: 140% (€210)
  */
 
+import { calculateStayNights } from "@/lib/stay-calculation"
+
 const BASE_PRICE = 15000 // €150 in cents
 
 export function calculatePriceByGuests(guests: number, nights = 1): number {
@@ -35,11 +37,7 @@ export function calculatePriceByGuests(guests: number, nights = 1): number {
 }
 
 export function calculateNights(checkIn: string, checkOut: string): number {
-  const start = new Date(checkIn)
-  const end = new Date(checkOut)
-  const diffTime = Math.abs(end.getTime() - start.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays
+  return calculateStayNights(checkIn, checkOut)
 }
 
 export function calculateDaysUntilCheckIn(checkIn: string): number {

@@ -33,6 +33,7 @@ import {
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions"
 import { getStorage } from "firebase/storage"
 import { setPersistence, browserLocalPersistence } from "firebase/auth"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 // ---------- INIT ----------
 const firebaseConfig = {
@@ -254,11 +255,7 @@ export type BookingPayload = {
 const BOOKINGS_COL = "bookings"
 
 export function computeNights(checkInISO: string, checkOutISO: string) {
-  const inD = new Date(checkInISO + "T00:00:00")
-  const outD = new Date(checkOutISO + "T00:00:00")
-  const ms = outD.getTime() - inD.getTime()
-  const nights = Math.max(0, Math.round(ms / (1000 * 60 * 60 * 24)))
-  return nights
+  return calculateStayNights(checkInISO, checkOutISO)
 }
 
 export function computeTotalEUR(pricePerNight: number, nights: number, taxes = 0, serviceFee = 0) {

@@ -11,6 +11,16 @@ import {
   safeCompareOtpHash,
 } from "../lib/otp-rules.ts"
 import { normalizePublicRoomId, SUITE_ROOM_ID } from "../lib/room-identifiers.ts"
+import { calculateStayNights } from "../lib/stay-calculation.ts"
+
+test("notti: check-in incluso, check-out escluso in ogni cambio d'ora", () => {
+  assert.equal(calculateStayNights("2026-08-18", "2026-08-19"), 1)
+  assert.equal(calculateStayNights("2026-08-18", "2026-08-20"), 2)
+  assert.equal(calculateStayNights("2026-03-28", "2026-03-30"), 2)
+  assert.equal(calculateStayNights("2026-10-24", "2026-10-26"), 2)
+  assert.equal(calculateStayNights("2026-08-20", "2026-08-18"), 0)
+  assert.equal(calculateStayNights("data-non-valida", "2026-08-20"), 0)
+})
 
 test("prezzi Suite: lo slug pubblico usa sempre l'ID del listino reale", () => {
   assert.equal(normalizePublicRoomId("appartamento-chaplin"), SUITE_ROOM_ID)

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -27,6 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { BookingCalendarPicker, type DateRange } from "@/components/booking-calendar-picker"
 import { useLanguage } from "@/components/language-provider"
 import { useDynamicPrice } from "@/hooks/use-dynamic-price"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 // Resolve a promise but reject if it doesn't settle within `ms`, so a hanging
 // Firestore write (e.g. Firebase unreachable/misconfigured) can never freeze the
@@ -198,13 +199,7 @@ export default function PrenotaPage() {
   }, [formData.checkIn, formData.checkOut, formData.roomType])
 
   // ---- Notti e totale ----
-  const nights = useMemo(() => {
-    const ci = formData.checkIn ? new Date(formData.checkIn) : null
-    const co = formData.checkOut ? new Date(formData.checkOut) : null
-    if (!ci || !co || isNaN(ci.getTime()) || isNaN(co.getTime())) return 0
-    const diff = Math.ceil((co.getTime() - ci.getTime()) / (1000 * 60 * 60 * 24))
-    return diff > 0 ? diff : 0
-  }, [formData.checkIn, formData.checkOut])
+  const nights = calculateStayNights(formData.checkIn, formData.checkOut)
 
   const basePrice = dynamicPrice || roomPrices[formData.roomType] || 0
   const adults = Number(formData.guests || "1")

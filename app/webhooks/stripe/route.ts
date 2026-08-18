@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { admin, getFirestore } from "@/lib/firebase-admin"
 import { sendBookingConfirmationEmail, sendModificationEmail } from "@/lib/email"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 export const dynamic = "force-dynamic"
 
@@ -161,10 +162,9 @@ export async function POST(req: NextRequest) {
         console.log("[Webhook] Database updated successfully")
 
         try {
-          const nights = Math.ceil(
-            (new Date(checkOut || bookingData.checkOut).getTime() -
-              new Date(checkIn || bookingData.checkIn).getTime()) /
-              (1000 * 60 * 60 * 24),
+          const nights = calculateStayNights(
+            checkIn || bookingData.checkIn,
+            checkOut || bookingData.checkOut,
           )
 
           console.log("[Webhook] Sending date change confirmation email")

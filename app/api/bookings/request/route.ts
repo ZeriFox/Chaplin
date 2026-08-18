@@ -7,6 +7,7 @@ import { CouponError } from "@/lib/coupons"
 import { BookingConflictError } from "@/lib/booking-rules"
 import { saveBookingWithInventory } from "@/lib/booking-inventory"
 import { SUITE_ROOM_ID } from "@/lib/suite-room"
+import { calculateStayNights } from "@/lib/stay-calculation"
 
 export const dynamic = "force-dynamic"
 
@@ -268,15 +269,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Numero di telefono non valido" }, { status: 400 })
     }
 
-    const checkInDate = new Date(`${checkIn}T00:00:00`)
-    const checkOutDate = new Date(`${checkOut}T00:00:00`)
-    const calculatedNights = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / 86_400_000)
+    const calculatedNights = calculateStayNights(checkIn, checkOut)
 
-    if (
-      Number.isNaN(checkInDate.getTime()) ||
-      Number.isNaN(checkOutDate.getTime()) ||
-      calculatedNights <= 0
-    ) {
+    if (calculatedNights <= 0) {
       return NextResponse.json({ error: "Intervallo di date non valido" }, { status: 400 })
     }
 
