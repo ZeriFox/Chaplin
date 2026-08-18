@@ -10,6 +10,13 @@ import {
   isOtpExpired,
   safeCompareOtpHash,
 } from "../lib/otp-rules.ts"
+import { normalizePublicRoomId, SUITE_ROOM_ID } from "../lib/room-identifiers.ts"
+
+test("prezzi Suite: lo slug pubblico usa sempre l'ID del listino reale", () => {
+  assert.equal(normalizePublicRoomId("appartamento-chaplin"), SUITE_ROOM_ID)
+  assert.equal(normalizePublicRoomId("suite"), SUITE_ROOM_ID)
+  assert.equal(normalizePublicRoomId(SUITE_ROOM_ID), SUITE_ROOM_ID)
+})
 
 test("prezzi/coupon: percentuale, fisso, minimo e limite cliente", () => {
   assert.equal(calculateCouponDiscount({ type: "percentage", value: 10 }, 199), 19.9)

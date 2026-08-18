@@ -3,6 +3,7 @@ import { Footer } from "@/components/footer"
 import { RoomDetails } from "@/components/room-details"
 import { RoomGallery } from "@/components/room-gallery"
 import { BookingWidget } from "@/components/booking-widget"
+import { normalizePublicRoomId } from "@/lib/room-identifiers"
 
 interface RoomPageProps {
   params: {
@@ -11,6 +12,8 @@ interface RoomPageProps {
 }
 
 export default function RoomPage({ params }: RoomPageProps) {
+  const roomId = normalizePublicRoomId(params.id)
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -20,14 +23,14 @@ export default function RoomPage({ params }: RoomPageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 py-12">
             {/* Room Content */}
             <div className="lg:col-span-2">
-              <RoomGallery roomId={params.id} />
-              <RoomDetails roomId={params.id} />
+              <RoomGallery roomId={roomId} />
+              <RoomDetails roomId={roomId} />
             </div>
 
             {/* Booking Sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-24">
-                <BookingWidget roomId={params.id} />
+                <BookingWidget roomId={roomId} />
               </div>
             </div>
           </div>

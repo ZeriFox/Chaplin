@@ -4,10 +4,7 @@ import { useEffect, useState } from "react"
 import { getAllRooms } from "@/lib/firebase"
 
 export function useRoomPrices() {
-  const [prices, setPrices] = useState<Record<string, number>>({
-    "1": 180, // Camera Familiare con Balcone (default)
-    "2": 150, // Camera Matrimoniale con Vasca Idromassaggio (default)
-  })
+  const [prices, setPrices] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

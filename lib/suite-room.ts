@@ -1,8 +1,9 @@
 import { FieldValue } from "firebase-admin/firestore"
 
 import { getAdminDb } from "@/lib/firebase-admin"
+import { SUITE_ROOM_ID } from "@/lib/room-identifiers"
 
-export const SUITE_ROOM_ID = "2"
+export { SUITE_ROOM_ID } from "@/lib/room-identifiers"
 export const SUITE_DEFAULT_PRICE = 150
 
 const SUITE_DATA = {
